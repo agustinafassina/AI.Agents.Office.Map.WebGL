@@ -25,7 +25,6 @@ export function canvasTexture(
   return tex;
 }
 
-/** Soft illustrative grain overlay */
 export function paintNoise(
   ctx: CanvasRenderingContext2D,
   w: number,
