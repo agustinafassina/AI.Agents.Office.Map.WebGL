@@ -9,6 +9,11 @@ export function distance2D(
   return Math.sqrt(dx * dx + dz * dz);
 }
 
+export function smoothStep(t: number): number {
+  const x = Math.max(0, Math.min(1, t));
+  return x * x * (3 - 2 * x);
+}
+
 export function lerpPosition(
   from: [number, number, number],
   to: [number, number, number],

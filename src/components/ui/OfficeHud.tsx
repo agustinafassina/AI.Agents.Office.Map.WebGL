@@ -11,7 +11,7 @@ export function OfficeHud() {
       <div className="office-hud__brand">
         <span className="office-hud__title">AI Agents Office</span>
         <span className="office-hud__hint">
-          Click an avatar to chat · Scroll to zoom · Shift+drag to pan
+          Drag background to pan · Hover zones · Select an agent to chat
         </span>
       </div>
       <div className="office-hud__status">

@@ -1,18 +1,21 @@
 :root {
-  --bg-app: #1a1d24;
-  --bg-panel: #252a33;
-  --bg-panel-elevated: #2f3540;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --text-primary: #f0f2f5;
-  --text-secondary: #9aa3b2;
-  --accent: #6eb5ff;
-  --accent-soft: rgba(110, 181, 255, 0.15);
-  --success: #7dd87d;
-  --warning: #f0c674;
-  --danger: #f07178;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --bg-app: #1a2e26;
+  --bg-panel: rgba(28, 42, 36, 0.94);
+  --bg-panel-elevated: rgba(38, 54, 46, 0.96);
+  --bg-glass: rgba(32, 48, 40, 0.82);
+  --border-subtle: rgba(255, 248, 240, 0.1);
+  --border-warm: rgba(212, 165, 116, 0.22);
+  --text-primary: #f5f3ef;
+  --text-secondary: #a8b5a8;
+  --accent: #d4a574;
+  --accent-sage: #8fa38c;
+  --accent-soft: rgba(212, 165, 116, 0.18);
+  --success: #7ab87a;
+  --warning: #e8c66a;
+  --danger: #e07a6a;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-panel: 0 12px 40px rgba(0, 0, 0, 0.32);
   --font: 'DM Sans', system-ui, sans-serif;
 }
 
@@ -50,6 +53,6 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(212, 165, 116, 0.25);
   border-radius: 3px;
 }

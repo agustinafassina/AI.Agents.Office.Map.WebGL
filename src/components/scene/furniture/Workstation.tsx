@@ -2,11 +2,13 @@ import { Edges } from '@react-three/drei';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { materials } from '../materials';
+import { DESK_SCALE } from './deskConstants';
 import {
   CurvedMonitorGroup,
   DeskPropsSlot,
   ErgonomicChairMesh,
-  StandingLegs,
+  KeyboardMouse,
+  TFrameLegs,
   type ChairStyle,
   type DeskPropType,
 } from './WorkstationParts';
@@ -33,45 +35,40 @@ export function Workstation({
       cream: materials.chairCream,
       white: materials.chairWhite,
       sage: materials.sage,
+      forest: materials.chairForest,
     };
     return mats[chairStyle].clone();
   }, [chairStyle]);
 
+  const chairZ = 0.4 * DESK_SCALE;
+
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.41, 0]} castShadow receiveShadow material={materials.deskTop}>
-        <boxGeometry args={[1.05, 0.05, 0.6]} />
-        <Edges color="#6a7580" threshold={12} />
-      </mesh>
+      <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
+        <mesh position={[0, 0.41, 0]} castShadow receiveShadow material={materials.deskTop}>
+          <boxGeometry args={[1.05, 0.05, 0.6]} />
+          <Edges color="#6a7580" threshold={12} />
+        </mesh>
 
-      <StandingLegs
-        points={[
-          [-0.4, -0.2],
-          [0.4, -0.2],
-          [-0.4, 0.2],
-          [0.4, 0.2],
-        ]}
-      />
+        <TFrameLegs
+          points={[
+            [-0.4, -0.2],
+            [0.4, -0.2],
+            [-0.4, 0.2],
+            [0.4, 0.2],
+          ]}
+        />
 
-      <CurvedMonitorGroup />
-      <mesh position={[0, 0.54, -0.14]} material={materials.deskLeg}>
-        <cylinderGeometry args={[0.016, 0.016, 0.08, 6]} />
-      </mesh>
-
-      <mesh position={[0, 0.44, 0.05]} material={materials.metal}>
-        <boxGeometry args={[0.26, 0.015, 0.08]} />
-      </mesh>
-      <mesh position={[0.18, 0.44, 0.09]} material={materials.metal}>
-        <sphereGeometry args={[0.02, 6, 5]} />
-      </mesh>
-
-      <DeskPropsSlot type={deskProp} offset={[0.34, 0.41, 0.12]} />
+        <CurvedMonitorGroup />
+        <KeyboardMouse position={[0, 0.44, 0.1]} />
+        <DeskPropsSlot type={deskProp} offset={[0.34, 0.41, 0.12]} />
+      </group>
 
       <ErgonomicChairMesh
-        position={[0, 0, 0.38]}
+        position={[0, 0, chairZ]}
         rotation={Math.PI}
         color={seatMat}
-        meshBack={chairStyle === 'mesh'}
+        meshBack={chairStyle === 'mesh' || chairStyle === 'forest'}
       />
     </group>
   );

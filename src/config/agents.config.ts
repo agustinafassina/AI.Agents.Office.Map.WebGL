@@ -2,10 +2,10 @@ import type { AgentDefinition } from '@/types/agent';
 import type { Waypoint } from '@/types/scene';
 
 export const OFFICE_PALETTE = {
-  sceneBackground: '#1a382e',
+  sceneBackground: '#1f362c',
   outline: '#5c6874',
-  tileSage: '#8fa38c',
-  tileGray: '#b8c0c8',
+  tileSage: '#b2beb5',
+  tileGray: '#c5cbc8',
   tileGrout: '#a8b0b8',
   wall: '#eceff2',
   wallMarble: '#e2e6ea',
@@ -21,8 +21,8 @@ export const OFFICE_PALETTE = {
   monitorGlow: '#9ab8d8',
   sage: '#87a685',
   sageDark: '#6a8568',
-  terracotta: '#c47458',
-  terracottaLight: '#d89078',
+  terracotta: '#c86a48',
+  terracottaLight: '#e2725b',
   plant: '#5c9a6c',
   plantDark: '#3f704c',
   plantPot: '#b89068',
@@ -40,7 +40,10 @@ export const OFFICE_PALETTE = {
   chairWhite: '#f4f2ee',
   chairYellow: '#e5c76a',
   olive: '#7a8c68',
-  zoneMatSage: '#8fa38c',
+  stoolGray: '#c8ccd0',
+  chairForest: '#4a6b52',
+  platformWood: '#a67b5b',
+  zoneMatSage: '#9aab9e',
   matTransition: '#b0a494',
   glass: '#b8dce4',
   mug: '#f0f2f4',
@@ -106,7 +109,7 @@ export const OFFICE_WAYPOINTS: Waypoint[] = [
 
 export const SCENE_CONFIG = {
   bounds: { minX: -6.5, maxX: 7, minZ: -5.5, maxZ: 5 },
-  walkSpeed: 1.3,
-  idlePauseMin: 1.5,
-  idlePauseMax: 4,
+  walkSpeed: 1.05,
+  idlePauseMin: 2,
+  idlePauseMax: 5,
 } as const;

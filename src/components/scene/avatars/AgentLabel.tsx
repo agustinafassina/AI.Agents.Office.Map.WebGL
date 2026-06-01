@@ -9,41 +9,47 @@ interface AgentLabelProps {
 }
 
 function statusColor(status: AgentStatus): string {
-  if (status === 'chatting') return '#6eb5ff';
-  if (status === 'walking') return '#e8c66a';
-  return '#9aa3b2';
+  if (status === 'chatting') return '#d4a574';
+  if (status === 'walking') return '#c8d4a8';
+  return '#9aab9e';
+}
+
+function statusLabel(status: AgentStatus): string {
+  if (status === 'chatting') return 'In chat';
+  if (status === 'walking') return 'Moving';
+  return 'Available';
 }
 
 export function AgentLabel({ name, status, accentColor, selected }: AgentLabelProps) {
   return (
-    <Billboard position={[0, 1.12, 0]} follow lockX lockZ>
+    <Billboard position={[0, 1.08, 0]} follow lockX lockZ>
       <group>
         {selected && (
-          <mesh position={[0, 0.06, -0.02]}>
-            <planeGeometry args={[0.55, 0.22]} />
-            <meshBasicMaterial color={accentColor} transparent opacity={0.25} />
+          <mesh position={[0, 0.04, -0.02]}>
+            <planeGeometry args={[0.52, 0.2]} />
+            <meshBasicMaterial color={accentColor} transparent opacity={0.2} />
           </mesh>
         )}
         <Text
-          fontSize={0.085}
-          color="#f8fafc"
+          fontSize={0.08}
+          color="#f5f3ef"
           anchorX="center"
           anchorY="bottom"
-          outlineWidth={0.01}
-          outlineColor="#4a5568"
-          maxWidth={1}
+          outlineWidth={0.008}
+          outlineColor="#2a3d34"
+          maxWidth={1.2}
         >
           {name}
         </Text>
         <Text
-          position={[0, -0.06, 0]}
-          fontSize={0.038}
+          position={[0, -0.055, 0]}
+          fontSize={0.034}
           color={statusColor(status)}
           anchorX="center"
           anchorY="top"
-          letterSpacing={0.04}
+          letterSpacing={0.03}
         >
-          {status}
+          {statusLabel(status)}
         </Text>
       </group>
     </Billboard>

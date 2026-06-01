@@ -10,7 +10,8 @@
   border-left: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-panel);
   z-index: 30;
-  animation: slideIn 0.28s ease-out;
+  animation: slideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: blur(16px);
   pointer-events: auto;
 }
 
@@ -99,7 +100,7 @@
 
 .chat-panel__badge--connected {
   color: var(--success);
-  background: rgba(125, 216, 125, 0.12);
+  background: rgba(122, 184, 122, 0.14);
 }
 
 .chat-panel__badge--connecting {
@@ -140,7 +141,7 @@
 .chat-panel__message--user {
   align-self: flex-end;
   background: var(--accent-soft);
-  border: 1px solid rgba(110, 181, 255, 0.25);
+  border: 1px solid var(--border-warm);
 }
 
 .chat-panel__message--assistant {
@@ -197,7 +198,7 @@
 
 .chat-panel__input:focus {
   outline: 2px solid var(--accent-soft);
-  border-color: rgba(110, 181, 255, 0.4);
+  border-color: var(--border-warm);
 }
 
 .chat-panel__send {

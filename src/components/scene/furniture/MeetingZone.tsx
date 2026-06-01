@@ -1,12 +1,15 @@
 import { materials } from '../materials';
-import { CeramicFloorPlant } from './decor/SceneDecor';
+import { CeramicFloorPlant, DeskNotebook, WallNotes } from './decor/SceneDecor';
 
 function Stool({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
   const legAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.24, 0]} castShadow material={materials.woodLight}>
-        <cylinderGeometry args={[0.14, 0.15, 0.05, 12]} />
+        <cylinderGeometry args={[0.14, 0.15, 0.04, 12]} />
+      </mesh>
+      <mesh position={[0, 0.265, 0]} castShadow material={materials.stoolGray}>
+        <cylinderGeometry args={[0.13, 0.135, 0.025, 12]} />
       </mesh>
       {legAngles.map((a, i) => (
         <mesh
@@ -23,22 +26,24 @@ function Stool({ position, rotation = 0 }: { position: [number, number, number];
 }
 
 export function MeetingZone() {
-  const stoolAngles = [0.5, Math.PI * 0.5, Math.PI, Math.PI * 1.5];
+  const stoolAngles = [0.35, (Math.PI * 2) / 3, (Math.PI * 4) / 3 + 0.2];
   return (
-    <group position={[-4.4, 0, 0.1]}>
+    <group position={[-4.35, 0, 0.08]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow material={materials.rug}>
-        <planeGeometry args={[2.6, 2.4]} />
+        <circleGeometry args={[1.2, 36]} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow material={materials.rugWeave}>
-        <planeGeometry args={[2.3, 2.1]} />
+        <ringGeometry args={[0.55, 1.05, 36]} />
       </mesh>
 
-      <mesh position={[0, 0.43, 0]} castShadow material={materials.woodTable}>
-        <cylinderGeometry args={[0.74, 0.76, 0.085, 22]} />
+      <mesh position={[0, 0.435, 0]} castShadow material={materials.woodTable}>
+        <cylinderGeometry args={[0.75, 0.77, 0.09, 22]} />
       </mesh>
       <mesh position={[0, 0.21, 0]} material={materials.woodDark}>
         <cylinderGeometry args={[0.065, 0.075, 0.34, 10]} />
       </mesh>
+
+      <DeskNotebook position={[0.12, 0.44, 0.08]} />
 
       {stoolAngles.map((a, i) => (
         <Stool
@@ -48,43 +53,48 @@ export function MeetingZone() {
         />
       ))}
 
-      <group position={[-1.36, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh position={[0, 1.1, 0]} material={materials.metal}>
-          <boxGeometry args={[1.6, 0.05, 0.07]} />
+      <group position={[-1.34, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 1.12, 0]} material={materials.metal}>
+          <boxGeometry args={[1.65, 0.05, 0.07]} />
         </mesh>
-        <mesh position={[0, 1.1, 0.045]} material={materials.whiteboard}>
-          <boxGeometry args={[1.45, 0.9, 0.02]} />
+        <mesh position={[0, 1.12, 0.045]} material={materials.whiteboard}>
+          <boxGeometry args={[1.5, 0.92, 0.02]} />
         </mesh>
-        <mesh position={[-0.4, 1.22, 0.055]} material={materials.sage}>
-          <boxGeometry args={[0.3, 0.035, 0.008]} />
+        <mesh position={[-0.42, 1.22, 0.055]} material={materials.sage}>
+          <boxGeometry args={[0.36, 0.05, 0.008]} />
         </mesh>
-        <mesh position={[0.1, 1.08, 0.055]} material={materials.terracotta}>
-          <boxGeometry args={[0.22, 0.16, 0.008]} />
+        <mesh position={[0.05, 1.08, 0.055]} material={materials.terracotta}>
+          <boxGeometry args={[0.28, 0.2, 0.008]} />
         </mesh>
         <mesh position={[0.35, 1.28, 0.055]} material={materials.monitor}>
-          <boxGeometry args={[0.14, 0.1, 0.008]} />
+          <boxGeometry args={[0.18, 0.14, 0.008]} />
         </mesh>
-        <mesh position={[-0.15, 0.95, 0.055]} material={materials.metal}>
-          <boxGeometry args={[0.55, 0.025, 0.008]} />
+        <mesh position={[-0.15, 0.86, 0.055]} material={materials.sageDark}>
+          <boxGeometry args={[0.5, 0.04, 0.008]} />
         </mesh>
-        <mesh position={[0.25, 1.0, 0.055]} material={materials.sageDark}>
+        <mesh position={[0.22, 0.92, 0.055]} material={materials.terracottaLight}>
+          <boxGeometry args={[0.12, 0.12, 0.008]} />
+        </mesh>
+        <mesh position={[-0.05, 1.02, 0.056]} material={materials.metal}>
           <boxGeometry args={[0.08, 0.08, 0.008]} />
         </mesh>
       </group>
 
-      <group position={[-1.3, 0, -0.95]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh position={[0, 1.4, 0]} material={materials.espresso}>
-          <cylinderGeometry args={[0.14, 0.14, 0.03, 20]} />
+      <WallNotes position={[-1.05, 0.95, 0.12]} rotation={[0, Math.PI / 2, 0]} />
+
+      <group position={[-1.28, 0, -0.92]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 1.42, 0]} material={materials.espresso}>
+          <cylinderGeometry args={[0.145, 0.145, 0.03, 20]} />
         </mesh>
-        <mesh position={[0, 1.4, 0.018]} material={materials.wall}>
-          <cylinderGeometry args={[0.11, 0.11, 0.01, 20]} />
+        <mesh position={[0, 1.42, 0.018]} material={materials.wall}>
+          <cylinderGeometry args={[0.115, 0.115, 0.01, 20]} />
         </mesh>
-        <mesh position={[0.04, 1.4, 0.022]} rotation={[0, 0, Math.PI / 4]} material={materials.metal}>
-          <boxGeometry args={[0.006, 0.055, 0.006]} />
+        <mesh position={[0.04, 1.42, 0.022]} rotation={[0, 0, Math.PI / 4]} material={materials.metal}>
+          <boxGeometry args={[0.006, 0.058, 0.006]} />
         </mesh>
       </group>
 
-      <CeramicFloorPlant position={[-0.95, 0, 1.2]} />
+      <CeramicFloorPlant position={[-0.75, 0, 1.2]} />
     </group>
   );
 }

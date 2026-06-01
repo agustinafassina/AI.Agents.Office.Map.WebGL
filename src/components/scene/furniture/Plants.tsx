@@ -2,10 +2,30 @@ import { materials } from '../materials';
 
 interface PlantProps {
   position: [number, number, number];
-  variant?: 'small' | 'medium' | 'tall' | 'fiddle';
+  variant?: 'small' | 'medium' | 'tall' | 'fiddle' | 'snake';
 }
 
 export function Plant({ position, variant = 'medium' }: PlantProps) {
+  if (variant === 'snake') {
+    return (
+      <group position={position}>
+        <mesh position={[0, 0.2, 0]} castShadow material={materials.potCeramic}>
+          <cylinderGeometry args={[0.2, 0.22, 0.4, 12]} />
+        </mesh>
+        {[
+          [0, 0.55, 0],
+          [0.06, 0.75, 0.02],
+          [-0.05, 0.95, -0.02],
+          [0.04, 1.15, 0.03],
+        ].map(([x, y, z], i) => (
+          <mesh key={i} position={[x, y, z]} castShadow material={materials.plantDark}>
+            <boxGeometry args={[0.06, 0.22 + (i % 2) * 0.08, 0.04]} />
+          </mesh>
+        ))}
+      </group>
+    );
+  }
+
   if (variant === 'fiddle' || variant === 'tall') {
     return (
       <group position={position}>
@@ -13,13 +33,13 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
           <cylinderGeometry args={[0.22, 0.24, 0.44, 12]} />
         </mesh>
         <mesh position={[0, 0.55, 0]} castShadow material={materials.plantDark}>
-          <boxGeometry args={[0.08, 0.35, 0.06]} />
+          <boxGeometry args={[0.08, 0.38, 0.06]} />
         </mesh>
-        <mesh position={[0, 0.95, 0]} castShadow material={materials.plant}>
-          <boxGeometry args={[0.14, 0.55, 0.1]} />
+        <mesh position={[0, 0.98, 0]} castShadow material={materials.plant}>
+          <boxGeometry args={[0.16, 0.58, 0.12]} />
         </mesh>
-        <mesh position={[0.1, 1.15, 0.04]} castShadow material={materials.plantDark}>
-          <boxGeometry args={[0.22, 0.28, 0.08]} />
+        <mesh position={[0.12, 1.2, 0.05]} castShadow material={materials.plantDark}>
+          <boxGeometry args={[0.24, 0.3, 0.1]} />
         </mesh>
       </group>
     );

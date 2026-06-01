@@ -37,16 +37,68 @@ export function ZoneMat({
   position,
   size,
   variant = 'sage',
+  elevation = 0.013,
 }: {
   position: [number, number, number];
   size: [number, number];
   variant?: 'sage' | 'jute';
+  elevation?: number;
 }) {
   const mat = variant === 'sage' ? materials.zoneMatSage : materials.rugWeave;
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[position[0], 0.013, position[2]]} receiveShadow material={mat}>
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[position[0], elevation, position[2]]}
+      receiveShadow
+      material={mat}
+    >
       <planeGeometry args={size} />
     </mesh>
+  );
+}
+
+export function WallNotes({
+  position,
+  rotation = [0, 0, 0] as [number, number, number],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}) {
+  const notes: [number, number, number, number, number][] = [
+    [0, 0.08, 0, 0.14, 0.1],
+    [0.18, -0.05, 0, 0.1, 0.08],
+    [-0.15, -0.12, 0, 0.12, 0.09],
+    [0.08, 0.2, 0, 0.08, 0.06],
+  ];
+  return (
+    <group position={position} rotation={rotation}>
+      {notes.map(([x, y, z, w, h], i) => (
+        <mesh
+          key={i}
+          position={[x, y, z]}
+          rotation={[0, 0, (i - 1) * 0.08]}
+          material={i % 2 ? materials.notebook : materials.mug}
+        >
+          <boxGeometry args={[w, h, 0.004]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+export function DeskCactus({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh material={materials.plantPot}>
+        <cylinderGeometry args={[0.05, 0.055, 0.06, 8]} />
+      </mesh>
+      <mesh position={[0, 0.1, 0]} castShadow material={materials.plant}>
+        <cylinderGeometry args={[0.025, 0.028, 0.12, 6]} />
+      </mesh>
+      <mesh position={[0.03, 0.14, 0]} castShadow material={materials.plantDark}>
+        <cylinderGeometry args={[0.02, 0.022, 0.08, 6]} />
+      </mesh>
+    </group>
   );
 }
 
@@ -121,9 +173,16 @@ export function Terrarium({ position }: { position: [number, number, number] }) 
   );
 }
 
-export function CeramicFloorPlant({ position }: { position: [number, number, number] }) {
+export function CeramicFloorPlant({
+  position,
+  variant = 'tall',
+}: {
+  position: [number, number, number];
+  variant?: 'tall' | 'compact';
+}) {
+  const scale = variant === 'compact' ? 0.72 : 1;
   return (
-    <group position={position}>
+    <group position={position} scale={scale}>
       <mesh position={[0, 0.24, 0]} castShadow material={materials.potCeramic}>
         <cylinderGeometry args={[0.26, 0.28, 0.48, 14]} />
       </mesh>

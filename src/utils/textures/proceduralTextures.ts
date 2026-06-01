@@ -31,33 +31,43 @@ function fillBase(
 }
 
 function createTileTexture(hex: string, variation: number): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(128, 128);
-  fillBase(ctx, 128, 128, hex);
-  paintNoise(ctx, 128, 128, variation);
+  const size = 192;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, hex);
+  paintNoise(ctx, size, size, variation);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(4, 4, 120, 120);
+  ctx.fillStyle = OFFICE_PALETTE.tileGrout;
+  ctx.fillRect(0, 0, size, size);
 
-  ctx.globalAlpha = 0.04;
-  for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = i % 2 ? '#ffffff' : '#000000';
-    ctx.fillRect(Math.random() * 128, Math.random() * 128, 30, 20);
-  }
-  ctx.globalAlpha = 1;
+  const inset = 8;
+  const [r, g, b] = hexToRgb(hex);
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(inset, inset, size - inset * 2, size - inset * 2);
+  paintNoise(ctx, size, size, variation * 0.5);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(inset + 2, inset + 2, size - (inset + 2) * 2, size - (inset + 2) * 2);
 
   return canvasTexture(canvas, [1, 1]);
 }
 
 function createWallPlaster(): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(256, 256);
-  fillBase(ctx, 256, 256, OFFICE_PALETTE.wall);
-  paintNoise(ctx, 256, 256, 12);
+  const size = 384;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, OFFICE_PALETTE.wall);
+  paintNoise(ctx, size, size, 14);
 
-  for (let x = 0; x < 256; x += 18) {
-    const shade = 8 + Math.random() * 10;
-    ctx.fillStyle = `rgba(${200 + shade},${205 + shade},${210 + shade},0.15)`;
-    ctx.fillRect(x, 0, 8, 256);
+  for (let i = 0; i < 1200; i++) {
+    const shade = 200 + Math.random() * 25;
+    ctx.fillStyle = `rgba(${shade},${shade + 2},${shade + 4},0.12)`;
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.5, 1.5);
+  }
+
+  for (let x = 0; x < size; x += 22) {
+    const shade = 6 + Math.random() * 8;
+    ctx.fillStyle = `rgba(${198 + shade},${202 + shade},${208 + shade},0.1)`;
+    ctx.fillRect(x, 0, 6, size);
   }
 
   return canvasTexture(canvas, [2, 2]);
@@ -142,17 +152,18 @@ function createRugWeave(): THREE.CanvasTexture {
 }
 
 function createPlantFoliage(): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(128, 128);
-  fillBase(ctx, 128, 128, OFFICE_PALETTE.plant);
-  paintNoise(ctx, 128, 128, 22);
+  const size = 192;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, OFFICE_PALETTE.plant);
+  paintNoise(ctx, size, size, 22);
 
   ctx.globalAlpha = 0.15;
   ctx.fillStyle = OFFICE_PALETTE.plantDark;
   for (let i = 0; i < 20; i++) {
     ctx.beginPath();
     ctx.ellipse(
-      Math.random() * 128,
-      Math.random() * 128,
+      Math.random() * size,
+      Math.random() * size,
       8 + Math.random() * 12,
       4 + Math.random() * 8,
       Math.random() * Math.PI,
@@ -166,10 +177,17 @@ function createPlantFoliage(): THREE.CanvasTexture {
   return canvasTexture(canvas, [1, 1]);
 }
 
+const TEXTURE_VERSION = 2;
 let cached: OfficeTextureSet | null = null;
+let cachedVersion = 0;
 
 export function getOfficeTextures(): OfficeTextureSet {
-  if (cached) return cached;
+  if (cached && cachedVersion === TEXTURE_VERSION) return cached;
+  if (cached) {
+    Object.values(cached).forEach((t) => t.dispose());
+    cached = null;
+  }
+  cachedVersion = TEXTURE_VERSION;
 
   cached = {
     tileSage: createTileTexture(OFFICE_PALETTE.tileSage, 14),

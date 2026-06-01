@@ -2,26 +2,31 @@ import { Edges } from '@react-three/drei';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { materials } from '../materials';
+import { DESK_SCALE } from './deskConstants';
 import {
   CurvedMonitorGroup,
   DeskPropsSlot,
   ErgonomicChairMesh,
-  StandingLegs,
+  KeyboardMouse,
+  TFrameLegs,
   type ChairStyle,
   type DeskPropType,
 } from './WorkstationParts';
+import { PenCup } from './decor/SceneDecor';
 
 export function LShapedDesk({
   position,
   rotation = 0,
   chairStyle = 'sage',
   deskProp = 'succulent',
+  dualMonitor = false,
   corner = 'inner',
 }: {
   position: [number, number, number];
   rotation?: number;
   chairStyle?: ChairStyle;
   deskProp?: DeskPropType;
+  dualMonitor?: boolean;
   corner?: 'inner' | 'outer';
 }) {
   const seatMat = useMemo(() => {
@@ -31,48 +36,47 @@ export function LShapedDesk({
       cream: materials.chairCream,
       white: materials.chairWhite,
       sage: materials.sage,
+      forest: materials.chairForest,
     };
     return mats[chairStyle].clone();
   }, [chairStyle]);
 
   const flip = corner === 'inner' ? 1 : -1;
+  const chairZ = 0.42 * DESK_SCALE;
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.41, 0.12 * flip]} castShadow receiveShadow material={materials.deskTop}>
-        <boxGeometry args={[0.88, 0.05, 0.52]} />
-        <Edges color="#6a7580" threshold={12} />
-      </mesh>
-      <mesh position={[0.28 * flip, 0.41, -0.18 * flip]} castShadow receiveShadow material={materials.deskTop}>
-        <boxGeometry args={[0.42, 0.05, 0.48]} />
-        <Edges color="#6a7580" threshold={12} />
-      </mesh>
+      <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
+        <mesh position={[0, 0.41, 0.12 * flip]} castShadow receiveShadow material={materials.deskTop}>
+          <boxGeometry args={[0.9, 0.05, 0.54]} />
+          <Edges color="#5c6874" threshold={12} />
+        </mesh>
+        <mesh position={[0.28 * flip, 0.41, -0.18 * flip]} castShadow receiveShadow material={materials.deskTop}>
+          <boxGeometry args={[0.44, 0.05, 0.5]} />
+          <Edges color="#5c6874" threshold={12} />
+        </mesh>
 
-      <StandingLegs
-        points={[
-          [-0.32, -0.05],
-          [0.32, -0.05],
-          [-0.32, 0.28],
-          [0.45 * flip, -0.38 * flip],
-          [0.12 * flip, -0.38 * flip],
-        ]}
-      />
+        <TFrameLegs
+          points={[
+            [-0.34, -0.04],
+            [0.34, -0.04],
+            [-0.34, 0.26],
+            [0.46 * flip, -0.36 * flip],
+            [0.1 * flip, -0.36 * flip],
+          ]}
+        />
 
-      <group position={[0, 0, 0.05 * flip]}>
-        <CurvedMonitorGroup />
+        <group position={[0, 0, 0.05 * flip]}>
+          <CurvedMonitorGroup dual={dualMonitor} />
+        </group>
+
+        <KeyboardMouse position={[0, 0.44, 0.08 * flip]} />
+        <DeskPropsSlot type={deskProp} offset={[0.34 * flip, 0.41, 0.18 * flip]} />
+        <PenCup position={[-0.22 * flip, 0.41, 0.12 * flip]} />
       </group>
 
-      <mesh position={[0, 0.44, 0.08]} material={materials.metal}>
-        <boxGeometry args={[0.26, 0.015, 0.08]} />
-      </mesh>
-      <mesh position={[0.18, 0.44, 0.11]} material={materials.metal}>
-        <sphereGeometry args={[0.02, 6, 5]} />
-      </mesh>
-
-      <DeskPropsSlot type={deskProp} offset={[0.32 * flip, 0.41, 0.2 * flip]} />
-
       <ErgonomicChairMesh
-        position={[0, 0, 0.42 * flip]}
+        position={[0, 0, chairZ * flip]}
         rotation={Math.PI}
         color={seatMat}
         meshBack={chairStyle === 'mesh' || chairStyle === 'tan'}

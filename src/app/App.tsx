@@ -12,6 +12,7 @@ export function App() {
     <div className="app">
       <main className="app__viewport">
         <OfficeScene />
+        <div className="app__vignette" aria-hidden />
         <OfficeHud />
         <ZoomControls />
       </main>

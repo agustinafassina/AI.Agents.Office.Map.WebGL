@@ -68,8 +68,11 @@ function buildMaterials() {
     chairTan: softColor(OFFICE_PALETTE.chairTan),
   chairCream: softColor(OFFICE_PALETTE.chairCream),
   chairWhite: softColor(OFFICE_PALETTE.chairWhite),
-  chairYellow: softColor(OFFICE_PALETTE.chairYellow),
-  olive: softColor(OFFICE_PALETTE.olive),
+    chairForest: softColor(OFFICE_PALETTE.chairForest),
+    chairYellow: softColor(OFFICE_PALETTE.chairYellow),
+    stoolGray: softColor(OFFICE_PALETTE.stoolGray),
+    platformWood: softColor(OFFICE_PALETTE.platformWood, { map: tex.woodGrain }),
+    olive: softColor(OFFICE_PALETTE.olive),
   zoneMatSage: softColor(OFFICE_PALETTE.zoneMatSage, { map: tex.tileSage }),
     glass: softColor(OFFICE_PALETTE.glass, {
       emissive: '#a0d0d8',

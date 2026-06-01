@@ -16,7 +16,6 @@ function CheckerTiles() {
     return {
       sage: materials.tileSage.clone(),
       gray: materials.tileGray.clone(),
-      grout: materials.tileGrout.clone(),
     };
   }, []);
 
@@ -30,11 +29,11 @@ function CheckerTiles() {
         <mesh
           key={`${row}-${col}`}
           rotation={[-Math.PI / 2, 0, 0]}
-          position={[cx, 0.002, cz]}
+          position={[cx, 0.003, cz]}
           receiveShadow
           material={isSage ? tileMaterials.sage : tileMaterials.gray}
         >
-          <planeGeometry args={[TILE * 0.94, TILE * 0.94]} />
+          <planeGeometry args={[TILE * 0.9, TILE * 0.9]} />
         </mesh>,
       );
     }
@@ -62,6 +61,9 @@ function TexturedWall({
       <mesh position={[0, h / 2, d / 2 + 0.008]} material={materials.wallMarble}>
         <boxGeometry args={[w * 0.98, h * 0.94, 0.015]} />
       </mesh>
+      <mesh position={[0, h + 0.02, 0]} material={materials.wallAccent}>
+        <boxGeometry args={[w * 1.02, 0.04, d * 1.05]} />
+      </mesh>
       <WallTextureStripes width={w} height={h} depth={d / 2 + 0.012} />
     </group>
   );
@@ -74,7 +76,7 @@ export function OfficeFloor() {
   return (
     <group>
       <mesh position={[0.5, -0.35, 0]} material={materials.sageDark}>
-        <boxGeometry args={[16, 0.08, 14]} />
+        <boxGeometry args={[16.2, 0.1, 14.2]} />
       </mesh>
 
       <mesh position={[0.5, -0.16, 0]} receiveShadow material={materials.woodDark}>
@@ -83,9 +85,8 @@ export function OfficeFloor() {
 
       <CheckerTiles />
 
-      <ZoneMat position={[0.5, 0, -2.2]} size={[3.6, 1.2]} variant="sage" />
       <ZoneMat position={[0.2, 0, 2.8]} size={[2.8, 0.9]} variant="sage" />
-      <ZoneMat position={[-2.7, 0, 0.15]} size={[1.8, 2.5]} variant="jute" />
+      <ZoneMat position={[-2.7, 0, 0.15]} size={[2.5, 2.2]} variant="jute" />
 
       <TexturedWall position={[0.5, 0, -6.35]} size={[14.5, wallH, 0.18]} />
       <TexturedWall position={[-6.85, 0, 0]} size={[12.5, wallH, 0.18]} rotation={[0, Math.PI / 2, 0]} />
@@ -101,7 +102,7 @@ export function OfficeFloor() {
 
       <mesh position={[0.5, -0.08, 0]}>
         <boxGeometry args={[14.6, 0.02, 12.6]} />
-        <meshBasicMaterial color={bg} transparent opacity={0.3} />
+        <meshBasicMaterial color={bg} transparent opacity={0.25} />
       </mesh>
     </group>
   );

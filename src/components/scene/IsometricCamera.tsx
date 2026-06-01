@@ -33,7 +33,7 @@ export function IsometricCamera() {
     if (!(camera instanceof THREE.OrthographicCamera)) return;
 
     const aspect = size.width / Math.max(size.height, 1);
-    smoothZoom.current = zoomLevel;
+    smoothZoom.current = useSceneStore.getState().zoomLevel;
     applyFrustum(camera, aspect, smoothZoom.current);
 
     camera.near = -50;
@@ -47,7 +47,7 @@ export function IsometricCamera() {
     );
     camera.lookAt(lookTarget.current);
     initialized.current = true;
-  }, [camera, size.width, size.height, zoomLevel]);
+  }, [camera, size.width, size.height]);
 
   useFrame((_, delta) => {
     if (!(camera instanceof THREE.OrthographicCamera) || !initialized.current) return;
