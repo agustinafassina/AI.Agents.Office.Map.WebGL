@@ -30,10 +30,10 @@ export function MeetingZone() {
   return (
     <group position={[-4.35, 0, 0.08]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow material={materials.rug}>
-        <circleGeometry args={[1.2, 36]} />
+        <planeGeometry args={[2.45, 2.15]} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow material={materials.rugWeave}>
-        <ringGeometry args={[0.55, 1.05, 36]} />
+        <planeGeometry args={[2.15, 1.9]} />
       </mesh>
 
       <mesh position={[0, 0.435, 0]} castShadow material={materials.woodTable}>

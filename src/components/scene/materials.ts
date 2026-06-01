@@ -79,7 +79,9 @@ function buildMaterials() {
     zoneMatSage: softColor(OFFICE_PALETTE.zoneMatSage, { map: tex.tileSage, roughness: 0.9 }),
     glass: softColor(OFFICE_PALETTE.glass, {
       emissive: '#a0d0d8',
-      emissiveIntensity: 0.12,
+      emissiveIntensity: 0.15,
+      roughness: 0.12,
+      metalness: 0.08,
     }),
     matTransition: softColor(OFFICE_PALETTE.matTransition, { map: tex.rugWeave, roughness: 0.92 }),
     mug: softColor(OFFICE_PALETTE.mug, { roughness: 0.35 }),

@@ -48,15 +48,25 @@
   transform: translateY(0) scale(0.97);
 }
 
+.office-nav__btn--active {
+  color: var(--text-primary);
+  background: rgba(212, 165, 116, 0.2);
+  border-color: var(--accent);
+}
+
+.office-nav__btn--active .office-nav__icon {
+  background: rgba(212, 165, 116, 0.25);
+  color: var(--text-primary);
+}
+
 .office-nav__icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: rgba(245, 243, 239, 0.08);
   color: var(--accent);
-  font-size: 0.86rem;
   line-height: 1;
 }
 

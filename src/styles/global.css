@@ -1,15 +1,15 @@
 :root {
-  --bg-app: #1a2e26;
-  --bg-panel: rgba(28, 42, 36, 0.94);
-  --bg-panel-elevated: rgba(38, 54, 46, 0.96);
-  --bg-glass: rgba(32, 48, 40, 0.82);
+  --bg-app: #1a382e;
+  --bg-panel: rgba(26, 46, 38, 0.94);
+  --bg-panel-elevated: rgba(36, 58, 48, 0.96);
+  --bg-glass: rgba(28, 48, 40, 0.84);
   --border-subtle: rgba(255, 248, 240, 0.1);
-  --border-warm: rgba(212, 165, 116, 0.22);
+  --border-warm: rgba(200, 106, 72, 0.28);
   --text-primary: #f5f3ef;
   --text-secondary: #a8b5a8;
-  --accent: #d4a574;
-  --accent-sage: #8fa38c;
-  --accent-soft: rgba(212, 165, 116, 0.18);
+  --accent: #e2725b;
+  --accent-sage: #9aab9e;
+  --accent-soft: rgba(226, 114, 91, 0.16);
   --success: #7ab87a;
   --warning: #e8c66a;
   --danger: #e07a6a;

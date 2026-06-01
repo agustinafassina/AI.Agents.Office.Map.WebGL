@@ -31,7 +31,7 @@ function fillBase(
 }
 
 function createTileTexture(hex: string, variation: number): THREE.CanvasTexture {
-  const size = 192;
+  const size = 256;
   const [canvas, ctx] = createCanvas(size, size);
   fillBase(ctx, size, size, hex);
   paintNoise(ctx, size, size, variation);
@@ -74,23 +74,24 @@ function createWallPlaster(): THREE.CanvasTexture {
 }
 
 function createWallMarble(): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(256, 256);
-  fillBase(ctx, 256, 256, OFFICE_PALETTE.wallMarble);
-  paintNoise(ctx, 256, 256, 10);
+  const size = 512;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, OFFICE_PALETTE.wallMarble);
+  paintNoise(ctx, size, size, 10);
 
   ctx.globalAlpha = 0.12;
   ctx.strokeStyle = '#b8c4d0';
   ctx.lineWidth = 1.5;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     ctx.beginPath();
-    ctx.moveTo(Math.random() * 256, Math.random() * 256);
+    ctx.moveTo(Math.random() * size, Math.random() * size);
     ctx.bezierCurveTo(
-      Math.random() * 256,
-      Math.random() * 256,
-      Math.random() * 256,
-      Math.random() * 256,
-      Math.random() * 256,
-      Math.random() * 256,
+      Math.random() * size,
+      Math.random() * size,
+      Math.random() * size,
+      Math.random() * size,
+      Math.random() * size,
+      Math.random() * size,
     );
     ctx.stroke();
   }
@@ -100,16 +101,18 @@ function createWallMarble(): THREE.CanvasTexture {
 }
 
 function createWoodGrain(hex: string, dark = false): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(256, 128);
-  fillBase(ctx, 256, 128, hex);
-  paintNoise(ctx, 256, 128, dark ? 14 : 10);
+  const w = 512;
+  const h = 256;
+  const [canvas, ctx] = createCanvas(w, h);
+  fillBase(ctx, w, h, hex);
+  paintNoise(ctx, w, h, dark ? 14 : 10);
 
-  ctx.globalAlpha = dark ? 0.2 : 0.14;
-  for (let y = 0; y < 128; y += 3) {
+  ctx.globalAlpha = dark ? 0.22 : 0.16;
+  for (let y = 0; y < h; y += 2) {
     const [r, g, b] = hexToRgb(hex);
-    const delta = (Math.sin(y * 0.2) + 1) * (dark ? 18 : 12);
-    ctx.fillStyle = `rgb(${r - delta},${g - delta},${b - delta})`;
-    ctx.fillRect(0, y, 256, 2);
+    const delta = (Math.sin(y * 0.15 + Math.sin(y * 0.04) * 2) + 1) * (dark ? 16 : 11);
+    ctx.fillStyle = `rgb(${Math.max(0, r - delta)},${Math.max(0, g - delta)},${Math.max(0, b - delta)})`;
+    ctx.fillRect(0, y, w, 1.5);
   }
   ctx.globalAlpha = 1;
 
@@ -117,20 +120,21 @@ function createWoodGrain(hex: string, dark = false): THREE.CanvasTexture {
 }
 
 function createRugJute(): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(256, 256);
-  fillBase(ctx, 256, 256, OFFICE_PALETTE.rug);
-  paintNoise(ctx, 256, 256, 18);
+  const size = 512;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, OFFICE_PALETTE.rug);
+  paintNoise(ctx, size, size, 18);
 
-  ctx.strokeStyle = 'rgba(90,75,60,0.25)';
-  ctx.lineWidth = 1;
-  for (let i = -256; i < 512; i += 6) {
+  ctx.strokeStyle = 'rgba(90,75,60,0.28)';
+  ctx.lineWidth = 1.2;
+  for (let i = -size; i < size * 2; i += 5) {
     ctx.beginPath();
     ctx.moveTo(i, 0);
-    ctx.lineTo(i + 256, 256);
+    ctx.lineTo(i + size, size);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(i, 256);
-    ctx.lineTo(i + 256, 0);
+    ctx.moveTo(i, size);
+    ctx.lineTo(i + size, 0);
     ctx.stroke();
   }
 
@@ -177,7 +181,7 @@ function createPlantFoliage(): THREE.CanvasTexture {
   return canvasTexture(canvas, [1, 1]);
 }
 
-const TEXTURE_VERSION = 2;
+const TEXTURE_VERSION = 3;
 let cached: OfficeTextureSet | null = null;
 let cachedVersion = 0;
 

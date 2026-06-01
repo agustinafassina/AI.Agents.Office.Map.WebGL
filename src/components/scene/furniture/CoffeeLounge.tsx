@@ -120,6 +120,14 @@ export function CoffeeLounge() {
         <mesh position={[-0.1, 0.16, 0.5]} castShadow material={materials.woodLight}>
           <boxGeometry args={[1, 0.07, 0.58]} />
         </mesh>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[-0.1, PLATFORM_Y + 0.016, 0.5]}
+          receiveShadow
+          material={materials.zoneMatSage}
+        >
+          <circleGeometry args={[0.92, 32]} />
+        </mesh>
         {[
           [-0.42, 0.34],
           [0.38, 0.34],

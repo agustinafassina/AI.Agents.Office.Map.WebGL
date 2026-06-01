@@ -1,4 +1,5 @@
 import { useSceneStore } from '@/stores/scene.store';
+import { UiIcon } from './UiIcon';
 import './ZoomControls.css';
 
 export function ZoomControls() {
@@ -9,23 +10,11 @@ export function ZoomControls() {
 
   return (
     <div className="zoom-controls" aria-label="Zoom del mapa">
-      <button
-        type="button"
-        className="zoom-controls__btn"
-        onClick={zoomIn}
-        aria-label="Acercar"
-        title="Acercar"
-      >
-        <span aria-hidden>+</span>
+      <button type="button" className="zoom-controls__btn" onClick={zoomIn} aria-label="Acercar" title="Acercar">
+        <UiIcon name="zoom-in" size={17} />
       </button>
-      <button
-        type="button"
-        className="zoom-controls__btn"
-        onClick={zoomOut}
-        aria-label="Alejar"
-        title="Alejar"
-      >
-        <span aria-hidden>−</span>
+      <button type="button" className="zoom-controls__btn" onClick={zoomOut} aria-label="Alejar" title="Alejar">
+        <UiIcon name="zoom-out" size={17} />
       </button>
       <button
         type="button"
@@ -34,7 +23,7 @@ export function ZoomControls() {
         aria-label="Restablecer zoom"
         title="Restablecer zoom"
       >
-        <span aria-hidden>⟲</span>
+        <UiIcon name="reset" size={16} />
       </button>
       <button
         type="button"
@@ -43,7 +32,7 @@ export function ZoomControls() {
         aria-label="Recentrar vista"
         title="Recentrar vista"
       >
-        <span aria-hidden>⌂</span>
+        <UiIcon name="recenter" size={16} />
       </button>
     </div>
   );

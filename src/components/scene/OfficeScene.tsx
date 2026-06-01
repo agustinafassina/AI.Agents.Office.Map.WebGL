@@ -65,7 +65,7 @@ export function OfficeScene() {
       }}
     >
       <color attach="background" args={[BG]} />
-      <fog attach="fog" args={['#2a4538', 26, 50]} />
+      <fog attach="fog" args={[OFFICE_PALETTE.fog, 26, 50]} />
       <Suspense fallback={null}>
         <SceneContents />
       </Suspense>
