@@ -1,3 +1,4 @@
+import { hubPerimeterPosition } from '@/config/officeObstacles';
 import type { AgentDefinition } from '@/types/agent';
 import type { Waypoint } from '@/types/scene';
 
@@ -60,7 +61,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#6eb5ff',
     accentColor: '#4a9eff',
     systemPrompt: 'You are Cursor, a helpful coding assistant in a creative office.',
-    spawnPosition: [0.5, 0, 1.2],
+    spawnPosition: hubPerimeterPosition(-Math.PI / 2 + 0.35),
   },
   {
     id: 'research-agent',
@@ -70,7 +71,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#b88cff',
     accentColor: '#9a6bff',
     systemPrompt: 'You are a research specialist who summarizes and explores ideas clearly.',
-    spawnPosition: [-3.8, 0, 0.4],
+    spawnPosition: [-2.6, 0, 0.9],
   },
   {
     id: 'design-agent',
@@ -80,7 +81,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#ff9a7a',
     accentColor: '#ff7b55',
     systemPrompt: 'You are a design-minded assistant focused on UX and visual coherence.',
-    spawnPosition: [-0.5, 0, -2.8],
+    spawnPosition: [1.2, 0, -1.6],
   },
   {
     id: 'ops-agent',
@@ -90,21 +91,22 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#7dd87d',
     accentColor: '#5bc45b',
     systemPrompt: 'You are an operations assistant who helps with workflows and reliability.',
-    spawnPosition: [4.5, 0, 1.8],
+    spawnPosition: [3.4, 0, 0.9],
   },
 ];
 
 export const OFFICE_WAYPOINTS: Waypoint[] = [
-  { id: 'wp-hub-1', position: [0.5, 0, 1.3] },
-  { id: 'wp-hub-2', position: [-0.4, 0, 0.9] },
-  { id: 'wp-meeting', position: [-3.6, 0, 0.6] },
-  { id: 'wp-meeting-2', position: [-3, 0, -0.5] },
-  { id: 'wp-lounge', position: [0.2, 0, -2.6] },
-  { id: 'wp-lounge-2', position: [-1.2, 0, -3.2] },
-  { id: 'wp-private', position: [4.8, 0, 1.4] },
-  { id: 'wp-private-2', position: [4, 0, 2.6] },
-  { id: 'wp-center', position: [1, 0, 1.2] },
-  { id: 'wp-wing', position: [3.6, 0, 0.1] },
+  { id: 'wp-hub-north', position: hubPerimeterPosition(-Math.PI / 2) },
+  { id: 'wp-hub-east', position: hubPerimeterPosition(0) },
+  { id: 'wp-hub-west', position: hubPerimeterPosition(Math.PI) },
+  { id: 'wp-hub-south', position: hubPerimeterPosition(Math.PI / 2) },
+  { id: 'wp-meeting', position: [-2.55, 0, 0.85] },
+  { id: 'wp-meeting-rug', position: [-3.15, 0, -1.05] },
+  { id: 'wp-corridor', position: [-0.8, 0, -0.4] },
+  { id: 'wp-lounge-front', position: [1.0, 0, -1.55] },
+  { id: 'wp-lounge-side', position: [-2.1, 0, -2.05] },
+  { id: 'wp-private-path', position: [3.35, 0, 0.85] },
+  { id: 'wp-private-near', position: [4.0, 0, 2.95] },
 ];
 
 export const SCENE_CONFIG = {

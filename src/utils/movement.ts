@@ -1,3 +1,4 @@
+import { isWalkablePosition } from '@/utils/collision';
 import type { Waypoint } from '@/types/scene';
 
 export function distance2D(
@@ -38,9 +39,20 @@ export function pickNextWaypointIndex(
   waypoints: Waypoint[],
 ): number {
   if (waypoints.length <= 1) return 0;
+
+  const walkable = waypoints
+    .map((wp, index) => ({ index, walkable: isWalkablePosition(wp.position) }))
+    .filter((entry) => entry.walkable && entry.index !== currentIndex);
+
+  if (walkable.length > 0) {
+    return walkable[Math.floor(Math.random() * walkable.length)].index;
+  }
+
   let next = currentIndex;
-  while (next === currentIndex) {
+  let attempts = 0;
+  while (next === currentIndex && attempts < 24) {
     next = Math.floor(Math.random() * waypoints.length);
+    attempts += 1;
   }
   return next;
 }

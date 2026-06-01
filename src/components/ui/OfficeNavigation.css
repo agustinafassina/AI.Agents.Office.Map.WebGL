@@ -1,0 +1,83 @@
+.office-nav {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 12;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  pointer-events: auto;
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-warm);
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  transform: translateX(-50%);
+}
+
+.office-nav__btn {
+  min-width: 74px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.office-nav__btn:hover {
+  color: var(--text-primary);
+  background: rgba(212, 165, 116, 0.13);
+  border-color: var(--border-warm);
+  transform: translateY(-1px);
+}
+
+.office-nav__btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.office-nav__icon {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(245, 243, 239, 0.08);
+  color: var(--accent);
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.office-nav__label {
+  line-height: 1;
+}
+
+@media (max-width: 760px) {
+  .office-nav {
+    right: 12px;
+    bottom: 14px;
+    left: 12px;
+    overflow-x: auto;
+    justify-content: flex-start;
+    transform: none;
+    border-radius: var(--radius);
+  }
+
+  .office-nav__btn {
+    min-width: 66px;
+    flex: 0 0 auto;
+    padding: 0 10px;
+  }
+}

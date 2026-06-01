@@ -8,6 +8,7 @@ import {
   randomIdleDuration,
   rotationTowards,
 } from '@/utils/movement';
+import { moveWithCollision, sanitizeWalkPosition } from '@/utils/collision';
 
 interface AgentsStore {
   definitions: AgentDefinition[];
@@ -19,11 +20,16 @@ interface AgentsStore {
   getRuntime: (id: string) => AgentRuntimeState | undefined;
 }
 
+const stuckSecondsByAgent = new Map<string, number>();
+const STUCK_THRESHOLD = 0.55;
+const MOVE_EPSILON = 0.004;
+
 function createInitialRuntime(def: AgentDefinition, index: number): AgentRuntimeState {
+  const spawn = sanitizeWalkPosition([...def.spawnPosition]);
   return {
     id: def.id,
     status: 'idle',
-    position: [...def.spawnPosition],
+    position: spawn,
     targetPosition: null,
     waypointIndex: index % OFFICE_WAYPOINTS.length,
     rotation: 0,
@@ -38,12 +44,14 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
   initialize: () => {
     const runtime: Record<string, AgentRuntimeState> = {};
     const idleTimers: Record<string, number> = {};
+    stuckSecondsByAgent.clear();
     AGENT_DEFINITIONS.forEach((def, i) => {
       runtime[def.id] = createInitialRuntime(def, i);
       idleTimers[def.id] = randomIdleDuration(
         SCENE_CONFIG.idlePauseMin,
         SCENE_CONFIG.idlePauseMax,
       );
+      stuckSecondsByAgent.set(def.id, 0);
     });
     set({ runtime, idleTimers });
   },
@@ -76,11 +84,16 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
         nextTimers[def.id] = (nextTimers[def.id] ?? 0) - delta;
         if (nextTimers[def.id] <= 0) {
           const wpIndex = pickNextWaypointIndex(state.waypointIndex, OFFICE_WAYPOINTS);
-          const target = OFFICE_WAYPOINTS[wpIndex].position;
+          const target = sanitizeWalkPosition([...OFFICE_WAYPOINTS[wpIndex].position] as [
+            number,
+            number,
+            number,
+          ]);
+          stuckSecondsByAgent.set(def.id, 0);
           nextRuntime[def.id] = {
             ...state,
             status: 'walking',
-            targetPosition: [...target],
+            targetPosition: target,
             waypointIndex: wpIndex,
           };
         }
@@ -90,11 +103,13 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       if (state.status === 'walking' && state.targetPosition) {
         const dist = distance2D(state.position, state.targetPosition);
         const step = SCENE_CONFIG.walkSpeed * delta;
+
         if (dist <= step) {
+          stuckSecondsByAgent.set(def.id, 0);
           nextRuntime[def.id] = {
             ...state,
             status: 'idle',
-            position: [...state.targetPosition],
+            position: sanitizeWalkPosition([...state.targetPosition]),
             targetPosition: null,
             rotation: rotationTowards(state.position, state.targetPosition),
           };
@@ -104,11 +119,39 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           );
         } else {
           const t = step / dist;
-          const newPos = lerpPosition(state.position, state.targetPosition, t);
+          const desired = lerpPosition(state.position, state.targetPosition, t);
+          const newPos = sanitizeWalkPosition(moveWithCollision(state.position, desired));
+          const moved = distance2D(state.position, newPos);
+
+          if (moved < MOVE_EPSILON) {
+            const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
+            stuckSecondsByAgent.set(def.id, stuck);
+
+            if (stuck >= STUCK_THRESHOLD) {
+              const wpIndex = pickNextWaypointIndex(state.waypointIndex, OFFICE_WAYPOINTS);
+              const escape = sanitizeWalkPosition([...OFFICE_WAYPOINTS[wpIndex].position] as [
+                number,
+                number,
+                number,
+              ]);
+              stuckSecondsByAgent.set(def.id, 0);
+              nextRuntime[def.id] = {
+                ...state,
+                status: 'walking',
+                targetPosition: escape,
+                waypointIndex: wpIndex,
+                rotation: state.rotation,
+              };
+              continue;
+            }
+          } else {
+            stuckSecondsByAgent.set(def.id, 0);
+          }
+
           nextRuntime[def.id] = {
             ...state,
             position: newPos,
-            rotation: rotationTowards(state.position, state.targetPosition),
+            rotation: rotationTowards(state.position, newPos),
           };
         }
       }

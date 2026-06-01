@@ -16,6 +16,12 @@ const POS_SMOOTH = 9;
 const ROT_SMOOTH = 11;
 const TARGET = new THREE.Vector3();
 
+function hashPhase(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return (h % 628) / 100;
+}
+
 export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const groupRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Group>(null);
@@ -28,6 +34,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const selectAgent = useSceneStore((s) => s.selectAgent);
   const openChat = useChatStore((s) => s.openChat);
   const isSelected = selectedId === definition.id;
+  const phase = useMemo(() => hashPhase(definition.id), [definition.id]);
 
   const bodyMat = useMemo(
     () =>
@@ -55,7 +62,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       1 - Math.exp(-ROT_SMOOTH * delta),
     );
 
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime + phase;
     const walking = runtime.status === 'walking';
     const chatting = runtime.status === 'chatting';
 

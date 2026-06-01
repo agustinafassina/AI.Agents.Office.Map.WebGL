@@ -1,6 +1,7 @@
 import { OfficeScene } from '@/components/scene/OfficeScene';
 import { ChatPanel } from '@/components/ui/ChatPanel';
 import { OfficeHud } from '@/components/ui/OfficeHud';
+import { OfficeNavigation } from '@/components/ui/OfficeNavigation';
 import { ZoomControls } from '@/components/ui/ZoomControls';
 import { useBootstrap } from '@/hooks/useBootstrap';
 import './App.css';
@@ -14,6 +15,7 @@ export function App() {
         <OfficeScene />
         <div className="app__vignette" aria-hidden />
         <OfficeHud />
+        <OfficeNavigation />
         <ZoomControls />
       </main>
       <ChatPanel />
