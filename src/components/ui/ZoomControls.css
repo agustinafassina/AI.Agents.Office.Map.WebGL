@@ -1,0 +1,37 @@
+.zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.zoom-controls__btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(37, 42, 51, 0.9);
+  backdrop-filter: blur(8px);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.zoom-controls__btn:hover {
+  background: rgba(47, 53, 64, 0.95);
+  border-color: rgba(110, 181, 255, 0.35);
+}
+
+.zoom-controls__btn:active {
+  transform: scale(0.96);
+}
+
+.zoom-controls__btn--reset {
+  font-size: 1rem;
+}
