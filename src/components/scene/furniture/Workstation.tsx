@@ -1,8 +1,8 @@
 import { Edges } from '@react-three/drei';
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { materials } from '../materials';
-import { DESK_SCALE } from './deskConstants';
+import { materials, OUTLINE_COLOR } from '../materials';
+import { DESK_SCALE, workstationChairOffsetZ } from './deskConstants';
 import {
   CurvedMonitorGroup,
   DeskPropsSlot,
@@ -36,18 +36,19 @@ export function Workstation({
       white: materials.chairWhite,
       sage: materials.sage,
       forest: materials.chairForest,
+      terracotta: materials.chairTerracotta,
     };
     return mats[chairStyle].clone();
   }, [chairStyle]);
 
-  const chairZ = 0.4 * DESK_SCALE;
+  const chairZ = workstationChairOffsetZ(DESK_SCALE);
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
         <mesh position={[0, 0.41, 0]} castShadow receiveShadow material={materials.deskTop}>
           <boxGeometry args={[1.05, 0.05, 0.6]} />
-          <Edges color="#6a7580" threshold={12} />
+          <Edges color={OUTLINE_COLOR} threshold={12} />
         </mesh>
 
         <TFrameLegs
@@ -68,7 +69,7 @@ export function Workstation({
         position={[0, 0, chairZ]}
         rotation={Math.PI}
         color={seatMat}
-        meshBack={chairStyle === 'mesh' || chairStyle === 'forest'}
+        meshBack
       />
     </group>
   );

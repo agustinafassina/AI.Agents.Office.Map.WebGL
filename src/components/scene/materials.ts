@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OFFICE_PALETTE } from '@/config/agents.config';
 import { getOfficeTextures } from '@/utils/textures/proceduralTextures';
 
+export const OUTLINE_COLOR = OFFICE_PALETTE.outline;
+
 export function softColor(
   color: string,
   opts?: {
@@ -84,6 +86,10 @@ function buildMaterials() {
       metalness: 0.08,
     }),
     matTransition: softColor(OFFICE_PALETTE.matTransition, { map: tex.rugWeave, roughness: 0.92 }),
+    beanBagTerracotta: softColor(OFFICE_PALETTE.terracotta, { map: tex.rugWeave, roughness: 0.94 }),
+    beanBagTerracottaLight: softColor(OFFICE_PALETTE.terracottaLight, { map: tex.rugWeave, roughness: 0.93 }),
+    beanBagSage: softColor(OFFICE_PALETTE.sage, { map: tex.rugWeave, roughness: 0.94 }),
+    chairTerracotta: softColor(OFFICE_PALETTE.terracottaLight, { roughness: 0.68 }),
     mug: softColor(OFFICE_PALETTE.mug, { roughness: 0.35 }),
     notebook: softColor(OFFICE_PALETTE.notebook, { roughness: 0.84 }),
   };

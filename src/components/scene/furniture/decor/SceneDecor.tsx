@@ -1,3 +1,6 @@
+import { useFrame } from '@react-three/fiber';
+import { useRef } from 'react';
+import type * as THREE from 'three';
 import { materials } from '../../materials';
 
 export function StringLights({
@@ -13,9 +16,22 @@ export function StringLights({
   height?: number;
   depth?: number;
 }) {
+  const bulbRefs = useRef<(THREE.Mesh | null)[]>([]);
   const [sx, , sz] = start;
   const z = sz + depth;
   const span = (count - 1) * spacing;
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    bulbRefs.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      const flicker = 0.82 + Math.sin(t * 2.4 + i * 1.7) * 0.12 + Math.sin(t * 5.1 + i * 0.9) * 0.06;
+      mat.emissiveIntensity = flicker;
+      mesh.scale.setScalar(0.92 + flicker * 0.1);
+    });
+  });
+
   return (
     <group>
       <mesh position={[sx + span / 2, height + 0.05, z - 0.02]} material={materials.metal}>
@@ -23,12 +39,44 @@ export function StringLights({
       </mesh>
       {Array.from({ length: count }, (_, i) => (
         <group key={i} position={[sx + i * spacing, height, z]}>
-          <mesh material={materials.stringLight}>
+          <mesh
+            ref={(el) => {
+              bulbRefs.current[i] = el;
+            }}
+            material={materials.stringLight}
+          >
             <sphereGeometry args={[0.045, 8, 8]} />
           </mesh>
-          <pointLight intensity={0.18} color="#ffedb8" distance={2.5} decay={2} />
+          <pointLight intensity={0.2} color="#ffedb8" distance={2.8} decay={2} />
         </group>
       ))}
+    </group>
+  );
+}
+
+export function BeanBag({
+  position,
+  color,
+  scale = 1,
+  rotation = 0,
+}: {
+  position: [number, number, number];
+  color: THREE.MeshStandardMaterial;
+  scale?: number;
+  rotation?: number;
+}) {
+  const mat = color.clone();
+  return (
+    <group position={position} rotation={[0, rotation, 0]} scale={scale}>
+      <mesh position={[0, 0.19, 0]} castShadow material={mat}>
+        <sphereGeometry args={[0.34, 14, 12]} />
+      </mesh>
+      <mesh position={[0, 0.08, 0.05]} castShadow material={mat}>
+        <sphereGeometry args={[0.3, 12, 10]} />
+      </mesh>
+      <mesh position={[0, 0.04, 0.12]} castShadow material={mat}>
+        <sphereGeometry args={[0.22, 10, 8]} />
+      </mesh>
     </group>
   );
 }
@@ -41,10 +89,15 @@ export function ZoneMat({
 }: {
   position: [number, number, number];
   size: [number, number];
-  variant?: 'sage' | 'jute';
+  variant?: 'sage' | 'jute' | 'transition';
   elevation?: number;
 }) {
-  const mat = variant === 'sage' ? materials.zoneMatSage : materials.rugWeave;
+  const mat =
+    variant === 'sage'
+      ? materials.zoneMatSage
+      : variant === 'jute'
+        ? materials.rugWeave
+        : materials.matTransition;
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}

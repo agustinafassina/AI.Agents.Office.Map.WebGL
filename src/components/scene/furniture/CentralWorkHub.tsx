@@ -8,7 +8,7 @@ export function CentralWorkHub() {
     <group position={[0.5, 0, 1.05]}>
       <LShapedDesk
         position={[0, 0, -r]}
-        rotation={0}
+        rotation={Math.PI}
         chairStyle="mesh"
         deskProp="mug"
         dualMonitor
@@ -16,14 +16,14 @@ export function CentralWorkHub() {
       />
       <LShapedDesk
         position={[0, 0, r]}
-        rotation={Math.PI}
-        chairStyle="tan"
+        rotation={0}
+        chairStyle="terracotta"
         deskProp="succulent"
         corner="inner"
       />
       <LShapedDesk
         position={[-r, 0, 0]}
-        rotation={Math.PI / 2}
+        rotation={-Math.PI / 2}
         chairStyle="white"
         deskProp="notebook"
         dualMonitor
@@ -31,7 +31,7 @@ export function CentralWorkHub() {
       />
       <LShapedDesk
         position={[r, 0, 0]}
-        rotation={-Math.PI / 2}
+        rotation={Math.PI / 2}
         chairStyle="cream"
         deskProp="pen"
         corner="inner"

@@ -45,12 +45,12 @@ export function OfficeLighting() {
 
   return (
     <>
-      <ambientLight intensity={0.56} color="#f3efe8" />
+      <ambientLight intensity={0.58} color="#f6f0e6" />
       <directionalLight
         ref={keyRef}
         position={KEY_LIGHT_POS}
-        intensity={0.44}
-        color="#fff8ee"
+        intensity={0.46}
+        color="#fff6ea"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.00008}
@@ -65,14 +65,14 @@ export function OfficeLighting() {
       <hemisphereLight args={['#f6f4ef', '#2d4a3a', 0.48]} />
 
       <AccentSpot
-        position={[2.8, 3.2, -2.6]}
-        target={[2.0, 0.85, -3.35]}
+        position={[2.8, 3.2, -3.55]}
+        target={[2.0, 0.85, -4.3]}
         intensity={0.42}
         color="#ffe8c4"
       />
       <AccentSpot
-        position={[0.2, 3.4, -5.2]}
-        target={[0, 1.1, -4.55]}
+        position={[0.2, 3.4, -6.15]}
+        target={[0, 1.1, -5.5]}
         intensity={0.32}
         color="#dcefdc"
         angle={0.65}

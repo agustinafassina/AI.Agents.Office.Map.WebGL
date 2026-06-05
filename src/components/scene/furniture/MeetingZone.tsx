@@ -1,5 +1,7 @@
+import type * as THREE from 'three';
 import { materials } from '../materials';
-import { CeramicFloorPlant, DeskNotebook, WallNotes } from './decor/SceneDecor';
+import { MEETING_ZONE_POSITION } from './meetingConstants';
+import { BeanBag, CeramicFloorPlant, DeskNotebook, WallNotes } from './decor/SceneDecor';
 
 function Stool({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
   const legAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
@@ -25,10 +27,24 @@ function Stool({ position, rotation = 0 }: { position: [number, number, number];
   );
 }
 
+const MEETING_PUFFS: {
+  position: [number, number, number];
+  color: THREE.MeshStandardMaterial;
+  scale?: number;
+}[] = [
+  { position: [0.72, 0, 0.88], color: materials.beanBagTerracotta },
+  { position: [0.48, 0, -0.92], color: materials.beanBagSage },
+  { position: [-0.35, 0, -0.78], color: materials.beanBagTerracottaLight, scale: 0.92 },
+  { position: [-0.22, 0, 0.72], color: materials.beanBagSage, scale: 0.95 },
+  { position: [0.95, 0, -0.08], color: materials.beanBagTerracotta, scale: 0.88 },
+  { position: [0.05, 0, 1.02], color: materials.olive, scale: 0.9 },
+];
+
 export function MeetingZone() {
   const stoolAngles = [0.35, (Math.PI * 2) / 3, (Math.PI * 4) / 3 + 0.2];
+
   return (
-    <group position={[-4.35, 0, 0.08]}>
+    <group position={MEETING_ZONE_POSITION}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow material={materials.rug}>
         <planeGeometry args={[2.45, 2.15]} />
       </mesh>
@@ -51,6 +67,10 @@ export function MeetingZone() {
           position={[Math.sin(a) * 1.05, 0, Math.cos(a) * 1.05]}
           rotation={a + Math.PI}
         />
+      ))}
+
+      {MEETING_PUFFS.map(({ position, color, scale }, i) => (
+        <BeanBag key={i} position={position} color={color} scale={scale} />
       ))}
 
       <group position={[-1.34, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
@@ -94,7 +114,7 @@ export function MeetingZone() {
         </mesh>
       </group>
 
-      <CeramicFloorPlant position={[-0.75, 0, 1.2]} />
+      <CeramicFloorPlant position={[0.62, 0, -0.82]} />
     </group>
   );
 }

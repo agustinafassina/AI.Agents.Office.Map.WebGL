@@ -1,4 +1,6 @@
-import { HUB_DESK_RADIUS } from '@/components/scene/furniture/deskConstants';
+import { PRIVATE_DESK_CENTER, PRIVATE_DESK_POSITIONS, PRIVATE_DESK_SPACING_Z, PRIVATE_DESK_X, HUB_DESK_RADIUS } from '@/components/scene/furniture/deskConstants';
+import { COFFEE_LOUNGE_POSITION } from '@/components/scene/furniture/coffeeLoungeConstants';
+import { MEETING_ZONE_POSITION } from '@/components/scene/furniture/meetingConstants';
 
 export const AGENT_COLLISION_RADIUS = 0.22;
 
@@ -22,16 +24,28 @@ export type OfficeObstacle = CircleObstacle | BoxObstacle;
 const HUB_X = 0.5;
 const HUB_Z = 1.05;
 const HUB_BLOCK_RADIUS = HUB_DESK_RADIUS + 0.38;
+const [PRIVATE_X, , PRIVATE_CENTER_Z] = PRIVATE_DESK_CENTER;
+const PRIVATE_HALF_SPAN_Z = PRIVATE_DESK_SPACING_Z / 2 + 0.95;
+const [MEETING_X, , MEETING_Z] = MEETING_ZONE_POSITION;
+const [, , LOUNGE_Z] = COFFEE_LOUNGE_POSITION;
 
 export const OFFICE_OBSTACLES: OfficeObstacle[] = [
   { kind: 'circle', x: HUB_X, z: HUB_Z, radius: HUB_BLOCK_RADIUS },
-  { kind: 'box', minX: -3.0, maxX: 3.0, minZ: -5.45, maxZ: -1.85 },
-  { kind: 'box', minX: 0.55, maxX: 3.55, minZ: -4.0, maxZ: -2.55 },
-  { kind: 'circle', x: -4.35, z: 0.08, radius: 1.05 },
-  { kind: 'box', minX: 4.35, maxX: 5.95, minZ: 1.15, maxZ: 2.65 },
+  { kind: 'box', minX: -3.0, maxX: 3.0, minZ: -6.35, maxZ: -1.85 },
+  { kind: 'box', minX: -3.0, maxX: 3.65, minZ: LOUNGE_Z - 1.35, maxZ: LOUNGE_Z + 2.15 },
+  { kind: 'circle', x: MEETING_X, z: MEETING_Z, radius: 0.82 },
+  { kind: 'circle', x: MEETING_X + 0.72, z: MEETING_Z + 0.88, radius: 0.32 },
+  { kind: 'circle', x: MEETING_X + 0.48, z: MEETING_Z - 0.92, radius: 0.3 },
+  { kind: 'circle', x: MEETING_X - 0.22, z: MEETING_Z + 0.72, radius: 0.28 },
+  { kind: 'circle', x: MEETING_X + 0.95, z: MEETING_Z - 0.08, radius: 0.28 },
+  { kind: 'box', minX: PRIVATE_X - 0.95, maxX: PRIVATE_X + 0.6, minZ: PRIVATE_CENTER_Z - PRIVATE_HALF_SPAN_Z, maxZ: PRIVATE_CENTER_Z + PRIVATE_HALF_SPAN_Z },
+  { kind: 'circle', x: PRIVATE_X, z: PRIVATE_DESK_POSITIONS[0][2], radius: 0.85 },
+  { kind: 'circle', x: PRIVATE_X, z: PRIVATE_DESK_POSITIONS[1][2], radius: 0.85 },
   { kind: 'circle', x: -5.85, z: 4.25, radius: 0.45 },
   { kind: 'circle', x: 6.55, z: 3.35, radius: 0.45 },
-  { kind: 'circle', x: 5.75, z: 1.4, radius: 0.35 },
+  { kind: 'circle', x: PRIVATE_X - 0.65, z: PRIVATE_CENTER_Z + 0.55, radius: 0.35 },
+  { kind: 'circle', x: PRIVATE_X - 0.55, z: PRIVATE_CENTER_Z - 0.55, radius: 0.28 },
+  { kind: 'circle', x: PRIVATE_X - 1.0, z: PRIVATE_CENTER_Z, radius: 0.32 },
 ];
 
 export function hubPerimeterPosition(angleRad: number, margin = 0.35): [number, number, number] {

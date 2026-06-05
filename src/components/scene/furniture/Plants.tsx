@@ -1,4 +1,5 @@
 import { materials } from '../materials';
+import { SwayGroup } from './decor/AnimatedDecor';
 
 interface PlantProps {
   position: [number, number, number];
@@ -8,7 +9,7 @@ interface PlantProps {
 export function Plant({ position, variant = 'medium' }: PlantProps) {
   if (variant === 'snake') {
     return (
-      <group position={position}>
+      <SwayGroup position={position} phase={0.4} amplitude={0.035}>
         <mesh position={[0, 0.2, 0]} castShadow material={materials.potCeramic}>
           <cylinderGeometry args={[0.2, 0.22, 0.4, 12]} />
         </mesh>
@@ -22,13 +23,13 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
             <boxGeometry args={[0.06, 0.22 + (i % 2) * 0.08, 0.04]} />
           </mesh>
         ))}
-      </group>
+      </SwayGroup>
     );
   }
 
   if (variant === 'fiddle' || variant === 'tall') {
     return (
-      <group position={position}>
+      <SwayGroup position={position} phase={1.2} amplitude={0.03}>
         <mesh position={[0, 0.22, 0]} castShadow material={materials.plantPot}>
           <cylinderGeometry args={[0.22, 0.24, 0.44, 12]} />
         </mesh>
@@ -41,7 +42,7 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
         <mesh position={[0.12, 1.2, 0.05]} castShadow material={materials.plantDark}>
           <boxGeometry args={[0.24, 0.3, 0.1]} />
         </mesh>
-      </group>
+      </SwayGroup>
     );
   }
 

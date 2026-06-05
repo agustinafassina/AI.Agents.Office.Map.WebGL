@@ -142,17 +142,29 @@ function createRugJute(): THREE.CanvasTexture {
 }
 
 function createRugWeave(): THREE.CanvasTexture {
-  const [canvas, ctx] = createCanvas(128, 128);
-  fillBase(ctx, 128, 128, OFFICE_PALETTE.rugWeave);
+  const size = 256;
+  const [canvas, ctx] = createCanvas(size, size);
+  fillBase(ctx, size, size, OFFICE_PALETTE.rugWeave);
+  paintNoise(ctx, size, size, 8);
 
-  for (let y = 0; y < 128; y += 4) {
-    for (let x = 0; x < 128; x += 4) {
-      ctx.fillStyle = (x + y) % 8 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-      ctx.fillRect(x, y, 4, 4);
+  for (let y = 0; y < size; y += 3) {
+    for (let x = 0; x < size; x += 3) {
+      const weave = (Math.floor(x / 6) + Math.floor(y / 6)) % 2;
+      ctx.fillStyle = weave ? 'rgba(255,255,255,0.07)' : 'rgba(60,50,42,0.06)';
+      ctx.fillRect(x, y, 3, 3);
     }
   }
 
-  return canvasTexture(canvas, [4, 4]);
+  ctx.strokeStyle = 'rgba(90,75,60,0.14)';
+  ctx.lineWidth = 0.8;
+  for (let i = -size; i < size * 2; i += 8) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i + size * 0.5, size);
+    ctx.stroke();
+  }
+
+  return canvasTexture(canvas, [3, 3]);
 }
 
 function createPlantFoliage(): THREE.CanvasTexture {
@@ -181,7 +193,7 @@ function createPlantFoliage(): THREE.CanvasTexture {
   return canvasTexture(canvas, [1, 1]);
 }
 
-const TEXTURE_VERSION = 3;
+const TEXTURE_VERSION = 4;
 let cached: OfficeTextureSet | null = null;
 let cachedVersion = 0;
 

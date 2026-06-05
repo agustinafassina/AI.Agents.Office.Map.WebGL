@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import type { AgentDefinition, AgentRuntimeState } from '@/types/agent';
+import { OFFICE_PALETTE } from '@/config/agents.config';
 import { useSceneStore } from '@/stores/scene.store';
 import { useChatStore } from '@/stores/chat.store';
 import { AgentLabel } from './AgentLabel';
@@ -126,7 +127,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         <>
           <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.48, 36]} />
-            <meshBasicMaterial color="#ffedb8" transparent opacity={0.22} />
+            <meshBasicMaterial color={OFFICE_PALETTE.selectionGlow} transparent opacity={0.22} />
           </mesh>
           <mesh
             ref={ringRef}
@@ -134,7 +135,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
             rotation={[-Math.PI / 2, 0, 0]}
           >
             <ringGeometry args={[0.3, 0.38, 36]} />
-            <meshBasicMaterial color="#d4a574" transparent opacity={0.75} />
+            <meshBasicMaterial color={OFFICE_PALETTE.terracottaLight} transparent opacity={0.75} />
           </mesh>
         </>
       )}

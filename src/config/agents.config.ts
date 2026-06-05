@@ -1,4 +1,5 @@
 import { hubPerimeterPosition } from '@/config/officeObstacles';
+import { PRIVATE_DESK_CENTER, PRIVATE_DESK_POSITIONS, PRIVATE_DESK_X } from '@/components/scene/furniture/deskConstants';
 import type { AgentDefinition } from '@/types/agent';
 import type { Waypoint } from '@/types/scene';
 
@@ -72,7 +73,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#b88cff',
     accentColor: '#9a6bff',
     systemPrompt: 'You are a research specialist who summarizes and explores ideas clearly.',
-    spawnPosition: [-2.6, 0, 0.9],
+    spawnPosition: [-3.75, 0, 0.9],
   },
   {
     id: 'design-agent',
@@ -82,7 +83,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#ff9a7a',
     accentColor: '#ff7b55',
     systemPrompt: 'You are a design-minded assistant focused on UX and visual coherence.',
-    spawnPosition: [1.2, 0, -1.6],
+    spawnPosition: [1.2, 0, -2.54],
   },
   {
     id: 'ops-agent',
@@ -92,7 +93,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     avatarColor: '#7dd87d',
     accentColor: '#5bc45b',
     systemPrompt: 'You are an operations assistant who helps with workflows and reliability.',
-    spawnPosition: [3.4, 0, 0.9],
+    spawnPosition: [2.9, 0, 1.05],
   },
 ];
 
@@ -101,13 +102,15 @@ export const OFFICE_WAYPOINTS: Waypoint[] = [
   { id: 'wp-hub-east', position: hubPerimeterPosition(0) },
   { id: 'wp-hub-west', position: hubPerimeterPosition(Math.PI) },
   { id: 'wp-hub-south', position: hubPerimeterPosition(Math.PI / 2) },
-  { id: 'wp-meeting', position: [-2.55, 0, 0.85] },
-  { id: 'wp-meeting-rug', position: [-3.15, 0, -1.05] },
+  { id: 'wp-meeting', position: [-3.85, 0, 0.85] },
+  { id: 'wp-meeting-rug', position: [-4.95, 0, -0.15] },
   { id: 'wp-corridor', position: [-0.8, 0, -0.4] },
-  { id: 'wp-lounge-front', position: [1.0, 0, -1.55] },
-  { id: 'wp-lounge-side', position: [-2.1, 0, -2.05] },
-  { id: 'wp-private-path', position: [3.35, 0, 0.85] },
-  { id: 'wp-private-near', position: [4.0, 0, 2.95] },
+  { id: 'wp-lounge-front', position: [1.0, 0, -2.5] },
+  { id: 'wp-lounge-side', position: [-2.1, 0, -3.0] },
+  { id: 'wp-private-path', position: [4.2, 0, PRIVATE_DESK_CENTER[2]] },
+  { id: 'wp-private-near', position: [5.4, 0, PRIVATE_DESK_CENTER[2]] },
+  { id: 'wp-private-desk-a', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[0][2]] },
+  { id: 'wp-private-desk-b', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[1][2]] },
 ];
 
 export const SCENE_CONFIG = {

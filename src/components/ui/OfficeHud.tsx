@@ -1,10 +1,15 @@
 import { env } from '@/config/env';
+import { OFFICE_ZONE_LINKS } from '@/config/officeZones';
 import { useChatStore } from '@/stores/chat.store';
+import { useSceneStore } from '@/stores/scene.store';
 import './OfficeHud.css';
 
 export function OfficeHud() {
   const serviceMode = useChatStore((s) => s.serviceMode);
   const connectionStatus = useChatStore((s) => s.connectionStatus);
+  const setView = useSceneStore((s) => s.setView);
+
+  const zoneChips = OFFICE_ZONE_LINKS.filter((z) => z.id !== 'all');
 
   return (
     <div className="office-hud">
@@ -12,13 +17,20 @@ export function OfficeHud() {
         <span className="office-hud__eyebrow">Isometric Workspace</span>
         <span className="office-hud__title">AI Agents Office</span>
         <span className="office-hud__hint">
-          Use section pills · drag background · select agents
+          Click zones · drag to pan · select agents to chat
         </span>
-        <div className="office-hud__chips" aria-hidden>
-          <span>Hub</span>
-          <span>Lounge</span>
-          <span>Meet</span>
-          <span>Desk</span>
+        <div className="office-hud__chips" role="group" aria-label="Quick zone focus">
+          {zoneChips.map((zone) => (
+            <button
+              key={zone.id}
+              type="button"
+              className="office-hud__chip"
+              onClick={() => setView(zone.pan, zone.zoom)}
+              title={`Focus ${zone.label}`}
+            >
+              {zone.shortLabel}
+            </button>
+          ))}
         </div>
       </div>
       <div className="office-hud__status">

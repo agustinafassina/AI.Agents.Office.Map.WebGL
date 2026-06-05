@@ -1,8 +1,8 @@
 import { Edges } from '@react-three/drei';
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { materials } from '../materials';
-import { DESK_SCALE } from './deskConstants';
+import { materials, OUTLINE_COLOR } from '../materials';
+import { DESK_SCALE, hubChairOffsetZ } from './deskConstants';
 import {
   CurvedMonitorGroup,
   DeskPropsSlot,
@@ -37,23 +37,24 @@ export function LShapedDesk({
       white: materials.chairWhite,
       sage: materials.sage,
       forest: materials.chairForest,
+      terracotta: materials.chairTerracotta,
     };
     return mats[chairStyle].clone();
   }, [chairStyle]);
 
   const flip = corner === 'inner' ? 1 : -1;
-  const chairZ = 0.42 * DESK_SCALE;
+  const chairZ = hubChairOffsetZ(DESK_SCALE);
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
         <mesh position={[0, 0.41, 0.12 * flip]} castShadow receiveShadow material={materials.deskTop}>
           <boxGeometry args={[0.9, 0.05, 0.54]} />
-          <Edges color="#5c6874" threshold={12} />
+          <Edges color={OUTLINE_COLOR} threshold={12} />
         </mesh>
         <mesh position={[0.28 * flip, 0.41, -0.18 * flip]} castShadow receiveShadow material={materials.deskTop}>
           <boxGeometry args={[0.44, 0.05, 0.5]} />
-          <Edges color="#5c6874" threshold={12} />
+          <Edges color={OUTLINE_COLOR} threshold={12} />
         </mesh>
 
         <TFrameLegs
@@ -79,7 +80,7 @@ export function LShapedDesk({
         position={[0, 0, chairZ * flip]}
         rotation={Math.PI}
         color={seatMat}
-        meshBack={chairStyle === 'mesh' || chairStyle === 'tan'}
+        meshBack
       />
     </group>
   );

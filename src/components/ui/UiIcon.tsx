@@ -1,4 +1,4 @@
-type IconName = 'home' | 'hub' | 'lounge' | 'meet' | 'desk' | 'zoom-in' | 'zoom-out' | 'reset' | 'recenter';
+export type IconName = 'home' | 'hub' | 'lounge' | 'meet' | 'desk' | 'zoom-in' | 'zoom-out' | 'reset' | 'recenter';
 
 const FILLED_PATHS: Partial<Record<IconName, string>> = {
   home: 'M12 3L4 10v9h5v-6h6v6h5v-9L12 3zm0 2.3l5 4.5v6.2h-2v-5H9v5H7v-6.2l5-4.5z',

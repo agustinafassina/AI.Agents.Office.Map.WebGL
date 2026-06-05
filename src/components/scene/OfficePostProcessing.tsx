@@ -19,14 +19,14 @@ export function OfficePostProcessing() {
         quality="medium"
       />
       <Bloom
-        intensity={0.18}
-        luminanceThreshold={0.78}
-        luminanceSmoothing={0.32}
+        intensity={0.22}
+        luminanceThreshold={0.72}
+        luminanceSmoothing={0.28}
         mipmapBlur
         blendFunction={BlendFunction.SCREEN}
       />
       <BrightnessContrast brightness={0.005} contrast={0.1} />
-      <HueSaturation hue={0} saturation={0.05} />
+      <HueSaturation hue={0.01} saturation={0.08} />
       <Vignette eskil={false} offset={0.2} darkness={0.28} />
     </EffectComposer>
   );

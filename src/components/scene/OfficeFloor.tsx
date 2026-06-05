@@ -85,16 +85,13 @@ export function OfficeFloor() {
 
       <CheckerTiles />
 
-      <ZoneMat position={[0.2, 0, 2.8]} size={[2.8, 0.9]} variant="sage" />
-      <ZoneMat position={[-2.7, 0, 0.15]} size={[2.5, 2.2]} variant="jute" />
+      <ZoneMat position={[-0.4, 0, -1.2]} size={[1.6, 2.4]} variant="transition" />
 
       <TexturedWall position={[0.5, 0, -6.35]} size={[14.5, wallH, 0.18]} />
       <TexturedWall position={[-6.85, 0, 0]} size={[12.5, wallH, 0.18]} rotation={[0, Math.PI / 2, 0]} />
       <TexturedWall position={[7.15, 0, 1.5]} size={[7, wallH, 0.18]} rotation={[0, Math.PI / 2, 0]} />
-      <TexturedWall position={[3.85, 0, -1.8]} size={[0.18, wallH, 5.2]} />
-      <TexturedWall position={[5.6, 0, 3.65]} size={[4.2, wallH, 0.18]} />
 
-      {[[-6.4, 4.6], [7, 4.1]].map(([x, z], i) => (
+      {[[-6.4, 4.6]].map(([x, z], i) => (
         <mesh key={i} position={[x, wallH / 2, z]} material={materials.wallAccent}>
           <boxGeometry args={[0.22, wallH, 0.22]} />
         </mesh>
