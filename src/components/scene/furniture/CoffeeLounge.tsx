@@ -95,7 +95,6 @@ function CoffeeBarStation() {
         <MilkPitcher position={[0.72, 0.04, 0.28]} />
       </group>
 
-      {/* Menu sign on backsplash */}
       <mesh position={[-0.08, 0.88, -0.06]} castShadow material={materials.woodLight}>
         <boxGeometry args={[0.72, 0.38, 0.02]} />
       </mesh>

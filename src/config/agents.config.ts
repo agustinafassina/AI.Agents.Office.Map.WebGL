@@ -98,19 +98,20 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
 ];
 
 export const OFFICE_WAYPOINTS: Waypoint[] = [
-  { id: 'wp-hub-north', position: hubPerimeterPosition(-Math.PI / 2) },
-  { id: 'wp-hub-east', position: hubPerimeterPosition(0) },
-  { id: 'wp-hub-west', position: hubPerimeterPosition(Math.PI) },
-  { id: 'wp-hub-south', position: hubPerimeterPosition(Math.PI / 2) },
-  { id: 'wp-meeting', position: [-3.85, 0, 0.85] },
-  { id: 'wp-meeting-rug', position: [-4.95, 0, -0.15] },
+  { id: 'wp-center-north', position: hubPerimeterPosition(-Math.PI / 2) },
+  { id: 'wp-center-east', position: hubPerimeterPosition(0) },
+  { id: 'wp-center-west', position: hubPerimeterPosition(Math.PI) },
+  { id: 'wp-center-south', position: hubPerimeterPosition(Math.PI / 2) },
+  { id: 'wp-living', position: [-3.85, 0, 0.85] },
+  { id: 'wp-living-rug', position: [-4.95, 0, -0.15] },
   { id: 'wp-corridor', position: [-0.8, 0, -0.4] },
-  { id: 'wp-lounge-front', position: [1.0, 0, -2.5] },
-  { id: 'wp-lounge-side', position: [-2.1, 0, -3.0] },
-  { id: 'wp-private-path', position: [4.2, 0, PRIVATE_DESK_CENTER[2]] },
-  { id: 'wp-private-near', position: [5.4, 0, PRIVATE_DESK_CENTER[2]] },
-  { id: 'wp-private-desk-a', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[0][2]] },
-  { id: 'wp-private-desk-b', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[1][2]] },
+  { id: 'wp-cafeteria-front', position: [1.0, 0, -2.5] },
+  { id: 'wp-cafeteria-side', position: [-2.1, 0, -3.0] },
+  { id: 'wp-wall-desks-path', position: [4.2, 0, PRIVATE_DESK_CENTER[2]] },
+  { id: 'wp-wall-desks-near', position: [5.4, 0, PRIVATE_DESK_CENTER[2]] },
+  { id: 'wp-wall-desks-a', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[0][2]] },
+  { id: 'wp-wall-desks-b', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[1][2]] },
+  { id: 'wp-wall-desks-c', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[2][2]] },
 ];
 
 export const SCENE_CONFIG = {

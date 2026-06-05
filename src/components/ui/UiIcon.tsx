@@ -1,11 +1,20 @@
-export type IconName = 'home' | 'hub' | 'lounge' | 'meet' | 'desk' | 'zoom-in' | 'zoom-out' | 'reset' | 'recenter';
+export type IconName =
+  | 'home'
+  | 'living'
+  | 'center-desk'
+  | 'cafeteria'
+  | 'wall-desks'
+  | 'zoom-in'
+  | 'zoom-out'
+  | 'reset'
+  | 'recenter';
 
 const FILLED_PATHS: Partial<Record<IconName, string>> = {
   home: 'M12 3L4 10v9h5v-6h6v6h5v-9L12 3zm0 2.3l5 4.5v6.2h-2v-5H9v5H7v-6.2l5-4.5z',
-  hub: 'M5 5h6v6H5V5zm8 0h6v6h-6V5zM5 13h6v6H5v-6zm8 0h6v6h-6v-6z',
-  lounge: 'M4 18h16v2H4v-2zm2-4h3v3H6v-3zm5 0h3v3h-3v-3zm5 0h3v3h-3v-3zM7 6h10l2 4H5l2-4z',
-  meet: 'M12 4a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z',
-  desk: 'M4 8h16v2H4V8zm2 4h12v6H6v-6zm2 2v2h8v-2H8z',
+  'center-desk': 'M5 5h6v6H5V5zm8 0h6v6h-6V5zM5 13h6v6H5v-6zm8 0h6v6h-6v-6z',
+  cafeteria: 'M4 18h16v2H4v-2zm2-4h3v3H6v-3zm5 0h3v3h-3v-3zm5 0h3v3h-3v-3zM7 6h10l2 4H5l2-4z',
+  living: 'M12 4a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z',
+  'wall-desks': 'M4 8h16v2H4V8zm2 4h12v6H6v-6zm2 2v2h8v-2H8z',
 };
 
 interface UiIconProps {

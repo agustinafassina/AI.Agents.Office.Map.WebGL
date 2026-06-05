@@ -1,15 +1,17 @@
 import { Edges } from '@react-three/drei';
 import {
   PRIVATE_DESK_CENTER,
+  PRIVATE_DESK_MAX_Z,
+  PRIVATE_DESK_MIN_Z,
   PRIVATE_DESK_POSITIONS,
   PRIVATE_DESK_SPACING_Z,
+  PRIVATE_DESK_SPAN_Z,
   PRIVATE_DESK_X,
 } from './deskConstants';
 import { Plant } from './Plants';
 import {
   CeramicFloorPlant,
   DeskCactus,
-  StringLights,
   Terrarium,
   ZoneMat,
 } from './decor/SceneDecor';
@@ -21,6 +23,7 @@ const DESK_ROTATION = -Math.PI / 2;
 const DESK_VARIANTS: { chairStyle: ChairStyle; props: DeskPropType }[] = [
   { chairStyle: 'forest', props: 'succulent' },
   { chairStyle: 'terracotta', props: 'mug' },
+  { chairStyle: 'sage', props: 'notebook' },
 ];
 
 function DeskShelf({ side = 1 }: { side?: 1 | -1 }) {
@@ -62,12 +65,15 @@ function PrivateDeskUnit({
 
 export function PrivateDesk() {
   const [, , centerZ] = PRIVATE_DESK_CENTER;
+  const wallSideX = PRIVATE_DESK_X - 0.3;
+  const gapA = PRIVATE_DESK_MIN_Z + PRIVATE_DESK_SPACING_Z / 2;
+  const gapB = PRIVATE_DESK_MAX_Z - PRIVATE_DESK_SPACING_Z / 2;
 
   return (
     <group>
       <ZoneMat
         position={[PRIVATE_DESK_X - 0.52, 0, centerZ]}
-        size={[2.05, PRIVATE_DESK_SPACING_Z + 1.35]}
+        size={[2.05, PRIVATE_DESK_SPAN_Z + 0.55]}
         variant="transition"
       />
 
@@ -75,23 +81,13 @@ export function PrivateDesk() {
         <PrivateDeskUnit key={i} position={position} variantIndex={i} />
       ))}
 
-      {/* Floor plants along the aisle */}
-      <Plant position={[PRIVATE_DESK_X - 1.05, 0, centerZ + 0.15]} variant="tall" />
-      <Plant position={[PRIVATE_DESK_X - 1.08, 0, centerZ - 0.55]} variant="fiddle" />
-      <Plant position={[PRIVATE_DESK_X - 0.82, 0, centerZ + PRIVATE_DESK_SPACING_Z * 0.52]} variant="snake" />
-      <Plant position={[PRIVATE_DESK_X - 0.78, 0, centerZ - PRIVATE_DESK_SPACING_Z * 0.52]} variant="medium" />
-      <CeramicFloorPlant position={[PRIVATE_DESK_X - 0.95, 0, centerZ]} variant="compact" />
-
-      {/* Corner accent between both desks */}
-      <Plant position={[PRIVATE_DESK_X - 0.62, 0, centerZ]} variant="small" />
-
-      <StringLights
-        start={[PRIVATE_DESK_X + 0.42, 0, centerZ - PRIVATE_DESK_SPACING_Z * 0.55]}
-        count={8}
-        spacing={0.24}
-        height={1.52}
-        depth={0.08}
-      />
+      {/* Plants beside the row — wall side and row ends, clear of chair aisle */}
+      <Plant position={[wallSideX, 0, gapA]} variant="snake" />
+      <Plant position={[wallSideX, 0, gapB]} variant="medium" />
+      <Plant position={[wallSideX, 0, PRIVATE_DESK_MIN_Z - 0.58]} variant="tall" />
+      <Plant position={[wallSideX, 0, PRIVATE_DESK_MAX_Z + 0.52]} variant="fiddle" />
+      <CeramicFloorPlant position={[wallSideX - 0.06, 0, PRIVATE_DESK_MAX_Z + 0.12]} variant="compact" />
+      <Plant position={[wallSideX, 0, PRIVATE_DESK_MIN_Z - 0.18]} variant="small" />
     </group>
   );
 }
