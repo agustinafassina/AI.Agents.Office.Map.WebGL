@@ -1,4 +1,8 @@
 import { Edges } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
+import * as THREE from 'three';
+import { CoffeeSteam } from './decor/CoffeeSteam';
 import { materials, OUTLINE_COLOR } from '../materials';
 
 export function CoffeeGrinder({ position }: { position: [number, number, number] }) {
@@ -27,9 +31,18 @@ export function EspressoMachine({
   position: [number, number, number];
   scale?: number;
 }) {
+  const displayMat = useMemo(() => materials.underGlow.clone(), []);
+  const displayRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    displayMat.emissiveIntensity = 0.55 + Math.sin(clock.elapsedTime * 3.2) * 0.18;
+    if (displayRef.current) {
+      displayRef.current.scale.x = 1 + Math.sin(clock.elapsedTime * 4.5) * 0.02;
+    }
+  });
+
   return (
     <group position={position} scale={scale}>
-      {/* Base / drip tray — origin y=0 is the counter surface */}
       <mesh position={[0, 0.03, 0.06]} castShadow material={materials.metal}>
         <boxGeometry args={[0.58, 0.06, 0.38]} />
         <Edges color={OUTLINE_COLOR} threshold={14} />
@@ -40,18 +53,15 @@ export function EspressoMachine({
         </mesh>
       ))}
 
-      {/* Main body */}
       <mesh position={[0, 0.29, -0.04]} castShadow material={materials.espresso}>
         <boxGeometry args={[0.5, 0.42, 0.3]} />
         <Edges color={OUTLINE_COLOR} threshold={12} />
       </mesh>
 
-      {/* Chrome trim band */}
       <mesh position={[0, 0.37, 0.08]} material={materials.metal}>
         <boxGeometry args={[0.52, 0.035, 0.02]} />
       </mesh>
 
-      {/* Cup warmer rail on top */}
       <mesh position={[0, 0.53, -0.02]} castShadow material={materials.metal}>
         <boxGeometry args={[0.48, 0.05, 0.26]} />
       </mesh>
@@ -61,12 +71,10 @@ export function EspressoMachine({
         </mesh>
       ))}
 
-      {/* Water tank (back) */}
       <mesh position={[0, 0.33, -0.2]} material={materials.glass}>
         <boxGeometry args={[0.3, 0.28, 0.08]} />
       </mesh>
 
-      {/* Pressure gauge */}
       <mesh position={[-0.17, 0.39, 0.08]} rotation={[Math.PI / 2, 0, 0]} material={materials.mug}>
         <cylinderGeometry args={[0.032, 0.032, 0.012, 14]} />
       </mesh>
@@ -74,15 +82,13 @@ export function EspressoMachine({
         <cylinderGeometry args={[0.012, 0.012, 0.006, 8]} />
       </mesh>
 
-      {/* Digital display */}
       <mesh position={[0.12, 0.41, 0.09]} material={materials.monitor}>
         <boxGeometry args={[0.14, 0.055, 0.008]} />
       </mesh>
-      <mesh position={[0.12, 0.41, 0.096]} material={materials.underGlow}>
+      <mesh position={[0.12, 0.41, 0.096]} ref={displayRef} material={displayMat}>
         <boxGeometry args={[0.1, 0.028, 0.004]} />
       </mesh>
 
-      {/* Group head assembly — protrudes toward the barista / room */}
       <group position={[0, 0.31, 0.2]}>
         <mesh castShadow material={materials.metal}>
           <boxGeometry args={[0.1, 0.14, 0.1]} />
@@ -91,7 +97,6 @@ export function EspressoMachine({
           <cylinderGeometry args={[0.058, 0.058, 0.045, 14]} />
         </mesh>
 
-        {/* Portafilter + wooden handle (iconic horizontal handle) */}
         <group position={[0, -0.08, 0.1]} rotation={[0.72, 0, 0]}>
           <mesh castShadow material={materials.metal}>
             <boxGeometry args={[0.045, 0.2, 0.055]} />
@@ -101,7 +106,6 @@ export function EspressoMachine({
           </mesh>
         </group>
 
-        {/* Cup under the spout */}
         <mesh position={[0, -0.2, 0.12]} material={materials.mug}>
           <cylinderGeometry args={[0.028, 0.032, 0.04, 10]} />
         </mesh>
@@ -110,7 +114,6 @@ export function EspressoMachine({
         </mesh>
       </group>
 
-      {/* Steam wand */}
       <group position={[0.19, 0.29, 0.14]} rotation={[0, 0, -1.05]}>
         <mesh material={materials.metal}>
           <cylinderGeometry args={[0.009, 0.009, 0.16, 6]} />
@@ -120,12 +123,13 @@ export function EspressoMachine({
         </mesh>
       </group>
 
-      {/* Hot water spout (left) */}
       <group position={[-0.19, 0.29, 0.14]} rotation={[0, 0, -0.75]}>
         <mesh material={materials.metal}>
           <cylinderGeometry args={[0.007, 0.007, 0.12, 6]} />
         </mesh>
       </group>
+
+      <CoffeeSteam />
 
       <pointLight position={[0, 0.57, 0.28]} intensity={0.28} color="#ffdba0" distance={1.8} decay={2} />
     </group>

@@ -3,6 +3,8 @@ import type { AgentStatus } from '@/types/agent';
 
 interface AgentLabelProps {
   name: string;
+  role?: string;
+  modelId?: string;
   status: AgentStatus;
   accentColor: string;
   selected: boolean;
@@ -10,12 +12,14 @@ interface AgentLabelProps {
 
 function statusColor(status: AgentStatus): string {
   if (status === 'chatting') return '#d4a574';
+  if (status === 'coffee') return '#c8a882';
   if (status === 'walking') return '#c8d4a8';
   return '#9aab9e';
 }
 
 function statusLabel(status: AgentStatus): string {
   if (status === 'chatting') return 'In chat';
+  if (status === 'coffee') return 'Coffee break';
   if (status === 'walking') return 'Moving';
   return 'Available';
 }

@@ -1,4 +1,3 @@
-import type * as THREE from 'three';
 import { materials } from '../materials';
 import { Plant } from './Plants';
 import {
@@ -12,26 +11,12 @@ import {
   COFFEE_LOUNGE_POSITION,
   LIVING_WALL_LOCAL_Z,
 } from './coffeeLoungeConstants';
-import { BeanBag, StringLights, Terrarium, DeskSucculent, ZoneMat } from './decor/SceneDecor';
+import { CafeHighTable } from './CafeHighTable';
+import { StringLights, Terrarium, DeskSucculent, ZoneMat } from './decor/SceneDecor';
 
 const PLATFORM_Y = 0.14;
 const LOUNGE_TABLE: [number, number, number] = [-0.88, 0, 0.78];
 const BAR_COUNTER_TOP_Y = 1.045;
-
-function puffRotationToward(table: [number, number, number], pos: [number, number, number]) {
-  return Math.atan2(table[0] - pos[0], table[2] - pos[2]);
-}
-
-const LOUNGE_PUFFS: {
-  position: [number, number, number];
-  color: THREE.MeshStandardMaterial;
-  scale?: number;
-}[] = [
-  { position: [-1.58, 0, 1.02], color: materials.beanBagTerracotta },
-  { position: [-1.12, 0, 1.48], color: materials.beanBagTerracottaLight, scale: 0.96 },
-  { position: [-0.48, 0, 1.52], color: materials.beanBagSage },
-  { position: [0.02, 0, 1.05], color: materials.beanBagSage, scale: 0.94 },
-];
 
 function CoffeeTable() {
   return (
@@ -186,16 +171,7 @@ export function CoffeeLounge() {
 
         <CoffeeBarStation />
         <CoffeeTable />
-
-        {LOUNGE_PUFFS.map(({ position, color, scale }, i) => (
-          <BeanBag
-            key={i}
-            position={position}
-            color={color}
-            scale={scale}
-            rotation={puffRotationToward(LOUNGE_TABLE, position)}
-          />
-        ))}
+        <CafeHighTable />
 
         <StringLights start={[-2.2, 0, -0.82]} count={11} spacing={0.45} height={1.58} depth={-0.34} />
       </group>

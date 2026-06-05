@@ -81,7 +81,6 @@ export function PrivateDesk() {
         <PrivateDeskUnit key={i} position={position} variantIndex={i} />
       ))}
 
-      {/* Plants beside the row — wall side and row ends, clear of chair aisle */}
       <Plant position={[wallSideX, 0, gapA]} variant="snake" />
       <Plant position={[wallSideX, 0, gapB]} variant="medium" />
       <Plant position={[wallSideX, 0, PRIVATE_DESK_MIN_Z - 0.58]} variant="tall" />

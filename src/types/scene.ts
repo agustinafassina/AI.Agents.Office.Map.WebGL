@@ -1,6 +1,15 @@
+import type { AgentHomeZone } from '@/types/agent';
+
 export interface Waypoint {
   id: string;
   position: [number, number, number];
+  zone: AgentHomeZone;
+}
+
+export interface ChatAnchor {
+  position: [number, number, number];
+  rotation: number;
+  posture: 'stand' | 'sit';
 }
 
 export interface OfficeBounds {

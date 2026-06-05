@@ -1,6 +1,15 @@
 import { create } from 'zustand';
-import { AGENT_DEFINITIONS, OFFICE_WAYPOINTS, SCENE_CONFIG } from '@/config/agents.config';
+import {
+  getAgentChatAnchor,
+  getAgentSpawnAnchor,
+  getCoffeeBarAnchor,
+  getZoneWaypoints,
+  isNearChatAnchor,
+  nearestZoneWaypointIndex,
+} from '@/config/agentZones.config';
+import { AGENT_DEFINITIONS, SCENE_CONFIG } from '@/config/agents.config';
 import type { AgentDefinition, AgentRuntimeState, AgentStatus } from '@/types/agent';
+import type { ChatAnchor } from '@/types/scene';
 import {
   distance2D,
   lerpPosition,
@@ -8,7 +17,13 @@ import {
   randomIdleDuration,
   rotationTowards,
 } from '@/utils/movement';
-import { moveWithCollision, sanitizeWalkPosition } from '@/utils/collision';
+import {
+  moveWithAgentAwareness,
+  resolveAllAgentOverlaps,
+  sanitizeAgentPosition,
+  sanitizeWalkPosition,
+  type AgentCircle,
+} from '@/utils/collision';
 
 interface AgentsStore {
   definitions: AgentDefinition[];
@@ -16,6 +31,8 @@ interface AgentsStore {
   idleTimers: Record<string, number>;
   initialize: () => void;
   tick: (delta: number) => void;
+  beginChatSession: (id: string) => void;
+  endChatSession: (id: string) => void;
   setAgentStatus: (id: string, status: AgentStatus) => void;
   getRuntime: (id: string) => AgentRuntimeState | undefined;
 }
@@ -24,16 +41,92 @@ const stuckSecondsByAgent = new Map<string, number>();
 const STUCK_THRESHOLD = 0.55;
 const MOVE_EPSILON = 0.004;
 
-function createInitialRuntime(def: AgentDefinition, index: number): AgentRuntimeState {
-  const spawn = sanitizeWalkPosition([...def.spawnPosition]);
+function applyChatAnchor(state: AgentRuntimeState, anchor: ChatAnchor): AgentRuntimeState {
+  return {
+    ...state,
+    status: 'chatting',
+    position: sanitizeWalkPosition([...anchor.position]),
+    targetPosition: null,
+    pendingChat: false,
+    pendingCoffee: false,
+    coffeeTimer: 0,
+    rotation: anchor.rotation,
+    posture: anchor.posture,
+  };
+}
+
+function dispatchToChatAnchor(state: AgentRuntimeState, anchor: ChatAnchor): AgentRuntimeState {
+  if (isNearChatAnchor(state.position, anchor)) {
+    return applyChatAnchor(state, anchor);
+  }
+
+  return {
+    ...state,
+    status: 'walking',
+    targetPosition: sanitizeWalkPosition([...anchor.position]),
+    pendingChat: true,
+    pendingCoffee: false,
+    coffeeTimer: 0,
+    posture: anchor.posture,
+  };
+}
+
+function dispatchToCoffeeBar(state: AgentRuntimeState, anchor: ChatAnchor): AgentRuntimeState {
+  if (isNearChatAnchor(state.position, anchor)) {
+    return {
+      ...state,
+      status: 'coffee',
+      position: sanitizeWalkPosition([...anchor.position]),
+      targetPosition: null,
+      pendingCoffee: false,
+      rotation: anchor.rotation,
+      posture: 'stand',
+      coffeeTimer: randomIdleDuration(
+        SCENE_CONFIG.coffeeDurationMin,
+        SCENE_CONFIG.coffeeDurationMax,
+      ),
+    };
+  }
+
+  return {
+    ...state,
+    status: 'walking',
+    targetPosition: sanitizeWalkPosition([...anchor.position]),
+    pendingCoffee: true,
+    pendingChat: false,
+    coffeeTimer: 0,
+    posture: 'stand',
+  };
+}
+
+function createInitialRuntime(def: AgentDefinition): AgentRuntimeState {
+  const anchor = getAgentSpawnAnchor(def);
+  const spawn = sanitizeWalkPosition([...anchor.position]);
   return {
     id: def.id,
     status: 'idle',
     position: spawn,
     targetPosition: null,
-    waypointIndex: index % OFFICE_WAYPOINTS.length,
-    rotation: 0,
+    waypointIndex: nearestZoneWaypointIndex(def.homeZone, spawn),
+    rotation: anchor.rotation,
+    pendingChat: false,
+    pendingCoffee: false,
+    coffeeTimer: 0,
+    posture: anchor.posture,
   };
+}
+
+function zoneWaypointsFor(def: AgentDefinition) {
+  return getZoneWaypoints(def.homeZone);
+}
+
+function otherAgents(
+  runtime: Record<string, AgentRuntimeState>,
+  selfId: string,
+): AgentCircle[] {
+  return Object.entries(runtime)
+    .filter(([id]) => id !== selfId)
+    .map(([, state]) => ({ id: state.id, position: state.position }));
 }
 
 export const useAgentsStore = create<AgentsStore>((set, get) => ({
@@ -45,15 +138,55 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     const runtime: Record<string, AgentRuntimeState> = {};
     const idleTimers: Record<string, number> = {};
     stuckSecondsByAgent.clear();
-    AGENT_DEFINITIONS.forEach((def, i) => {
-      runtime[def.id] = createInitialRuntime(def, i);
+    AGENT_DEFINITIONS.forEach((def) => {
+      runtime[def.id] = createInitialRuntime(def);
       idleTimers[def.id] = randomIdleDuration(
         SCENE_CONFIG.idlePauseMin,
         SCENE_CONFIG.idlePauseMax,
       );
       stuckSecondsByAgent.set(def.id, 0);
     });
-    set({ runtime, idleTimers });
+    set({ runtime: resolveAllAgentOverlaps(runtime), idleTimers });
+  },
+
+  beginChatSession: (id) => {
+    const def = AGENT_DEFINITIONS.find((agent) => agent.id === id);
+    const state = get().runtime[id];
+    if (!def || !state) return;
+
+    stuckSecondsByAgent.set(id, 0);
+    const anchor = getAgentChatAnchor(def);
+
+    set({
+      runtime: {
+        ...get().runtime,
+        [id]: dispatchToChatAnchor(state, anchor),
+      },
+    });
+  },
+
+  endChatSession: (id) => {
+    const state = get().runtime[id];
+    if (!state) return;
+
+    set({
+      runtime: {
+        ...get().runtime,
+        [id]: {
+          ...state,
+          status: 'idle',
+          targetPosition: null,
+          pendingChat: false,
+          pendingCoffee: false,
+          coffeeTimer: 0,
+          posture: 'stand',
+        },
+      },
+      idleTimers: {
+        ...get().idleTimers,
+        [id]: randomIdleDuration(SCENE_CONFIG.idlePauseMin, SCENE_CONFIG.idlePauseMax),
+      },
+    });
   },
 
   setAgentStatus: (id, status) => {
@@ -62,7 +195,14 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     set({
       runtime: {
         ...get().runtime,
-        [id]: { ...current, status },
+        [id]: {
+          ...current,
+          status,
+          pendingChat: status === 'chatting' ? false : current.pendingChat,
+          pendingCoffee: status === 'chatting' ? false : current.pendingCoffee,
+          coffeeTimer: status === 'chatting' ? 0 : current.coffeeTimer,
+          posture: status === 'chatting' ? current.posture : 'stand',
+        },
       },
     });
   },
@@ -78,13 +218,16 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       const state = nextRuntime[def.id];
       if (!state) continue;
 
+      const zoneWaypoints = zoneWaypointsFor(def);
+      const chatAnchor = getAgentChatAnchor(def);
+
       if (state.status === 'chatting') continue;
 
-      if (state.status === 'idle') {
-        nextTimers[def.id] = (nextTimers[def.id] ?? 0) - delta;
-        if (nextTimers[def.id] <= 0) {
-          const wpIndex = pickNextWaypointIndex(state.waypointIndex, OFFICE_WAYPOINTS);
-          const target = sanitizeWalkPosition([...OFFICE_WAYPOINTS[wpIndex].position] as [
+      if (state.status === 'coffee') {
+        const coffeeTimer = Math.max(0, state.coffeeTimer - delta);
+        if (coffeeTimer <= 0 && zoneWaypoints.length > 0) {
+          const wpIndex = nearestZoneWaypointIndex(def.homeZone, state.position);
+          const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
             number,
             number,
             number,
@@ -95,6 +238,40 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             status: 'walking',
             targetPosition: target,
             waypointIndex: wpIndex,
+            pendingCoffee: false,
+            coffeeTimer: 0,
+          };
+        } else {
+          nextRuntime[def.id] = { ...state, coffeeTimer };
+        }
+        continue;
+      }
+
+      if (state.status === 'idle') {
+        nextTimers[def.id] = (nextTimers[def.id] ?? 0) - delta;
+        if (nextTimers[def.id] <= 0 && zoneWaypoints.length > 0) {
+          const wantsCoffee = Math.random() < SCENE_CONFIG.coffeeBreakChance;
+
+          if (wantsCoffee) {
+            stuckSecondsByAgent.set(def.id, 0);
+            nextRuntime[def.id] = dispatchToCoffeeBar(state, getCoffeeBarAnchor(def));
+            continue;
+          }
+
+          const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+          const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
+            number,
+            number,
+            number,
+          ]);
+          stuckSecondsByAgent.set(def.id, 0);
+          nextRuntime[def.id] = {
+            ...state,
+            status: 'walking',
+            targetPosition: target,
+            waypointIndex: wpIndex,
+            pendingChat: false,
+            pendingCoffee: false,
           };
         }
         continue;
@@ -106,12 +283,49 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
 
         if (dist <= step) {
           stuckSecondsByAgent.set(def.id, 0);
+
+          if (state.pendingChat) {
+            nextRuntime[def.id] = applyChatAnchor(
+              {
+                ...state,
+                position: sanitizeAgentPosition(
+                  [...state.targetPosition],
+                  def.id,
+                  otherAgents(nextRuntime, def.id),
+                ),
+              },
+              chatAnchor,
+            );
+            continue;
+          }
+
+          if (state.pendingCoffee) {
+            nextRuntime[def.id] = dispatchToCoffeeBar(
+              {
+                ...state,
+                position: sanitizeAgentPosition(
+                  [...state.targetPosition],
+                  def.id,
+                  otherAgents(nextRuntime, def.id),
+                ),
+              },
+              getCoffeeBarAnchor(def),
+            );
+            continue;
+          }
+
           nextRuntime[def.id] = {
             ...state,
             status: 'idle',
-            position: sanitizeWalkPosition([...state.targetPosition]),
+            position: sanitizeAgentPosition(
+              [...state.targetPosition],
+              def.id,
+              otherAgents(nextRuntime, def.id),
+            ),
             targetPosition: null,
             rotation: rotationTowards(state.position, state.targetPosition),
+            pendingChat: false,
+            pendingCoffee: false,
           };
           nextTimers[def.id] = randomIdleDuration(
             SCENE_CONFIG.idlePauseMin,
@@ -120,16 +334,21 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
         } else {
           const t = step / dist;
           const desired = lerpPosition(state.position, state.targetPosition, t);
-          const newPos = sanitizeWalkPosition(moveWithCollision(state.position, desired));
+          const newPos = moveWithAgentAwareness(
+            state.position,
+            desired,
+            def.id,
+            otherAgents(nextRuntime, def.id),
+          );
           const moved = distance2D(state.position, newPos);
 
           if (moved < MOVE_EPSILON) {
             const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
             stuckSecondsByAgent.set(def.id, stuck);
 
-            if (stuck >= STUCK_THRESHOLD) {
-              const wpIndex = pickNextWaypointIndex(state.waypointIndex, OFFICE_WAYPOINTS);
-              const escape = sanitizeWalkPosition([...OFFICE_WAYPOINTS[wpIndex].position] as [
+            if (stuck >= STUCK_THRESHOLD && zoneWaypoints.length > 0) {
+              const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+              const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
                 number,
                 number,
                 number,
@@ -157,6 +376,6 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       }
     }
 
-    set({ runtime: nextRuntime, idleTimers: nextTimers });
+    set({ runtime: resolveAllAgentOverlaps(nextRuntime), idleTimers: nextTimers });
   },
 }));

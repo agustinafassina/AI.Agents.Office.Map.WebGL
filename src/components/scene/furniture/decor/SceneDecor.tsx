@@ -1,7 +1,10 @@
+import { Edges, RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type * as THREE from 'three';
-import { materials } from '../../materials';
+import { materials, OUTLINE_COLOR } from '../../materials';
+
+export const BEAN_BAG_SEAT_Y = 0.36;
 
 export function StringLights({
   start,
@@ -68,14 +71,20 @@ export function BeanBag({
   const mat = color.clone();
   return (
     <group position={position} rotation={[0, rotation, 0]} scale={scale}>
-      <mesh position={[0, 0.19, 0]} castShadow material={mat}>
-        <sphereGeometry args={[0.34, 14, 12]} />
-      </mesh>
-      <mesh position={[0, 0.08, 0.05]} castShadow material={mat}>
-        <sphereGeometry args={[0.3, 12, 10]} />
-      </mesh>
-      <mesh position={[0, 0.04, 0.12]} castShadow material={mat}>
-        <sphereGeometry args={[0.22, 10, 8]} />
+      <RoundedBox
+        args={[0.76, 0.28, 0.76]}
+        radius={0.05}
+        smoothness={3}
+        position={[0, 0.16, 0]}
+        castShadow
+        receiveShadow
+        material={mat}
+      >
+        <Edges color={OUTLINE_COLOR} threshold={12} />
+      </RoundedBox>
+      <mesh position={[0, BEAN_BAG_SEAT_Y, 0]} castShadow receiveShadow material={mat}>
+        <boxGeometry args={[0.72, 0.1, 0.72]} />
+        <Edges color={OUTLINE_COLOR} threshold={12} />
       </mesh>
     </group>
   );

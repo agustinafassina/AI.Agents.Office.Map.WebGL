@@ -1,4 +1,3 @@
-/** Inner face of the back perimeter wall (z). */
 export const BACK_WALL_INNER_Z = -6.35 + 0.09;
 
 const PLATFORM_CENTER_Z = 0.4;
@@ -17,7 +16,20 @@ export const COFFEE_LOUNGE_CENTER_Z =
 export const LIVING_WALL_DEPTH = 0.13;
 export const LIVING_WALL_HALF_DEPTH = LIVING_WALL_DEPTH / 2;
 export const LIVING_WALL_LOCAL_Z = PLATFORM_BACK_LOCAL_Z + LIVING_WALL_HALF_DEPTH;
+
 export const BAR_CABINET_DEPTH = 0.6;
 export const BAR_CABINET_HALF_DEPTH = BAR_CABINET_DEPTH / 2;
+
 export const BAR_STATION_LOCAL_Z =
   LIVING_WALL_LOCAL_Z + LIVING_WALL_HALF_DEPTH + BAR_CABINET_HALF_DEPTH;
+
+export const CAFE_HIGH_TABLE_LOCAL: [number, number, number] = [-0.85, 0, 1.28];
+export const CAFE_HIGH_TABLE_TOP_Y = 0.92;
+export const CAFE_BAR_STOOL_SEAT_Y = 0.68;
+export const CAFE_BAR_STOOL_RADIUS = 0.44;
+
+export const CAFE_PRIMARY_STOOL_LOCAL: [number, number, number] = [
+  CAFE_HIGH_TABLE_LOCAL[0],
+  0,
+  CAFE_HIGH_TABLE_LOCAL[2] + CAFE_BAR_STOOL_RADIUS,
+];

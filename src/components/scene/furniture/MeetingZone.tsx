@@ -1,79 +1,54 @@
 import type * as THREE from 'three';
 import { materials } from '../materials';
-import { MEETING_ZONE_POSITION } from './meetingConstants';
-import { BeanBag, CeramicFloorPlant, DeskNotebook, WallNotes } from './decor/SceneDecor';
+import {
+  MEETING_PUFF_LAYOUT,
+  MEETING_RUG_INNER,
+  MEETING_RUG_OUTER,
+  MEETING_TABLE_RADIUS,
+  MEETING_TABLE_TOP_Y,
+  MEETING_ZONE_POSITION,
+} from './meetingConstants';
+import { BeanBag, DeskNotebook, WallNotes } from './decor/SceneDecor';
+import { LivingWallClock } from './decor/LivingWallClock';
+import { MiniScreenGlow } from './decor/GlowingScreen';
 
-function Stool({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
-  const legAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
-  return (
-    <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.24, 0]} castShadow material={materials.woodLight}>
-        <cylinderGeometry args={[0.14, 0.15, 0.04, 12]} />
-      </mesh>
-      <mesh position={[0, 0.265, 0]} castShadow material={materials.stoolGray}>
-        <cylinderGeometry args={[0.13, 0.135, 0.025, 12]} />
-      </mesh>
-      {legAngles.map((a, i) => (
-        <mesh
-          key={i}
-          position={[Math.sin(a) * 0.08, 0.11, Math.cos(a) * 0.08]}
-          castShadow
-          material={materials.wood}
-        >
-          <cylinderGeometry args={[0.018, 0.02, 0.22, 5]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-const MEETING_PUFFS: {
-  position: [number, number, number];
-  color: THREE.MeshStandardMaterial;
-  scale?: number;
-}[] = [
-  { position: [0.72, 0, 0.88], color: materials.beanBagTerracotta },
-  { position: [0.48, 0, -0.92], color: materials.beanBagSage },
-  { position: [-0.35, 0, -0.78], color: materials.beanBagTerracottaLight, scale: 0.92 },
-  { position: [-0.22, 0, 0.72], color: materials.beanBagSage, scale: 0.95 },
-  { position: [0.95, 0, -0.08], color: materials.beanBagTerracotta, scale: 0.88 },
-  { position: [0.05, 0, 1.02], color: materials.olive, scale: 0.9 },
+const PUFF_COLORS: THREE.MeshStandardMaterial[] = [
+  materials.beanBagTerracotta,
+  materials.beanBagSage,
+  materials.beanBagTerracottaLight,
+  materials.beanBagSage,
+  materials.olive,
 ];
 
 export function MeetingZone() {
-  const stoolAngles = [0.35, (Math.PI * 2) / 3, (Math.PI * 4) / 3 + 0.2];
-
   return (
     <group position={MEETING_ZONE_POSITION}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow material={materials.rug}>
-        <planeGeometry args={[2.45, 2.15]} />
+        <planeGeometry args={MEETING_RUG_OUTER} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow material={materials.rugWeave}>
-        <planeGeometry args={[2.15, 1.9]} />
+        <planeGeometry args={MEETING_RUG_INNER} />
       </mesh>
 
-      <mesh position={[0, 0.435, 0]} castShadow material={materials.woodTable}>
-        <cylinderGeometry args={[0.75, 0.77, 0.09, 22]} />
+      <mesh position={[0, MEETING_TABLE_TOP_Y - 0.085, 0]} castShadow material={materials.woodTable}>
+        <cylinderGeometry args={[MEETING_TABLE_RADIUS, MEETING_TABLE_RADIUS + 0.02, 0.09, 22]} />
       </mesh>
-      <mesh position={[0, 0.21, 0]} material={materials.woodDark}>
-        <cylinderGeometry args={[0.065, 0.075, 0.34, 10]} />
+      <mesh position={[0, MEETING_TABLE_TOP_Y / 2 - 0.04, 0]} material={materials.woodDark}>
+        <cylinderGeometry args={[0.065, 0.075, MEETING_TABLE_TOP_Y - 0.08, 10]} />
       </mesh>
 
-      <DeskNotebook position={[0.12, 0.44, 0.08]} />
+      <DeskNotebook position={[0.12, MEETING_TABLE_TOP_Y + 0.02, 0.08]} />
 
-      {stoolAngles.map((a, i) => (
-        <Stool
+      {MEETING_PUFF_LAYOUT.map(({ position, scale }, i) => (
+        <BeanBag
           key={i}
-          position={[Math.sin(a) * 1.05, 0, Math.cos(a) * 1.05]}
-          rotation={a + Math.PI}
+          position={position}
+          color={PUFF_COLORS[i % PUFF_COLORS.length]}
+          scale={scale}
         />
       ))}
 
-      {MEETING_PUFFS.map(({ position, color, scale }, i) => (
-        <BeanBag key={i} position={position} color={color} scale={scale} />
-      ))}
-
-      <group position={[-1.34, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[-1.62, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
         <mesh position={[0, 1.12, 0]} material={materials.metal}>
           <boxGeometry args={[1.65, 0.05, 0.07]} />
         </mesh>
@@ -86,9 +61,7 @@ export function MeetingZone() {
         <mesh position={[0.05, 1.08, 0.055]} material={materials.terracotta}>
           <boxGeometry args={[0.28, 0.2, 0.008]} />
         </mesh>
-        <mesh position={[0.35, 1.28, 0.055]} material={materials.monitor}>
-          <boxGeometry args={[0.18, 0.14, 0.008]} />
-        </mesh>
+        <MiniScreenGlow position={[0.35, 1.28, 0.059]} size={[0.18, 0.14, 0.008]} />
         <mesh position={[-0.15, 0.86, 0.055]} material={materials.sageDark}>
           <boxGeometry args={[0.5, 0.04, 0.008]} />
         </mesh>
@@ -100,21 +73,8 @@ export function MeetingZone() {
         </mesh>
       </group>
 
-      <WallNotes position={[-1.05, 0.95, 0.12]} rotation={[0, Math.PI / 2, 0]} />
-
-      <group position={[-1.28, 0, -0.92]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh position={[0, 1.42, 0]} material={materials.espresso}>
-          <cylinderGeometry args={[0.145, 0.145, 0.03, 20]} />
-        </mesh>
-        <mesh position={[0, 1.42, 0.018]} material={materials.wall}>
-          <cylinderGeometry args={[0.115, 0.115, 0.01, 20]} />
-        </mesh>
-        <mesh position={[0.04, 1.42, 0.022]} rotation={[0, 0, Math.PI / 4]} material={materials.metal}>
-          <boxGeometry args={[0.006, 0.058, 0.006]} />
-        </mesh>
-      </group>
-
-      <CeramicFloorPlant position={[0.62, 0, -0.82]} />
+      <WallNotes position={[-1.32, 0.95, 0.12]} rotation={[0, Math.PI / 2, 0]} />
+      <LivingWallClock position={[-1.55, 0, -1.15]} />
     </group>
   );
 }

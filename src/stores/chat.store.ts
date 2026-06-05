@@ -55,7 +55,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!conversations[agentId]) {
       conversations[agentId] = emptyConversation(agentId);
     }
-    useAgentsStore.getState().setAgentStatus(agentId, 'chatting');
+    useAgentsStore.getState().beginChatSession(agentId);
     set({
       isPanelOpen: true,
       activeAgentId: agentId,
@@ -66,7 +66,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   closeChat: () => {
     const activeId = get().activeAgentId;
     if (activeId) {
-      useAgentsStore.getState().setAgentStatus(activeId, 'idle');
+      useAgentsStore.getState().endChatSession(activeId);
     }
     set({ isPanelOpen: false, activeAgentId: null });
   },

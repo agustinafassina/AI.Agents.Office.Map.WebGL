@@ -4,6 +4,29 @@ import {
   type OfficeObstacle,
 } from '@/config/officeObstacles';
 
+export const AGENT_BODY_RADIUS = AGENT_COLLISION_RADIUS;
+export const AGENT_PERSONAL_SPACE = AGENT_BODY_RADIUS * 2 + 0.1;
+
+export type AgentCircle = {
+  id: string;
+  position: [number, number, number];
+};
+
+function distance2D(
+  a: [number, number, number],
+  b: [number, number, number],
+): number {
+  const dx = a[0] - b[0];
+  const dz = a[2] - b[2];
+  return Math.sqrt(dx * dx + dz * dz);
+}
+
+function hashAngle(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return ((h % 360) * Math.PI) / 180;
+}
+
 function circleBlocked(x: number, z: number, obs: Extract<OfficeObstacle, { kind: 'circle' }>, r: number): boolean {
   const dx = x - obs.x;
   const dz = z - obs.z;
@@ -125,4 +148,110 @@ export function sanitizeWalkPosition(
   const resolved = resolvePenetration(position);
   if (isWalkablePosition(resolved)) return resolved;
   return resolved;
+}
+
+export function separateFromAgents(
+  position: [number, number, number],
+  selfId: string,
+  others: AgentCircle[],
+): [number, number, number] {
+  let [x, y, z] = position;
+  const minDist = AGENT_PERSONAL_SPACE;
+
+  for (const other of others) {
+    if (other.id === selfId) continue;
+
+    let dx = x - other.position[0];
+    let dz = z - other.position[2];
+    let distSq = dx * dx + dz * dz;
+
+    if (distSq >= minDist * minDist) continue;
+
+    if (distSq < 1e-8) {
+      const angle = hashAngle(`${selfId}:${other.id}`);
+      dx = Math.cos(angle) * 0.001;
+      dz = Math.sin(angle) * 0.001;
+      distSq = dx * dx + dz * dz;
+    }
+
+    const dist = Math.sqrt(distSq);
+    const push = (minDist - dist) / dist;
+    x += dx * push;
+    z += dz * push;
+  }
+
+  return resolvePenetration([x, y, z]);
+}
+
+export function moveWithAgentAwareness(
+  from: [number, number, number],
+  to: [number, number, number],
+  selfId: string,
+  others: AgentCircle[],
+): [number, number, number] {
+  const obstacleSafe = moveWithCollision(from, to);
+  let result = separateFromAgents(obstacleSafe, selfId, others);
+
+  const progress = distance2D(from, result);
+  const ideal = distance2D(from, to);
+
+  if (ideal > 0.05 && progress < ideal * 0.2) {
+    const dx = to[0] - from[0];
+    const dz = to[2] - from[2];
+    const len = Math.sqrt(dx * dx + dz * dz) || 1;
+    const perpX = -dz / len;
+    const perpZ = dx / len;
+
+    for (const sign of [-1, 1]) {
+      const sidestep: [number, number, number] = [
+        from[0] + dx * 0.4 + perpX * sign * 0.32,
+        from[1],
+        from[2] + dz * 0.4 + perpZ * sign * 0.32,
+      ];
+      const candidate = separateFromAgents(moveWithCollision(from, sidestep), selfId, others);
+      if (distance2D(from, candidate) > progress + 0.012) {
+        result = candidate;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+export function sanitizeAgentPosition(
+  position: [number, number, number],
+  selfId: string,
+  others: AgentCircle[],
+): [number, number, number] {
+  return separateFromAgents(sanitizeWalkPosition(position), selfId, others);
+}
+
+export function resolveAllAgentOverlaps<T extends { id: string; position: [number, number, number] }>(
+  states: Record<string, T>,
+  iterations = 3,
+): Record<string, T> {
+  const next: Record<string, T> = { ...states };
+  const ids = Object.keys(next);
+
+  for (let pass = 0; pass < iterations; pass++) {
+    for (const id of ids) {
+      const state = next[id];
+      if (!state) continue;
+
+      const others = ids
+        .filter((otherId) => otherId !== id)
+        .map((otherId) => ({
+          id: otherId,
+          position: next[otherId].position,
+        }));
+
+      next[id] = {
+        ...state,
+        position: separateFromAgents(state.position, id, others),
+      };
+    }
+  }
+
+  return next;
 }

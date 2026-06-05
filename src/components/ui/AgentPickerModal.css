@@ -1,0 +1,123 @@
+.agent-picker-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(12, 22, 18, 0.62);
+  backdrop-filter: blur(6px);
+  animation: agent-picker-fade-in 0.2s ease;
+}
+
+.agent-picker-modal__panel {
+  width: min(520px, 100%);
+  max-height: min(82vh, 640px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 20px 18px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-warm);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: agent-picker-slide-in 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agent-picker-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-picker-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.agent-picker-modal__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.agent-picker-modal__close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 243, 239, 0.08);
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.agent-picker-modal__close:hover {
+  background: rgba(212, 165, 116, 0.18);
+}
+
+.agent-picker-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.agent-picker-modal__grid .office-hud__avatar-btn {
+  width: 100%;
+  min-height: 118px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: rgba(245, 243, 239, 0.04);
+  border: 1px solid transparent;
+}
+
+.agent-picker-modal__grid .office-hud__avatar-btn:hover {
+  background: rgba(245, 243, 239, 0.1);
+  border-color: var(--border-subtle);
+}
+
+.agent-picker-modal__grid .office-hud__avatar-btn--selected {
+  background: rgba(212, 165, 116, 0.14);
+  border-color: rgba(212, 165, 116, 0.35);
+}
+
+.agent-picker-modal__grid .office-hud__agent-name {
+  max-width: none;
+  font-size: 0.68rem;
+}
+
+.agent-picker-modal__grid .office-hud__agent-role,
+.agent-picker-modal__grid .office-hud__model-name {
+  max-width: none;
+  font-size: 0.58rem;
+}
+
+@keyframes agent-picker-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes agent-picker-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

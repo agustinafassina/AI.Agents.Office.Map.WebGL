@@ -5,6 +5,7 @@ import { useSceneStore } from '@/stores/scene.store';
 
 const ISO_DIRECTION = new THREE.Vector3(1, 1.15, 1).normalize();
 const CAMERA_DISTANCE = 20;
+
 const FRUSTUM_HEIGHT = 15;
 
 function applyFrustum(
@@ -25,6 +26,7 @@ export function IsometricCamera() {
   const { camera, size } = useThree();
   const panOffset = useSceneStore((s) => s.panOffset);
   const zoomLevel = useSceneStore((s) => s.zoomLevel);
+  const viewIntent = useSceneStore((s) => s.viewIntent);
   const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
   const smoothZoom = useRef(zoomLevel);
   const initialized = useRef(false);
@@ -33,7 +35,7 @@ export function IsometricCamera() {
     if (!(camera instanceof THREE.OrthographicCamera)) return;
 
     const aspect = size.width / Math.max(size.height, 1);
-    smoothZoom.current = useSceneStore.getState().zoomLevel;
+    smoothZoom.current = zoomLevel;
     applyFrustum(camera, aspect, smoothZoom.current);
 
     camera.near = -50;
@@ -47,7 +49,7 @@ export function IsometricCamera() {
     );
     camera.lookAt(lookTarget.current);
     initialized.current = true;
-  }, [camera, size.width, size.height]);
+  }, [camera, size.width, size.height, zoomLevel]);
 
   useFrame((_, delta) => {
     if (!(camera instanceof THREE.OrthographicCamera) || !initialized.current) return;
@@ -55,7 +57,9 @@ export function IsometricCamera() {
     const [px, , pz] = panOffset;
     const desiredLook = new THREE.Vector3(px, 0, pz);
 
-    const alpha = 1 - Math.exp(-5 * delta);
+    const panRate = viewIntent === 'agent-focus' ? 3.4 : 5;
+    const zoomRate = viewIntent === 'agent-focus' ? 4.8 : 8;
+    const alpha = 1 - Math.exp(-panRate * delta);
     lookTarget.current.lerp(desiredLook, alpha);
 
     const desiredPos = lookTarget.current
@@ -65,7 +69,7 @@ export function IsometricCamera() {
     camera.position.lerp(desiredPos, alpha);
     camera.lookAt(lookTarget.current);
 
-    smoothZoom.current += (zoomLevel - smoothZoom.current) * (1 - Math.exp(-8 * delta));
+    smoothZoom.current += (zoomLevel - smoothZoom.current) * (1 - Math.exp(-zoomRate * delta));
     const aspect = size.width / Math.max(size.height, 1);
     applyFrustum(camera, aspect, smoothZoom.current);
   });

@@ -14,18 +14,16 @@ export interface OfficeZoneLink {
   pan: [number, number, number];
   zoom: number;
   accent: string;
+  identity?: {
+    subtitle: string;
+    plaquePosition: [number, number, number];
+  };
   hotspot?: {
     position: [number, number, number];
     size: [number, number];
   };
 }
 
-/** Map layout — four zones:
- *  1. Living      — puffs & meeting table (left wall)
- *  2. Center Desk — four L-desks hub (center)
- *  3. Cafeteria   — coffee bar & lounge seating (back wall)
- *  4. Wall Desks  — three workstations against the right wall
- */
 export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
   {
     id: 'all',
@@ -46,6 +44,10 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     pan: [MEETING_ZONE_POSITION[0], 0, MEETING_ZONE_POSITION[2]],
     zoom: 0.82,
     accent: '#c8ccd0',
+    identity: {
+      subtitle: 'Puffs · meeting table',
+      plaquePosition: [-4.35, 0, 0.82],
+    },
     hotspot: {
       position: [MEETING_ZONE_POSITION[0], 0.015, MEETING_ZONE_POSITION[2]],
       size: [2.9, 2.6],
@@ -60,6 +62,10 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     pan: [0.5, 0, 1.05],
     zoom: 0.78,
     accent: '#d4a574',
+    identity: {
+      subtitle: 'Four-desk team hub',
+      plaquePosition: [0.5, 0, 2.72],
+    },
     hotspot: { position: [0.5, 0.015, 1.05], size: [4.1, 3.5] },
   },
   {
@@ -71,6 +77,10 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     pan: [0, 0, COFFEE_LOUNGE_CENTER_Z + 0.15],
     zoom: 0.82,
     accent: '#9aab9e',
+    identity: {
+      subtitle: 'Coffee bar · lounge',
+      plaquePosition: [0, 0, -3.35],
+    },
     hotspot: {
       position: [0, 0.015, COFFEE_LOUNGE_CENTER_Z],
       size: [5.4, 2.9],
@@ -85,6 +95,10 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     pan: [PRIVATE_DESK_CENTER[0], 0, PRIVATE_DESK_CENTER[2]],
     zoom: 0.78,
     accent: '#8fa38c',
+    identity: {
+      subtitle: 'Private workstations',
+      plaquePosition: [4.85, 0, PRIVATE_DESK_CENTER[2]],
+    },
     hotspot: {
       position: [PRIVATE_DESK_CENTER[0], 0.015, PRIVATE_DESK_CENTER[2]],
       size: [2.2, PRIVATE_DESK_SPAN_Z + 0.65],

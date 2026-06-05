@@ -1,7 +1,6 @@
-import { hubPerimeterPosition } from '@/config/officeObstacles';
-import { PRIVATE_DESK_CENTER, PRIVATE_DESK_POSITIONS, PRIVATE_DESK_X } from '@/components/scene/furniture/deskConstants';
+import { getZoneWaypoints } from '@/config/agentZones.config';
+import type { OfficeZoneId } from '@/config/officeZones';
 import type { AgentDefinition } from '@/types/agent';
-import type { Waypoint } from '@/types/scene';
 
 export const OFFICE_PALETTE = {
   sceneBackground: '#1a382e',
@@ -58,65 +57,87 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
   {
     id: 'cursor-agent',
     name: 'Cursor',
+    role: 'Code',
     modelId: 'gpt-4o-mini',
     logoUrl: '/logos/cursor.svg',
     avatarColor: '#6eb5ff',
     accentColor: '#4a9eff',
+    homeZone: 'center-desk',
     systemPrompt: 'You are Cursor, a helpful coding assistant in a creative office.',
-    spawnPosition: hubPerimeterPosition(-Math.PI / 2 + 0.35),
   },
   {
     id: 'research-agent',
     name: 'Research',
+    role: 'Research',
     modelId: 'gpt-4o',
     logoUrl: '/logos/research.svg',
     avatarColor: '#b88cff',
     accentColor: '#9a6bff',
+    homeZone: 'living',
     systemPrompt: 'You are a research specialist who summarizes and explores ideas clearly.',
-    spawnPosition: [-3.75, 0, 0.9],
   },
   {
     id: 'design-agent',
     name: 'Design',
+    role: 'Design',
     modelId: 'claude-3-5-sonnet',
     logoUrl: '/logos/design.svg',
     avatarColor: '#ff9a7a',
     accentColor: '#ff7b55',
+    homeZone: 'cafeteria',
     systemPrompt: 'You are a design-minded assistant focused on UX and visual coherence.',
-    spawnPosition: [1.2, 0, -2.54],
   },
   {
     id: 'ops-agent',
     name: 'Ops',
+    role: 'Ops',
     modelId: 'gpt-4o-mini',
     logoUrl: '/logos/ops.svg',
     avatarColor: '#7dd87d',
     accentColor: '#5bc45b',
+    homeZone: 'wall-desks',
+    wallDeskSlot: 0,
     systemPrompt: 'You are an operations assistant who helps with workflows and reliability.',
-    spawnPosition: [2.9, 0, 1.05],
+  },
+  {
+    id: 'review-agent',
+    name: 'Review',
+    role: 'QA',
+    modelId: 'gpt-4o',
+    logoUrl: '/logos/review.svg',
+    avatarColor: '#f0c674',
+    accentColor: '#e5b84a',
+    homeZone: 'wall-desks',
+    wallDeskSlot: 1,
+    systemPrompt: 'You are a QA reviewer who checks quality, edge cases, and test coverage.',
+  },
+  {
+    id: 'data-agent',
+    name: 'Data',
+    role: 'Analytics',
+    modelId: 'claude-3-5-sonnet',
+    logoUrl: '/logos/data.svg',
+    avatarColor: '#5ec4d4',
+    accentColor: '#3aa8bc',
+    homeZone: 'wall-desks',
+    wallDeskSlot: 2,
+    systemPrompt: 'You are a data analyst who interprets metrics and surfaces insights clearly.',
   },
 ];
 
-export const OFFICE_WAYPOINTS: Waypoint[] = [
-  { id: 'wp-center-north', position: hubPerimeterPosition(-Math.PI / 2) },
-  { id: 'wp-center-east', position: hubPerimeterPosition(0) },
-  { id: 'wp-center-west', position: hubPerimeterPosition(Math.PI) },
-  { id: 'wp-center-south', position: hubPerimeterPosition(Math.PI / 2) },
-  { id: 'wp-living', position: [-3.85, 0, 0.85] },
-  { id: 'wp-living-rug', position: [-4.95, 0, -0.15] },
-  { id: 'wp-corridor', position: [-0.8, 0, -0.4] },
-  { id: 'wp-cafeteria-front', position: [1.0, 0, -2.5] },
-  { id: 'wp-cafeteria-side', position: [-2.1, 0, -3.0] },
-  { id: 'wp-wall-desks-path', position: [4.2, 0, PRIVATE_DESK_CENTER[2]] },
-  { id: 'wp-wall-desks-near', position: [5.4, 0, PRIVATE_DESK_CENTER[2]] },
-  { id: 'wp-wall-desks-a', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[0][2]] },
-  { id: 'wp-wall-desks-b', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[1][2]] },
-  { id: 'wp-wall-desks-c', position: [PRIVATE_DESK_X - 0.5, 0, PRIVATE_DESK_POSITIONS[2][2]] },
-];
+export function getAgentsByZone(zoneId: OfficeZoneId): AgentDefinition[] {
+  if (zoneId === 'all') return AGENT_DEFINITIONS;
+  return AGENT_DEFINITIONS.filter((agent) => agent.homeZone === zoneId);
+}
+
+export const OFFICE_WAYPOINTS = getZoneWaypoints('center-desk');
 
 export const SCENE_CONFIG = {
   bounds: { minX: -6.5, maxX: 7, minZ: -5.5, maxZ: 5 },
   walkSpeed: 1.05,
   idlePauseMin: 2,
   idlePauseMax: 5,
+  coffeeBreakChance: 0.24,
+  coffeeDurationMin: 4,
+  coffeeDurationMax: 9,
 } as const;
