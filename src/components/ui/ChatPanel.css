@@ -67,6 +67,15 @@
   font-size: 0.78rem;
 }
 
+.chat-panel__model--missing {
+  color: #e5b84a;
+}
+
+.chat-panel__model-source {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
 .chat-panel__close {
   width: 36px;
   height: 36px;

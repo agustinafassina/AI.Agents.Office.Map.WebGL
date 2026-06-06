@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { AGENT_DEFINITIONS } from '@/config/agents.config';
 import { getAgentFocusView } from '@/config/agentFocusView';
 import { resolveActiveOfficeZone } from '@/config/resolveActiveOfficeZone';
 import type { OfficeZoneId } from '@/config/officeZones';
@@ -34,6 +33,7 @@ interface SceneStore {
   addPan: (dx: number, dz: number) => void;
   setView: (pan: [number, number, number], zoom?: number, zoneId?: OfficeZoneId) => void;
   setZoomLevel: (level: number) => void;
+  zoomAtWorldPoint: (delta: number, worldX: number, worldZ: number) => void;
   zoomIn: () => void;
   zoomOut: () => void;
   resetZoom: () => void;
@@ -53,7 +53,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     }),
 
   focusOnAgent: (id) => {
-    const def = AGENT_DEFINITIONS.find((agent) => agent.id === id);
+    const def = useAgentsStore.getState().definitions.find((agent) => agent.id === id);
     if (!def) return;
 
     const runtime = useAgentsStore.getState().getRuntime(id);
@@ -114,6 +114,27 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     set({
       zoomLevel,
       focusedZoneId: resolveActiveOfficeZone(get().panOffset, zoomLevel),
+      viewIntent: null,
+    });
+  },
+
+  zoomAtWorldPoint: (delta, worldX, worldZ) => {
+    const { panOffset, zoomLevel: oldZoom } = get();
+    const zoomLevel = clampZoom(oldZoom + delta);
+    if (zoomLevel === oldZoom) return;
+
+    const ratio = zoomLevel / oldZoom;
+    const [panX, panY, panZ] = panOffset;
+    const nextPan: [number, number, number] = [
+      clampPan(panX + (worldX - panX) * (1 - ratio), PAN_LIMIT_X),
+      panY,
+      clampPan(panZ + (worldZ - panZ) * (1 - ratio), PAN_LIMIT_Z),
+    ];
+
+    set({
+      zoomLevel,
+      panOffset: nextPan,
+      focusedZoneId: resolveActiveOfficeZone(nextPan, zoomLevel),
       viewIntent: null,
     });
   },

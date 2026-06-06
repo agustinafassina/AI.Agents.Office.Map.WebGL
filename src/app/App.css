@@ -10,6 +10,13 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  transition:
+    right 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app--chat-open .app__viewport {
+  right: min(410px, 92vw);
 }
 
 .app__viewport canvas {
@@ -28,4 +35,12 @@
     transparent 38%,
     rgba(26, 56, 46, 0.38) 100%
   );
+}
+
+@media (max-width: 760px) {
+  .app--chat-open .app__viewport {
+    right: 8px;
+    left: 8px;
+    bottom: calc(min(72vh, 620px) + 16px);
+  }
 }

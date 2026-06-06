@@ -34,22 +34,30 @@ export function IsometricCamera() {
   useLayoutEffect(() => {
     if (!(camera instanceof THREE.OrthographicCamera)) return;
 
-    const aspect = size.width / Math.max(size.height, 1);
-    smoothZoom.current = zoomLevel;
-    applyFrustum(camera, aspect, smoothZoom.current);
-
     camera.near = -50;
     camera.far = 200;
     camera.zoom = 1;
     camera.up.set(0, 1, 0);
 
-    lookTarget.current.set(0, 0, 0);
-    camera.position.copy(lookTarget.current).add(
-      ISO_DIRECTION.clone().multiplyScalar(CAMERA_DISTANCE),
-    );
-    camera.lookAt(lookTarget.current);
-    initialized.current = true;
-  }, [camera, size.width, size.height, zoomLevel]);
+    if (!initialized.current) {
+      const [px, , pz] = useSceneStore.getState().panOffset;
+      lookTarget.current.set(px, 0, pz);
+      smoothZoom.current = useSceneStore.getState().zoomLevel;
+
+      const aspect = size.width / Math.max(size.height, 1);
+      applyFrustum(camera, aspect, smoothZoom.current);
+
+      camera.position.copy(lookTarget.current).add(
+        ISO_DIRECTION.clone().multiplyScalar(CAMERA_DISTANCE),
+      );
+      camera.lookAt(lookTarget.current);
+      initialized.current = true;
+      return;
+    }
+
+    const aspect = size.width / Math.max(size.height, 1);
+    applyFrustum(camera, aspect, smoothZoom.current);
+  }, [camera, size.width, size.height]);
 
   useFrame((_, delta) => {
     if (!(camera instanceof THREE.OrthographicCamera) || !initialized.current) return;

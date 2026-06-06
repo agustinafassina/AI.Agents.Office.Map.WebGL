@@ -1,8 +1,13 @@
 import { create } from 'zustand';
-import { AGENT_DEFINITIONS } from '@/config/agents.config';
+import { resolveAgentDefinitions } from '@/config/resolveAgents';
 import { liteLLMService } from '@/services/litellm';
+import type { AgentDefinition } from '@/types/agent';
 import type { ChatMessage, ConnectionStatus, ConversationState } from '@/types/chat';
 import type { LiteLLMModel } from '@/types/litellm';
+import {
+  isAgentModelAvailableOnApi,
+  resolveAgentModelLabel,
+} from '@/utils/agentModel';
 import { createId } from '@/utils/id';
 import { useAgentsStore } from './agents.store';
 
@@ -18,11 +23,18 @@ interface ChatStore {
   closeChat: () => void;
   sendMessage: (content: string) => Promise<void>;
   getActiveConversation: () => ConversationState | null;
-  getActiveAgent: () => (typeof AGENT_DEFINITIONS)[number] | null;
+  getActiveAgent: () => AgentDefinition | null;
+  getAvailableAgents: () => AgentDefinition[];
+  resolveModelLabel: (configuredModelId: string) => string;
+  isModelAvailableOnApi: (configuredModelId: string) => boolean;
 }
 
 function emptyConversation(agentId: string): ConversationState {
   return { agentId, messages: [], isLoading: false, error: null };
+}
+
+function syncSceneAgents(agents: AgentDefinition[]) {
+  useAgentsStore.getState().setDefinitions(agents);
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -37,12 +49,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ connectionStatus: 'connecting' });
     try {
       const models = await liteLLMService.fetchModels();
+      const serviceMode = liteLLMService.mode;
+      const agents = resolveAgentDefinitions(serviceMode, models);
+      syncSceneAgents(agents);
       set({
         models,
         connectionStatus: 'connected',
-        serviceMode: liteLLMService.mode,
+        serviceMode,
       });
     } catch {
+      const agents = resolveAgentDefinitions('mock', []);
+      syncSceneAgents(agents);
       set({
         connectionStatus: 'error',
         serviceMode: 'error',
@@ -71,10 +88,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ isPanelOpen: false, activeAgentId: null });
   },
 
+  getAvailableAgents: () => useAgentsStore.getState().definitions,
+
   getActiveAgent: () => {
     const id = get().activeAgentId;
     if (!id) return null;
-    return AGENT_DEFINITIONS.find((a) => a.id === id) ?? null;
+    return useAgentsStore.getState().definitions.find((agent) => agent.id === id) ?? null;
   },
 
   getActiveConversation: () => {
@@ -83,11 +102,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     return get().conversations[id] ?? null;
   },
 
+  resolveModelLabel: (configuredModelId) => {
+    const { models, serviceMode } = get();
+    return resolveAgentModelLabel(configuredModelId, models, serviceMode);
+  },
+
+  isModelAvailableOnApi: (configuredModelId) => {
+    const { models, serviceMode } = get();
+    return isAgentModelAvailableOnApi(configuredModelId, models, serviceMode);
+  },
+
   sendMessage: async (content) => {
     const agentId = get().activeAgentId;
     if (!agentId || !content.trim()) return;
 
-    const agent = AGENT_DEFINITIONS.find((a) => a.id === agentId);
+    const agent = get().getActiveAgent();
     if (!agent) return;
 
     const userMessage: ChatMessage = {

@@ -69,13 +69,14 @@ class LiteLLMService {
           ? err.message
           : 'Failed to fetch models from LiteLLM';
       this.lastError = message;
-      this.cachedModels = MOCK_MODELS;
-      return MOCK_MODELS;
+      this.cachedModels = env.useMockLitellm || !hasLiteLLMCredentials() ? MOCK_MODELS : [];
+      return this.cachedModels;
     }
   }
 
   getCachedModels(): LiteLLMModel[] {
-    return this.cachedModels ?? MOCK_MODELS;
+    if (this.cachedModels) return this.cachedModels;
+    return env.useMockLitellm || !hasLiteLLMCredentials() ? MOCK_MODELS : [];
   }
 
   async sendMessage(params: SendMessageParams): Promise<SendMessageResult> {

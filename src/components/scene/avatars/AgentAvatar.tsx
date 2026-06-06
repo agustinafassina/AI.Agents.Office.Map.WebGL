@@ -17,6 +17,12 @@ import {
   lerpSitValue,
   LEG_HIP_STAND_Y,
 } from './agentSitPose';
+import {
+  easeCoffeeBlend,
+  getCoffeePoseFrame,
+  lerpCoffeeValue,
+} from './agentCoffeePose';
+import { CoffeeHandCup } from './CoffeeHandCup';
 import { OUTLINE_COLOR, softColor } from '../materials';
 
 interface AgentAvatarProps {
@@ -67,6 +73,16 @@ function SpeechBubble() {
   );
 }
 
+function lerpArmRotation(
+  arm: THREE.Group,
+  target: { rotX: number; rotY: number; rotZ: number },
+  rate: number,
+): void {
+  arm.rotation.x = THREE.MathUtils.lerp(arm.rotation.x, target.rotX, rate);
+  arm.rotation.y = THREE.MathUtils.lerp(arm.rotation.y, target.rotY, rate);
+  arm.rotation.z = THREE.MathUtils.lerp(arm.rotation.z, target.rotZ, rate);
+}
+
 export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const groupRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Group>(null);
@@ -78,6 +94,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const leftShinRef = useRef<THREE.Group>(null);
   const rightShinRef = useRef<THREE.Group>(null);
   const sitBlendRef = useRef(0);
+  const coffeeBlendRef = useRef(0);
   const ringRef = useRef<THREE.Mesh>(null);
   const hoverRef = useRef(0);
   const selectedId = useSceneStore((s) => s.selectedAgentId);
@@ -142,6 +159,15 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     const sitEase = easeSitBlend(sitBlendRef.current);
     const sitting = sitEase > 0.02;
 
+    const coffeeTarget = atCoffee ? 1 : 0;
+    coffeeBlendRef.current = THREE.MathUtils.lerp(
+      coffeeBlendRef.current,
+      coffeeTarget,
+      1 - Math.exp(-5.5 * delta),
+    );
+    const coffeeEase = easeCoffeeBlend(coffeeBlendRef.current);
+    const coffeePose = atCoffee ? getCoffeePoseFrame(state.clock.elapsedTime, phase) : null;
+
     const standBob = walking
       ? Math.sin(t * 14) * 0.032
       : chatting
@@ -156,8 +182,9 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       bodyRef.current.position.y = lerpSitValue(0, sitPose.bodyY, sitEase);
       const walkLean = walking && sitEase < 0.5 ? Math.sin(t * 14) * 0.05 : 0;
       const chatLean = chatting && sitEase > 0.6 ? 0.02 : 0;
+      const coffeeLean = coffeePose ? coffeePose.bodyRotX * coffeeEase : 0;
       bodyRef.current.rotation.x = lerpSitValue(
-        walkLean + chatLean,
+        walkLean + chatLean + coffeeLean,
         sitPose.bodyRotX,
         sitEase,
       );
@@ -176,25 +203,29 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     const legSwing = walking && sitEase < 0.25 ? Math.sin(t * 10) * 0.55 : 0;
 
     const idleArm = sitting && !walking ? sitPose.armRotX : 0;
-    const coffeeArm = atCoffee ? -0.72 + Math.sin(t * 2.6) * 0.06 : 0;
-    const leftArmTarget = atCoffee
-      ? coffeeArm * 0.35
-      : lerpSitValue(armSwing, idleArm, sitEase);
-    const rightArmTarget = atCoffee ? coffeeArm : lerpSitValue(-armSwing, idleArm, sitEase);
+    const leftArmBase = lerpSitValue(armSwing, idleArm, sitEase);
+    const rightArmBase = lerpSitValue(-armSwing, idleArm, sitEase);
+
+    const leftArmTarget = {
+      rotX: coffeePose
+        ? lerpCoffeeValue(leftArmBase, coffeePose.leftArm.rotX, coffeeEase)
+        : leftArmBase,
+      rotY: coffeePose ? coffeePose.leftArm.rotY * coffeeEase : 0,
+      rotZ: coffeePose ? coffeePose.leftArm.rotZ * coffeeEase : 0,
+    };
+    const rightArmTarget = {
+      rotX: coffeePose
+        ? lerpCoffeeValue(rightArmBase, coffeePose.rightArm.rotX, coffeeEase)
+        : rightArmBase,
+      rotY: coffeePose ? coffeePose.rightArm.rotY * coffeeEase : 0,
+      rotZ: coffeePose ? coffeePose.rightArm.rotZ * coffeeEase : 0,
+    };
 
     if (leftArmRef.current) {
-      leftArmRef.current.rotation.x = THREE.MathUtils.lerp(
-        leftArmRef.current.rotation.x,
-        leftArmTarget,
-        0.2,
-      );
+      lerpArmRotation(leftArmRef.current, leftArmTarget, 0.22);
     }
     if (rightArmRef.current) {
-      rightArmRef.current.rotation.x = THREE.MathUtils.lerp(
-        rightArmRef.current.rotation.x,
-        rightArmTarget,
-        0.2,
-      );
+      lerpArmRotation(rightArmRef.current, rightArmTarget, 0.22);
     }
 
     const leftThighX = lerpSitValue(-legSwing, sitPose.thighRotX, sitEase);
@@ -231,9 +262,20 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     if (headRef.current) {
       const lookAmp = chatting ? sitPose.headRotYChat : atCoffee ? 0.02 : walking ? 0.04 : 0.03;
       const look = Math.sin(t * (chatting ? 2.5 : atCoffee ? 1.6 : walking ? 8 : 1.8)) * lookAmp;
-      headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, look, 0.12);
-      const nod = chatting ? Math.sin(t * 3.2) * 0.06 : atCoffee ? Math.sin(t * 2.2) * 0.04 : 0;
-      headRef.current.rotation.x = lerpSitValue(nod, sitPose.headRotX + nod * 0.5, sitEase);
+      const coffeeHeadY = coffeePose ? coffeePose.headRotY * coffeeEase : 0;
+      headRef.current.rotation.y = THREE.MathUtils.lerp(
+        headRef.current.rotation.y,
+        look + coffeeHeadY,
+        0.12,
+      );
+      const nod = chatting ? Math.sin(t * 3.2) * 0.06 : 0;
+      const coffeeNod = coffeePose ? coffeePose.headRotX * coffeeEase : 0;
+      headRef.current.rotation.x = lerpSitValue(nod + coffeeNod, sitPose.headRotX + nod * 0.5, sitEase);
+      headRef.current.rotation.z = THREE.MathUtils.lerp(
+        headRef.current.rotation.z,
+        coffeePose ? coffeePose.headRotZ * coffeeEase : 0,
+        0.14,
+      );
     }
 
     if (ringRef.current && isSelected) {
@@ -347,9 +389,12 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           <mesh position={[0, -0.05, 0]} castShadow material={shirtMat}>
             <capsuleGeometry args={[0.032, 0.1, 4, 8]} />
           </mesh>
-          <mesh position={[0, -0.12, 0.01]} castShadow material={skinMat}>
-            <sphereGeometry args={[0.034, 7, 6]} />
-          </mesh>
+          <group position={[0, -0.12, 0.01]}>
+            <mesh castShadow material={skinMat}>
+              <sphereGeometry args={[0.034, 7, 6]} />
+            </mesh>
+            {runtime.status === 'coffee' && <CoffeeHandCup />}
+          </group>
         </group>
 
         <group ref={headRef} position={[0, 0.52, 0]}>
@@ -402,13 +447,6 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         </group>
 
         {runtime.status === 'chatting' && <SpeechBubble />}
-
-        {runtime.status === 'coffee' && (
-          <mesh position={[0.16, 0.36, 0.08]} rotation={[0.15, -0.35, 0]}>
-            <cylinderGeometry args={[0.022, 0.026, 0.05, 8]} />
-            <meshStandardMaterial color="#f0f2f4" roughness={0.85} />
-          </mesh>
-        )}
       </group>
 
       <AgentRoleLogo logoUrl={definition.logoUrl} accentColor={definition.accentColor} />

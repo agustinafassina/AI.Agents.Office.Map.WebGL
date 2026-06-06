@@ -53,6 +53,12 @@
   pointer-events: auto;
 }
 
+.office-hud__loading {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  padding: 8px 4px;
+}
+
 @media (max-width: 520px) {
   .office-hud__agents {
     flex-wrap: wrap;
@@ -109,6 +115,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+}
+
+.office-hud__model-name--missing {
+  color: #e5b84a;
 }
 
 .office-hud__agent-name {

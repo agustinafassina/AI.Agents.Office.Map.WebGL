@@ -1,14 +1,10 @@
 import { useFrame } from '@react-three/fiber';
-import { useEffect } from 'react';
+import { useAgentBootstrap } from '@/hooks/useBootstrap';
 import { useAgentsStore } from '@/stores/agents.store';
 
 export function useAgentMovement() {
-  const initialize = useAgentsStore((s) => s.initialize);
-  const tick = useAgentsStore((s) => s.tick);
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
+  useAgentBootstrap();
+  const tick = useAgentsStore((state) => state.tick);
 
   useFrame((_, delta) => {
     tick(delta);

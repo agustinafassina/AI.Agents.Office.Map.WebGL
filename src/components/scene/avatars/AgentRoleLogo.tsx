@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { Billboard, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { AGENT_DEFINITIONS } from '@/config/agents.config';
 
 interface AgentRoleLogoProps {
   logoUrl: string;
@@ -51,7 +50,3 @@ export function AgentRoleLogo({ logoUrl, accentColor }: AgentRoleLogoProps) {
     </Billboard>
   );
 }
-
-AGENT_DEFINITIONS.forEach((agent) => {
-  useTexture.preload(agent.logoUrl);
-});

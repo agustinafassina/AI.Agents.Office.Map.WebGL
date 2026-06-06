@@ -11,7 +11,7 @@ import {
   getCoffeeBarQueueAnchor,
   isAtCoffeeBarQueueSlot,
 } from '@/config/coffeeBarQueue';
-import { AGENT_DEFINITIONS, SCENE_CONFIG } from '@/config/agents.config';
+import { SCENE_CONFIG } from '@/config/agents.config';
 import type { AgentDefinition, AgentRuntimeState, AgentStatus } from '@/types/agent';
 import type { ChatAnchor } from '@/types/scene';
 import {
@@ -34,6 +34,7 @@ interface AgentsStore {
   definitions: AgentDefinition[];
   runtime: Record<string, AgentRuntimeState>;
   idleTimers: Record<string, number>;
+  setDefinitions: (definitions: AgentDefinition[]) => void;
   initialize: () => void;
   tick: (delta: number) => void;
   beginChatSession: (id: string) => void;
@@ -135,8 +136,12 @@ function isInCoffeeFlow(state: AgentRuntimeState): boolean {
   );
 }
 
-function getCoffeeQueueOrder(runtime: Record<string, AgentRuntimeState>): string[] {
-  return AGENT_DEFINITIONS.map((def) => def.id)
+function getCoffeeQueueOrder(
+  runtime: Record<string, AgentRuntimeState>,
+  definitions: AgentDefinition[],
+): string[] {
+  return definitions
+    .map((def) => def.id)
     .filter((id) => isInCoffeeFlow(runtime[id]))
     .sort((a, b) => runtime[a].coffeeQueueTicket - runtime[b].coffeeQueueTicket);
 }
@@ -159,9 +164,10 @@ function canBeginServing(
 
 function applyCoffeeQueueSync(
   runtime: Record<string, AgentRuntimeState>,
+  definitions: AgentDefinition[],
 ): Record<string, AgentRuntimeState> {
   const next = { ...runtime };
-  const queue = getCoffeeQueueOrder(next);
+  const queue = getCoffeeQueueOrder(next, definitions);
 
   for (let i = 0; i < queue.length; i++) {
     const id = queue[i];
@@ -239,16 +245,21 @@ function applyCoffeeQueueSync(
 }
 
 export const useAgentsStore = create<AgentsStore>((set, get) => ({
-  definitions: AGENT_DEFINITIONS,
+  definitions: [],
   runtime: {},
   idleTimers: {},
 
+  setDefinitions: (definitions) => {
+    set({ definitions, runtime: {}, idleTimers: {} });
+  },
+
   initialize: () => {
+    const definitions = get().definitions;
     const runtime: Record<string, AgentRuntimeState> = {};
     const idleTimers: Record<string, number> = {};
     stuckSecondsByAgent.clear();
     coffeeQueueTicketSeq = 1;
-    AGENT_DEFINITIONS.forEach((def) => {
+    definitions.forEach((def) => {
       runtime[def.id] = createInitialRuntime(def);
       idleTimers[def.id] = randomIdleDuration(
         SCENE_CONFIG.idlePauseMin,
@@ -260,7 +271,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
   },
 
   beginChatSession: (id) => {
-    const def = AGENT_DEFINITIONS.find((agent) => agent.id === id);
+    const def = get().definitions.find((agent) => agent.id === id);
     const state = get().runtime[id];
     if (!def || !state) return;
 
@@ -318,11 +329,11 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
   getRuntime: (id) => get().runtime[id],
 
   tick: (delta) => {
-    const { runtime, idleTimers } = get();
+    const { runtime, idleTimers, definitions } = get();
     let nextRuntime = { ...runtime };
     const nextTimers = { ...idleTimers };
 
-    for (const def of AGENT_DEFINITIONS) {
+    for (const def of definitions) {
       const state = nextRuntime[def.id];
       if (!state) continue;
 
@@ -498,7 +509,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       }
     }
 
-    nextRuntime = applyCoffeeQueueSync(nextRuntime);
+    nextRuntime = applyCoffeeQueueSync(nextRuntime, definitions);
     set({ runtime: resolveAllAgentOverlaps(nextRuntime), idleTimers: nextTimers });
   },
 }));

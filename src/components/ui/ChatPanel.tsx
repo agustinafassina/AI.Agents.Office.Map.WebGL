@@ -11,6 +11,9 @@ export function ChatPanel() {
   const conversation = useChatStore((s) => s.getActiveConversation());
   const connectionStatus = useChatStore((s) => s.connectionStatus);
   const serviceMode = useChatStore((s) => s.serviceMode);
+  const models = useChatStore((s) => s.models);
+  const resolveModelLabel = useChatStore((s) => s.resolveModelLabel);
+  const isModelAvailableOnApi = useChatStore((s) => s.isModelAvailableOnApi);
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
   const [input, setInput] = useState('');
@@ -21,6 +24,9 @@ export function ChatPanel() {
   }, [conversation?.messages.length, conversation?.isLoading]);
 
   if (!isOpen || !agent) return null;
+
+  const modelLabel = resolveModelLabel(agent.modelId);
+  const modelAvailable = isModelAvailableOnApi(agent.modelId);
 
   const handleClose = () => {
     closeChat();
@@ -43,7 +49,13 @@ export function ChatPanel() {
           <div>
             <h2 className="chat-panel__title">{agent.name}</h2>
             <p className="chat-panel__model">
-              Model: <code>{agent.modelId}</code>
+              Model:{' '}
+              <code className={serviceMode === 'live' && !modelAvailable ? 'chat-panel__model--missing' : ''}>
+                {modelLabel}
+              </code>
+              {serviceMode === 'live' && modelAvailable && (
+                <span className="chat-panel__model-source"> · from LiteLLM</span>
+              )}
             </p>
           </div>
         </div>
@@ -64,6 +76,11 @@ export function ChatPanel() {
         <span className="chat-panel__badge chat-panel__badge--mode">
           {serviceMode === 'mock' ? 'Mock LiteLLM' : serviceMode === 'live' ? 'Live' : 'Degraded'}
         </span>
+        {serviceMode === 'live' && models.length > 0 && (
+          <span className="chat-panel__badge chat-panel__badge--models">
+            {models.length} models
+          </span>
+        )}
       </div>
 
       <div className="chat-panel__messages">
