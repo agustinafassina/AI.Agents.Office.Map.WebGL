@@ -67,7 +67,6 @@ const PLANT_RADIUS: Record<'small' | 'medium' | 'tall' | 'fiddle' | 'snake', num
 };
 
 const CAFE_STOOL_ANGLES = [Math.PI / 2, Math.PI / 2 + 0.78, Math.PI / 2 - 0.78];
-const LOUNGE_TABLE_LOCAL: [number, number, number] = [-0.88, 0, 0.78];
 
 function loungeWorld(lx: number, lz: number): { x: number; z: number } {
   return { x: LOUNGE_X + lx, z: LOUNGE_Z + lz };
@@ -175,13 +174,11 @@ function meetingObstacles(): OfficeObstacle[] {
 }
 
 function coffeeLoungeObstacles(): OfficeObstacle[] {
-  const table = loungeWorld(LOUNGE_TABLE_LOCAL[0], LOUNGE_TABLE_LOCAL[2]);
   const bar = loungeWorld(0, BAR_STATION_LOCAL_Z);
   const highTable = loungeWorld(CAFE_HIGH_TABLE_LOCAL[0], CAFE_HIGH_TABLE_LOCAL[2]);
 
   const obstacles: OfficeObstacle[] = [
     boxObstacle(bar.x - 1.35, bar.x + 1.35, bar.z - 0.38, bar.z + 0.38),
-    boxObstacle(table.x - 0.62, table.x + 0.62, table.z - 0.42, table.z + 0.42),
     circleObstacle(highTable.x, highTable.z, 0.38),
     ...CAFE_WALL_PLANT_LOCAL.map(([lx, , lz]) => {
       const world = loungeWorld(lx, lz);

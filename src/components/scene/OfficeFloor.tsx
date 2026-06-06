@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { OFFICE_PALETTE } from '@/config/agents.config';
 import { getOfficeTextures } from '@/utils/textures/proceduralTextures';
 import { materials } from './materials';
-import { ZoneMat, WallTextureStripes } from './furniture/decor/SceneDecor';
+import { WallTextureStripes } from './furniture/decor/SceneDecor';
 
 const TILE = 1;
 const COLS = 14;
@@ -84,8 +84,6 @@ export function OfficeFloor() {
       </mesh>
 
       <CheckerTiles />
-
-      <ZoneMat position={[-0.4, 0, -1.2]} size={[1.6, 2.4]} variant="transition" />
 
       <TexturedWall position={[0.5, 0, -6.35]} size={[14.5, wallH, 0.18]} />
       <TexturedWall position={[-6.85, 0, 0]} size={[12.5, wallH, 0.18]} rotation={[0, Math.PI / 2, 0]} />

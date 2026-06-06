@@ -11,24 +11,28 @@ export function CentralWorkHub() {
         rotation={Math.PI}
         chairStyle="mesh"
         props="mug"
+        dualMonitor
       />
       <Workstation
         position={[0, 0, r]}
         rotation={0}
         chairStyle="terracotta"
         props="succulent"
+        dualMonitor
       />
       <Workstation
         position={[-r, 0, 0]}
         rotation={-Math.PI / 2}
         chairStyle="white"
         props="notebook"
+        dualMonitor
       />
       <Workstation
         position={[r, 0, 0]}
         rotation={Math.PI / 2}
         chairStyle="cream"
         props="pen"
+        dualMonitor
       />
       <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
         <VintageGlobe />

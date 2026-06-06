@@ -49,10 +49,6 @@ export function CafeHighTable() {
 
   return (
     <group position={CAFE_HIGH_TABLE_LOCAL}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow material={materials.rugWeave}>
-        <circleGeometry args={[0.72, 28]} />
-      </mesh>
-
       <mesh position={[0, 0.025, 0]} castShadow material={materials.espresso}>
         <cylinderGeometry args={[0.14, 0.16, 0.05, 12]} />
       </mesh>

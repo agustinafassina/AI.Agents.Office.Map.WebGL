@@ -71,7 +71,7 @@ export const ZONE_WAYPOINTS: Waypoint[] = [
   {
     id: 'wp-cafeteria-bar',
     zone: 'cafeteria',
-    position: walkWaypoint(0.35, COFFEE_LOUNGE_CENTER_Z + 0.72),
+    position: walkWaypoint(0.35, COFFEE_LOUNGE_CENTER_Z + 0.35),
   },
   {
     id: 'wp-cafeteria-high-table',

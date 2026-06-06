@@ -15,47 +15,7 @@ import {
 import { CafeHighTable } from './CafeHighTable';
 import { StringLights, Terrarium, DeskSucculent, ZoneMat } from './decor/SceneDecor';
 
-const PLATFORM_Y = 0.14;
-const LOUNGE_TABLE: [number, number, number] = [-0.88, 0, 0.78];
 const BAR_COUNTER_TOP_Y = 1.045;
-
-function CoffeeTable() {
-  return (
-    <group position={LOUNGE_TABLE}>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, PLATFORM_Y + 0.012, 0]}
-        receiveShadow
-        material={materials.rugWeave}
-      >
-        <circleGeometry args={[1.05, 32]} />
-      </mesh>
-      <mesh position={[0, 0.16, 0]} castShadow material={materials.woodLight}>
-        <boxGeometry args={[1.05, 0.08, 0.62]} />
-      </mesh>
-      {[
-        [-0.38, 0.22],
-        [0.38, 0.22],
-        [-0.38, -0.22],
-        [0.38, -0.22],
-      ].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.08, z]} castShadow material={materials.woodDark}>
-          <boxGeometry args={[0.055, 0.14, 0.055]} />
-        </mesh>
-      ))}
-      <mesh position={[0.22, 0.205, 0.08]} material={materials.mug}>
-        <cylinderGeometry args={[0.032, 0.036, 0.06, 8]} />
-      </mesh>
-      <mesh position={[-0.2, 0.202, -0.06]} material={materials.mug}>
-        <cylinderGeometry args={[0.028, 0.032, 0.055, 8]} />
-      </mesh>
-      <mesh position={[0.02, 0.205, -0.14]} rotation={[0, 0.35, 0]} material={materials.notebook}>
-        <boxGeometry args={[0.16, 0.008, 0.11]} />
-      </mesh>
-      <DeskSucculent position={[-0.18, 0.2, 0.1]} />
-    </group>
-  );
-}
 
 function CoffeeBarStation() {
   return (
@@ -122,16 +82,9 @@ function CoffeeBarStation() {
 export function CoffeeLounge() {
   return (
     <group position={COFFEE_LOUNGE_POSITION}>
-      <mesh position={[0, PLATFORM_Y / 2, 0.4]} castShadow receiveShadow material={materials.platformWood}>
-        <boxGeometry args={[5.8, PLATFORM_Y, 3.4]} />
-      </mesh>
-      <mesh position={[0, PLATFORM_Y + 0.002, 0.4]} receiveShadow material={materials.woodLight}>
-        <boxGeometry args={[5.6, 0.02, 3.2]} />
-      </mesh>
+      <ZoneMat position={[0, 0, 0.45]} size={[5.6, 3.2]} variant="sage" />
 
-      <ZoneMat position={[0, 0, 0.45]} size={[5.2, 3]} variant="sage" elevation={PLATFORM_Y + 0.015} />
-
-      <group position={[0, PLATFORM_Y, 0]}>
+      <group>
         <group position={[0, 0, LIVING_WALL_LOCAL_Z]}>
           <mesh position={[0, 0.98, 0]} material={materials.sageDark}>
             <boxGeometry args={[6, 2.1, 0.13]} />
@@ -172,7 +125,6 @@ export function CoffeeLounge() {
         ))}
 
         <CoffeeBarStation />
-        <CoffeeTable />
         <CafeHighTable />
 
         <StringLights start={[-2.2, 0, -0.82]} count={11} spacing={0.45} height={1.58} depth={-0.34} />

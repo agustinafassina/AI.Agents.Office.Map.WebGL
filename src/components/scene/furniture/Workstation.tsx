@@ -20,6 +20,7 @@ interface WorkstationProps {
   rotation?: number;
   chairStyle?: ChairStyle;
   props?: DeskPropType;
+  dualMonitor?: boolean;
 }
 
 export function Workstation({
@@ -27,6 +28,7 @@ export function Workstation({
   rotation = 0,
   chairStyle = 'sage',
   props: deskProp = 'succulent',
+  dualMonitor = false,
 }: WorkstationProps) {
   const seatMat = useMemo(() => {
     const mats: Record<ChairStyle, THREE.MeshStandardMaterial> = {
@@ -60,7 +62,7 @@ export function Workstation({
           ]}
         />
 
-        <CurvedMonitorGroup />
+        <CurvedMonitorGroup dual={dualMonitor} />
         <KeyboardMouse position={[0, 0.44, 0.1]} />
         <DeskPropsSlot type={deskProp} offset={[0.34, 0.41, 0.12]} />
       </group>
