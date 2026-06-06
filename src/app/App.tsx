@@ -1,5 +1,5 @@
 import { OfficeScene } from '@/components/scene/OfficeScene';
-import { ChatPanel } from '@/components/ui/ChatPanel';
+import { LazyChatPanel } from '@/components/ui/LazyChatPanel';
 import { OfficeHud } from '@/components/ui/OfficeHud';
 import { OfficeNavigation } from '@/components/ui/OfficeNavigation';
 import { ZoomControls } from '@/components/ui/ZoomControls';
@@ -18,7 +18,7 @@ export function App() {
         <OfficeNavigation />
         <ZoomControls />
       </main>
-      <ChatPanel />
+      <LazyChatPanel />
     </div>
   );
 }

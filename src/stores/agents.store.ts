@@ -2,11 +2,15 @@ import { create } from 'zustand';
 import {
   getAgentChatAnchor,
   getAgentSpawnAnchor,
-  getCoffeeBarAnchor,
   getZoneWaypoints,
   isNearChatAnchor,
   nearestZoneWaypointIndex,
 } from '@/config/agentZones.config';
+import {
+  COFFEE_BAR_MAX_SERVING,
+  getCoffeeBarQueueAnchor,
+  isAtCoffeeBarQueueSlot,
+} from '@/config/coffeeBarQueue';
 import { AGENT_DEFINITIONS, SCENE_CONFIG } from '@/config/agents.config';
 import type { AgentDefinition, AgentRuntimeState, AgentStatus } from '@/types/agent';
 import type { ChatAnchor } from '@/types/scene';
@@ -19,6 +23,7 @@ import {
 } from '@/utils/movement';
 import {
   moveWithAgentAwareness,
+  findChatApproachPosition,
   resolveAllAgentOverlaps,
   sanitizeAgentPosition,
   sanitizeWalkPosition,
@@ -40,16 +45,37 @@ interface AgentsStore {
 const stuckSecondsByAgent = new Map<string, number>();
 const STUCK_THRESHOLD = 0.55;
 const MOVE_EPSILON = 0.004;
+let coffeeQueueTicketSeq = 1;
+
+function clearCoffeeQueue(state: AgentRuntimeState): AgentRuntimeState {
+  return {
+    ...state,
+    pendingCoffee: false,
+    coffeeTimer: 0,
+    coffeeQueueTicket: 0,
+  };
+}
+
+function anchorPosition(anchor: ChatAnchor): [number, number, number] {
+  if (anchor.posture === 'sit') {
+    return sanitizeWalkPosition([...anchor.position], { allowFurniture: true });
+  }
+  return sanitizeWalkPosition([...anchor.position]);
+}
+
+function chatWalkTarget(anchor: ChatAnchor): [number, number, number] {
+  if (anchor.posture === 'sit') {
+    return findChatApproachPosition([...anchor.position]);
+  }
+  return sanitizeWalkPosition([...anchor.position]);
+}
 
 function applyChatAnchor(state: AgentRuntimeState, anchor: ChatAnchor): AgentRuntimeState {
   return {
-    ...state,
+    ...clearCoffeeQueue(state),
     status: 'chatting',
-    position: sanitizeWalkPosition([...anchor.position]),
+    position: anchorPosition(anchor),
     targetPosition: null,
-    pendingChat: false,
-    pendingCoffee: false,
-    coffeeTimer: 0,
     rotation: anchor.rotation,
     posture: anchor.posture,
   };
@@ -61,41 +87,11 @@ function dispatchToChatAnchor(state: AgentRuntimeState, anchor: ChatAnchor): Age
   }
 
   return {
-    ...state,
+    ...clearCoffeeQueue(state),
     status: 'walking',
-    targetPosition: sanitizeWalkPosition([...anchor.position]),
+    targetPosition: chatWalkTarget(anchor),
     pendingChat: true,
-    pendingCoffee: false,
-    coffeeTimer: 0,
     posture: anchor.posture,
-  };
-}
-
-function dispatchToCoffeeBar(state: AgentRuntimeState, anchor: ChatAnchor): AgentRuntimeState {
-  if (isNearChatAnchor(state.position, anchor)) {
-    return {
-      ...state,
-      status: 'coffee',
-      position: sanitizeWalkPosition([...anchor.position]),
-      targetPosition: null,
-      pendingCoffee: false,
-      rotation: anchor.rotation,
-      posture: 'stand',
-      coffeeTimer: randomIdleDuration(
-        SCENE_CONFIG.coffeeDurationMin,
-        SCENE_CONFIG.coffeeDurationMax,
-      ),
-    };
-  }
-
-  return {
-    ...state,
-    status: 'walking',
-    targetPosition: sanitizeWalkPosition([...anchor.position]),
-    pendingCoffee: true,
-    pendingChat: false,
-    coffeeTimer: 0,
-    posture: 'stand',
   };
 }
 
@@ -112,6 +108,7 @@ function createInitialRuntime(def: AgentDefinition): AgentRuntimeState {
     pendingChat: false,
     pendingCoffee: false,
     coffeeTimer: 0,
+    coffeeQueueTicket: 0,
     posture: anchor.posture,
   };
 }
@@ -129,6 +126,118 @@ function otherAgents(
     .map(([, state]) => ({ id: state.id, position: state.position }));
 }
 
+function isInCoffeeFlow(state: AgentRuntimeState): boolean {
+  return (
+    state.coffeeQueueTicket > 0 ||
+    state.pendingCoffee ||
+    state.status === 'coffee' ||
+    state.status === 'coffee-queue'
+  );
+}
+
+function getCoffeeQueueOrder(runtime: Record<string, AgentRuntimeState>): string[] {
+  return AGENT_DEFINITIONS.map((def) => def.id)
+    .filter((id) => isInCoffeeFlow(runtime[id]))
+    .sort((a, b) => runtime[a].coffeeQueueTicket - runtime[b].coffeeQueueTicket);
+}
+
+function canBeginServing(
+  queue: string[],
+  agentId: string,
+  runtime: Record<string, AgentRuntimeState>,
+): boolean {
+  const index = queue.indexOf(agentId);
+  if (index < 0 || index >= COFFEE_BAR_MAX_SERVING) return false;
+
+  for (let i = 0; i < index; i++) {
+    const ahead = runtime[queue[i]];
+    if (ahead.status === 'coffee') continue;
+    if (!isAtCoffeeBarQueueSlot(ahead.position, i)) return false;
+  }
+  return true;
+}
+
+function applyCoffeeQueueSync(
+  runtime: Record<string, AgentRuntimeState>,
+): Record<string, AgentRuntimeState> {
+  const next = { ...runtime };
+  const queue = getCoffeeQueueOrder(next);
+
+  for (let i = 0; i < queue.length; i++) {
+    const id = queue[i];
+    const state = next[id];
+    if (!state || state.status === 'chatting') continue;
+
+    const anchor = getCoffeeBarQueueAnchor(i);
+    const target = sanitizeWalkPosition([...anchor.position], { allowFurniture: true });
+    const atSlot = isAtCoffeeBarQueueSlot(state.position, i);
+    const servingSlot = i < COFFEE_BAR_MAX_SERVING;
+
+    if (state.status === 'coffee') {
+      next[id] = {
+        ...state,
+        rotation: anchor.rotation,
+        posture: 'stand',
+        targetPosition: null,
+        pendingCoffee: false,
+      };
+      continue;
+    }
+
+    if (servingSlot && canBeginServing(queue, id, next)) {
+      if (atSlot) {
+        next[id] = {
+          ...state,
+          status: 'coffee',
+          position: target,
+          targetPosition: null,
+          pendingCoffee: false,
+          rotation: anchor.rotation,
+          posture: 'stand',
+          coffeeTimer:
+            state.coffeeTimer > 0
+              ? state.coffeeTimer
+              : randomIdleDuration(
+                  SCENE_CONFIG.coffeeDurationMin,
+                  SCENE_CONFIG.coffeeDurationMax,
+                ),
+        };
+      } else {
+        next[id] = {
+          ...state,
+          status: 'walking',
+          pendingCoffee: true,
+          targetPosition: target,
+          posture: 'stand',
+        };
+      }
+      continue;
+    }
+
+    if (atSlot) {
+      next[id] = {
+        ...state,
+        status: 'coffee-queue',
+        position: sanitizeWalkPosition([...state.position]),
+        targetPosition: null,
+        pendingCoffee: true,
+        rotation: anchor.rotation,
+        posture: 'stand',
+      };
+    } else {
+      next[id] = {
+        ...state,
+        status: 'walking',
+        pendingCoffee: true,
+        targetPosition: target,
+        posture: 'stand',
+      };
+    }
+  }
+
+  return next;
+}
+
 export const useAgentsStore = create<AgentsStore>((set, get) => ({
   definitions: AGENT_DEFINITIONS,
   runtime: {},
@@ -138,6 +247,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     const runtime: Record<string, AgentRuntimeState> = {};
     const idleTimers: Record<string, number> = {};
     stuckSecondsByAgent.clear();
+    coffeeQueueTicketSeq = 1;
     AGENT_DEFINITIONS.forEach((def) => {
       runtime[def.id] = createInitialRuntime(def);
       idleTimers[def.id] = randomIdleDuration(
@@ -173,12 +283,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       runtime: {
         ...get().runtime,
         [id]: {
-          ...state,
+          ...clearCoffeeQueue(state),
           status: 'idle',
           targetPosition: null,
-          pendingChat: false,
-          pendingCoffee: false,
-          coffeeTimer: 0,
           posture: 'stand',
         },
       },
@@ -201,6 +308,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           pendingChat: status === 'chatting' ? false : current.pendingChat,
           pendingCoffee: status === 'chatting' ? false : current.pendingCoffee,
           coffeeTimer: status === 'chatting' ? 0 : current.coffeeTimer,
+          coffeeQueueTicket: status === 'chatting' ? 0 : current.coffeeQueueTicket,
           posture: status === 'chatting' ? current.posture : 'stand',
         },
       },
@@ -211,7 +319,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
 
   tick: (delta) => {
     const { runtime, idleTimers } = get();
-    const nextRuntime = { ...runtime };
+    let nextRuntime = { ...runtime };
     const nextTimers = { ...idleTimers };
 
     for (const def of AGENT_DEFINITIONS) {
@@ -234,16 +342,18 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           ]);
           stuckSecondsByAgent.set(def.id, 0);
           nextRuntime[def.id] = {
-            ...state,
+            ...clearCoffeeQueue(state),
             status: 'walking',
             targetPosition: target,
             waypointIndex: wpIndex,
-            pendingCoffee: false,
-            coffeeTimer: 0,
           };
         } else {
           nextRuntime[def.id] = { ...state, coffeeTimer };
         }
+        continue;
+      }
+
+      if (state.status === 'coffee-queue') {
         continue;
       }
 
@@ -254,7 +364,14 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
 
           if (wantsCoffee) {
             stuckSecondsByAgent.set(def.id, 0);
-            nextRuntime[def.id] = dispatchToCoffeeBar(state, getCoffeeBarAnchor(def));
+            nextRuntime[def.id] = {
+              ...state,
+              coffeeQueueTicket: coffeeQueueTicketSeq++,
+              pendingCoffee: true,
+              status: 'walking',
+              targetPosition: null,
+              posture: 'stand',
+            };
             continue;
           }
 
@@ -299,18 +416,18 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             continue;
           }
 
-          if (state.pendingCoffee) {
-            nextRuntime[def.id] = dispatchToCoffeeBar(
-              {
-                ...state,
-                position: sanitizeAgentPosition(
-                  [...state.targetPosition],
-                  def.id,
-                  otherAgents(nextRuntime, def.id),
-                ),
-              },
-              getCoffeeBarAnchor(def),
-            );
+          if (state.pendingCoffee || state.coffeeQueueTicket > 0) {
+            nextRuntime[def.id] = {
+              ...state,
+              position: sanitizeAgentPosition(
+                [...state.targetPosition],
+                def.id,
+                otherAgents(nextRuntime, def.id),
+                { allowFurniture: true },
+              ),
+              rotation: rotationTowards(state.position, state.targetPosition),
+              targetPosition: null,
+            };
             continue;
           }
 
@@ -346,7 +463,12 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
             stuckSecondsByAgent.set(def.id, stuck);
 
-            if (stuck >= STUCK_THRESHOLD && zoneWaypoints.length > 0) {
+            if (
+              stuck >= STUCK_THRESHOLD &&
+              zoneWaypoints.length > 0 &&
+              !state.pendingCoffee &&
+              state.coffeeQueueTicket === 0
+            ) {
               const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
               const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
                 number,
@@ -376,6 +498,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       }
     }
 
+    nextRuntime = applyCoffeeQueueSync(nextRuntime);
     set({ runtime: resolveAllAgentOverlaps(nextRuntime), idleTimers: nextTimers });
   },
 }));

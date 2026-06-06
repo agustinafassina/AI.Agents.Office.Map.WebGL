@@ -23,6 +23,11 @@ export const BAR_CABINET_HALF_DEPTH = BAR_CABINET_DEPTH / 2;
 export const BAR_STATION_LOCAL_Z =
   LIVING_WALL_LOCAL_Z + LIVING_WALL_HALF_DEPTH + BAR_CABINET_HALF_DEPTH;
 
+export const CAFE_WALL_PLANT_LOCAL: [number, number, number][] = [
+  [-2.15, 0, LIVING_WALL_LOCAL_Z + 0.16],
+  [2.15, 0, LIVING_WALL_LOCAL_Z + 0.16],
+];
+
 export const CAFE_HIGH_TABLE_LOCAL: [number, number, number] = [-0.85, 0, 1.28];
 export const CAFE_HIGH_TABLE_TOP_Y = 0.92;
 export const CAFE_BAR_STOOL_SEAT_Y = 0.68;

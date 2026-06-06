@@ -10,6 +10,16 @@ export function hubChairOffsetZ(scale = DESK_SCALE): number {
   return L_DESK_FRONT_Z * scale + CHAIR_GAP + CHAIR_HALF_DEPTH;
 }
 
+export const HUB_WORKSTATION_HALF_X = 0.525;
+export const HUB_WORKSTATION_HALF_Z = 0.3;
+
+export const HUB_DESK_PLACEMENTS = [
+  { offset: [0, -HUB_DESK_RADIUS] as const, rotation: Math.PI },
+  { offset: [0, HUB_DESK_RADIUS] as const, rotation: 0 },
+  { offset: [-HUB_DESK_RADIUS, 0] as const, rotation: -Math.PI / 2 },
+  { offset: [HUB_DESK_RADIUS, 0] as const, rotation: Math.PI / 2 },
+] as const;
+
 export function workstationChairOffsetZ(scale = DESK_SCALE): number {
   return WORKSTATION_FRONT_Z * scale + CHAIR_GAP + CHAIR_HALF_DEPTH;
 }

@@ -10,6 +10,10 @@ import {
   MEETING_ZONE_POSITION,
 } from '@/components/scene/furniture/meetingConstants';
 import { hubPerimeterPosition } from '@/config/officeObstacles';
+import {
+  findNearestWalkablePosition,
+  findStandPositionNearSeat,
+} from '@/utils/collision';
 import type { AgentDefinition, AgentHomeZone } from '@/types/agent';
 import type { ChatAnchor, Waypoint } from '@/types/scene';
 
@@ -25,22 +29,74 @@ const CAFE_STOOL_SEAT: [number, number, number] = [
   COFFEE_LOUNGE_POSITION[2] + CAFE_PRIMARY_STOOL_LOCAL[2],
 ];
 
+const CHAT_ARRIVAL_RADIUS = 0.28;
+
+function walkWaypoint(x: number, z: number): [number, number, number] {
+  return findNearestWalkablePosition([x, 0, z]);
+}
+
 export const ZONE_WAYPOINTS: Waypoint[] = [
   { id: 'wp-center-north', zone: 'center-desk', position: hubPerimeterPosition(-Math.PI / 2) },
   { id: 'wp-center-east', zone: 'center-desk', position: hubPerimeterPosition(0) },
   { id: 'wp-center-west', zone: 'center-desk', position: hubPerimeterPosition(Math.PI) },
   { id: 'wp-center-south', zone: 'center-desk', position: hubPerimeterPosition(Math.PI / 2) },
-  { id: 'wp-living-puff', zone: 'living', position: LIVING_PUFF_SEAT },
-  { id: 'wp-living-table', zone: 'living', position: [MEETING_ZONE_POSITION[0], 0, MEETING_ZONE_POSITION[2]] },
-  { id: 'wp-living-rug', zone: 'living', position: [MEETING_ZONE_POSITION[0] + 0.55, 0, MEETING_ZONE_POSITION[2] - 0.35] },
-  { id: 'wp-living-board', zone: 'living', position: [MEETING_ZONE_POSITION[0] - 1.15, 0, MEETING_ZONE_POSITION[2] + 0.35] },
-  { id: 'wp-cafeteria-table', zone: 'cafeteria', position: [-0.55, 0, COFFEE_LOUNGE_CENTER_Z + 0.95] },
-  { id: 'wp-cafeteria-bar', zone: 'cafeteria', position: [0.35, 0, COFFEE_LOUNGE_CENTER_Z + 0.15] },
-  { id: 'wp-cafeteria-high-table', zone: 'cafeteria', position: CAFE_STOOL_SEAT },
-  { id: 'wp-wall-desks-path', zone: 'wall-desks', position: [4.2, 0, PRIVATE_DESK_CENTER[2]] },
-  { id: 'wp-wall-desks-a', zone: 'wall-desks', position: [PRIVATE_DESK_X - 0.55, 0, PRIVATE_DESK_POSITIONS[0][2]] },
-  { id: 'wp-wall-desks-b', zone: 'wall-desks', position: [PRIVATE_DESK_X - 0.55, 0, PRIVATE_DESK_POSITIONS[1][2]] },
-  { id: 'wp-wall-desks-c', zone: 'wall-desks', position: [PRIVATE_DESK_X - 0.55, 0, PRIVATE_DESK_POSITIONS[2][2]] },
+  {
+    id: 'wp-living-puff',
+    zone: 'living',
+    position: walkWaypoint(
+      MEETING_ZONE_POSITION[0] + 0.35,
+      MEETING_ZONE_POSITION[2] + 1.05,
+    ),
+  },
+  {
+    id: 'wp-living-table',
+    zone: 'living',
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] + 1.05, MEETING_ZONE_POSITION[2] + 0.45),
+  },
+  {
+    id: 'wp-living-rug',
+    zone: 'living',
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] + 0.55, MEETING_ZONE_POSITION[2] - 0.35),
+  },
+  {
+    id: 'wp-living-board',
+    zone: 'living',
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] - 1.15, MEETING_ZONE_POSITION[2] + 0.35),
+  },
+  {
+    id: 'wp-cafeteria-table',
+    zone: 'cafeteria',
+    position: walkWaypoint(-0.55, COFFEE_LOUNGE_CENTER_Z + 1.05),
+  },
+  {
+    id: 'wp-cafeteria-bar',
+    zone: 'cafeteria',
+    position: walkWaypoint(0.35, COFFEE_LOUNGE_CENTER_Z + 0.72),
+  },
+  {
+    id: 'wp-cafeteria-high-table',
+    zone: 'cafeteria',
+    position: walkWaypoint(
+      COFFEE_LOUNGE_POSITION[0] + CAFE_HIGH_TABLE_LOCAL[0] + 0.95,
+      COFFEE_LOUNGE_POSITION[2] + CAFE_HIGH_TABLE_LOCAL[2] + 0.35,
+    ),
+  },
+  { id: 'wp-wall-desks-path', zone: 'wall-desks', position: walkWaypoint(4.2, PRIVATE_DESK_CENTER[2]) },
+  {
+    id: 'wp-wall-desks-a',
+    zone: 'wall-desks',
+    position: walkWaypoint(PRIVATE_DESK_X - 0.55, PRIVATE_DESK_POSITIONS[0][2]),
+  },
+  {
+    id: 'wp-wall-desks-b',
+    zone: 'wall-desks',
+    position: walkWaypoint(PRIVATE_DESK_X - 0.55, PRIVATE_DESK_POSITIONS[1][2]),
+  },
+  {
+    id: 'wp-wall-desks-c',
+    zone: 'wall-desks',
+    position: walkWaypoint(PRIVATE_DESK_X - 0.55, PRIVATE_DESK_POSITIONS[2][2]),
+  },
 ];
 
 const ZONE_CHAT_ANCHORS: Record<AgentHomeZone, ChatAnchor> = {
@@ -81,21 +137,6 @@ function wallDeskChatAnchor(slot: 0 | 1 | 2): ChatAnchor {
   };
 }
 
-const CHAT_ARRIVAL_RADIUS = 0.28;
-
-const COFFEE_BAR_FRONT_Z = COFFEE_LOUNGE_CENTER_Z + 0.22;
-
-const COFFEE_BAR_SLOTS: [number, number, number][] = [
-  [0.05, 0, COFFEE_BAR_FRONT_Z],
-  [0.45, 0, COFFEE_BAR_FRONT_Z + 0.04],
-  [-0.35, 0, COFFEE_BAR_FRONT_Z + 0.03],
-  [0.85, 0, COFFEE_BAR_FRONT_Z + 0.02],
-  [-0.75, 0, COFFEE_BAR_FRONT_Z + 0.05],
-  [0.25, 0, COFFEE_BAR_FRONT_Z + 0.08],
-];
-
-const COFFEE_BAR_COUNTER: [number, number, number] = [0.1, 0, COFFEE_LOUNGE_CENTER_Z + 0.12];
-
 export function getZoneWaypoints(zone: AgentHomeZone): Waypoint[] {
   return ZONE_WAYPOINTS.filter((wp) => wp.zone === zone);
 }
@@ -108,7 +149,25 @@ export function getAgentChatAnchor(def: AgentDefinition): ChatAnchor {
 }
 
 export function getAgentSpawnAnchor(def: AgentDefinition): ChatAnchor {
-  return getAgentChatAnchor(def);
+  const anchor = getAgentChatAnchor(def);
+
+  if (anchor.posture === 'sit') {
+    const standPosition = findStandPositionNearSeat([...anchor.position], [
+      [0, 0.72],
+      [0.55, 0.45],
+      [-0.55, 0.45],
+    ]);
+    return {
+      position: standPosition,
+      rotation: anchor.rotation,
+      posture: 'stand',
+    };
+  }
+
+  return {
+    ...anchor,
+    position: findNearestWalkablePosition([...anchor.position]),
+  };
 }
 
 export function getAgentPuffScale(def: AgentDefinition): number {
@@ -144,24 +203,6 @@ export function isNearChatAnchor(
   const dx = position[0] - anchor.position[0];
   const dz = position[2] - anchor.position[2];
   return Math.sqrt(dx * dx + dz * dz) <= CHAT_ARRIVAL_RADIUS;
-}
-
-function coffeeSlotIndex(agentId: string): number {
-  let h = 0;
-  for (let i = 0; i < agentId.length; i++) h = (h * 31 + agentId.charCodeAt(i)) >>> 0;
-  return h % COFFEE_BAR_SLOTS.length;
-}
-
-export function getCoffeeBarAnchor(def: AgentDefinition): ChatAnchor {
-  const slot = COFFEE_BAR_SLOTS[coffeeSlotIndex(def.id)];
-  return {
-    position: slot,
-    rotation: Math.atan2(
-      COFFEE_BAR_COUNTER[0] - slot[0],
-      COFFEE_BAR_COUNTER[2] - slot[2],
-    ),
-    posture: 'stand',
-  };
 }
 
 export { CHAT_ARRIVAL_RADIUS };

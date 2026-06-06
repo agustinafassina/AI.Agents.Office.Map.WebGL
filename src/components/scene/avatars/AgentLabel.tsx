@@ -13,6 +13,7 @@ interface AgentLabelProps {
 function statusColor(status: AgentStatus): string {
   if (status === 'chatting') return '#d4a574';
   if (status === 'coffee') return '#c8a882';
+  if (status === 'coffee-queue') return '#a8b5a0';
   if (status === 'walking') return '#c8d4a8';
   return '#9aab9e';
 }
@@ -20,13 +21,14 @@ function statusColor(status: AgentStatus): string {
 function statusLabel(status: AgentStatus): string {
   if (status === 'chatting') return 'In chat';
   if (status === 'coffee') return 'Coffee break';
+  if (status === 'coffee-queue') return 'In line';
   if (status === 'walking') return 'Moving';
   return 'Available';
 }
 
 export function AgentLabel({ name, status, accentColor, selected }: AgentLabelProps) {
   return (
-    <Billboard position={[0, 1.08, 0]} follow lockX lockZ>
+    <Billboard position={[0, 1.16, 0]} follow lockX lockZ>
       <group>
         {selected && (
           <mesh position={[0, 0.04, -0.02]}>

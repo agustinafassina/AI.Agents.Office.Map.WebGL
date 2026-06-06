@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
-import { Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { OFFICE_PALETTE } from '@/config/agents.config';
 import { useAgentMovement } from '@/hooks/useAgentMovement';
 import { OfficeFloor } from './OfficeFloor';
@@ -13,7 +13,11 @@ import { CameraZoomHandler } from './CameraZoomHandler';
 import { TextureWarmup } from './TextureWarmup';
 import { OptionalTextureLoader } from './OptionalTextureLoader';
 import { OfficeZoneHotspots } from './OfficeZoneHotspots';
-import { OfficePostProcessing } from './OfficePostProcessing';
+const OfficePostProcessing = lazy(() =>
+  import('./OfficePostProcessing').then((module) => ({
+    default: module.OfficePostProcessing,
+  })),
+);
 
 const BG = OFFICE_PALETTE.sceneBackground;
 
@@ -41,7 +45,9 @@ function SceneContents() {
         color="#1e2f27"
       />
       <AgentsLayer />
-      <OfficePostProcessing />
+      <Suspense fallback={null}>
+        <OfficePostProcessing />
+      </Suspense>
     </>
   );
 }

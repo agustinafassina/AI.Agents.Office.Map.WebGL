@@ -8,7 +8,7 @@ import { getAgentChatAnchor, getAgentPuffScale, isNearChatAnchor } from '@/confi
 import { useSceneStore } from '@/stores/scene.store';
 import { useChatStore } from '@/stores/chat.store';
 import { AgentLabel } from './AgentLabel';
-import { AgentChestBadge } from './AgentChestBadge';
+import { AgentRoleLogo } from './AgentRoleLogo';
 import { AVATAR_SCALE } from './avatarConstants';
 import {
   easeSitBlend,
@@ -264,9 +264,11 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       ? 'chatting'
       : runtime.status === 'coffee'
         ? 'coffee'
-        : runtime.status === 'walking'
-          ? 'walking'
-          : 'idle';
+        : runtime.status === 'coffee-queue'
+          ? 'coffee-queue'
+          : runtime.status === 'walking'
+            ? 'walking'
+            : 'idle';
 
   return (
     <group ref={groupRef} position={runtime.position} userData={{ blockPan: true }}>
@@ -332,7 +334,6 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         <mesh position={[0, 0.44, 0.055]} material={accentMat}>
           <boxGeometry args={[0.08, 0.03, 0.02]} />
         </mesh>
-        <AgentChestBadge role={definition.role} accentColor={definition.accentColor} />
 
         <group ref={leftArmRef} position={[-0.13, 0.38, 0]}>
           <mesh position={[0, -0.05, 0]} castShadow material={shirtMat}>
@@ -409,6 +410,8 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           </mesh>
         )}
       </group>
+
+      <AgentRoleLogo logoUrl={definition.logoUrl} accentColor={definition.accentColor} />
 
       <AgentLabel
         name={definition.name}

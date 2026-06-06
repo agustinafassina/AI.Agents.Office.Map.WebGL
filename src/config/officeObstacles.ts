@@ -1,8 +1,38 @@
-import { PRIVATE_DESK_CENTER, PRIVATE_DESK_MAX_Z, PRIVATE_DESK_MIN_Z, PRIVATE_DESK_POSITIONS, PRIVATE_DESK_SPACING_Z, PRIVATE_DESK_SPAN_Z, HUB_DESK_RADIUS } from '@/components/scene/furniture/deskConstants';
-import { COFFEE_LOUNGE_POSITION } from '@/components/scene/furniture/coffeeLoungeConstants';
-import { MEETING_ZONE_POSITION } from '@/components/scene/furniture/meetingConstants';
+import {
+  DESK_SCALE,
+  HUB_DESK_PLACEMENTS,
+  HUB_DESK_RADIUS,
+  HUB_WORKSTATION_HALF_X,
+  HUB_WORKSTATION_HALF_Z,
+  PRIVATE_DESK_MAX_Z,
+  PRIVATE_DESK_MIN_Z,
+  PRIVATE_DESK_POSITIONS,
+  PRIVATE_DESK_SPACING_Z,
+  PRIVATE_DESK_X,
+  workstationChairOffsetZ,
+} from '@/components/scene/furniture/deskConstants';
+import {
+  BAR_STATION_LOCAL_Z,
+  CAFE_BAR_STOOL_RADIUS,
+  CAFE_WALL_PLANT_LOCAL,
+  CAFE_HIGH_TABLE_LOCAL,
+  COFFEE_LOUNGE_POSITION,
+} from '@/components/scene/furniture/coffeeLoungeConstants';
+import {
+  MEETING_PUFF_LAYOUT,
+  MEETING_TABLE_RADIUS,
+  MEETING_ZONE_POSITION,
+} from '@/components/scene/furniture/meetingConstants';
+import { PERIMETER_PLANTS } from '@/config/officePerimeterPlants';
 
 export const AGENT_COLLISION_RADIUS = 0.22;
+
+export const SCENE_WALK_BOUNDS = {
+  minX: -6.5,
+  maxX: 7,
+  minZ: -5.5,
+  maxZ: 5,
+} as const;
 
 export type CircleObstacle = {
   kind: 'circle';
@@ -23,32 +53,238 @@ export type OfficeObstacle = CircleObstacle | BoxObstacle;
 
 const HUB_X = 0.5;
 const HUB_Z = 1.05;
-const HUB_BLOCK_RADIUS = HUB_DESK_RADIUS + 0.38;
-const [PRIVATE_X, , PRIVATE_CENTER_Z] = PRIVATE_DESK_CENTER;
-const PRIVATE_HALF_SPAN_Z = PRIVATE_DESK_SPAN_Z / 2 + 0.55;
+const HUB_PERIMETER_MARGIN = 0.38;
 const [MEETING_X, , MEETING_Z] = MEETING_ZONE_POSITION;
-const [, , LOUNGE_Z] = COFFEE_LOUNGE_POSITION;
+const [LOUNGE_X, , LOUNGE_Z] = COFFEE_LOUNGE_POSITION;
+const PRIVATE_WALL_X = PRIVATE_DESK_X - 0.3;
+
+const PLANT_RADIUS: Record<'small' | 'medium' | 'tall' | 'fiddle' | 'snake', number> = {
+  small: 0.3,
+  medium: 0.36,
+  tall: 0.4,
+  fiddle: 0.44,
+  snake: 0.36,
+};
+
+const CAFE_STOOL_ANGLES = [Math.PI / 2, Math.PI / 2 + 0.78, Math.PI / 2 - 0.78];
+const LOUNGE_TABLE_LOCAL: [number, number, number] = [-0.88, 0, 0.78];
+
+function loungeWorld(lx: number, lz: number): { x: number; z: number } {
+  return { x: LOUNGE_X + lx, z: LOUNGE_Z + lz };
+}
+
+function meetingWorld(lx: number, lz: number): { x: number; z: number } {
+  return { x: MEETING_X + lx, z: MEETING_Z + lz };
+}
+
+function circleObstacle(x: number, z: number, radius: number): CircleObstacle {
+  return { kind: 'circle', x, z, radius };
+}
+
+function boxObstacle(
+  minX: number,
+  maxX: number,
+  minZ: number,
+  maxZ: number,
+): BoxObstacle {
+  return { kind: 'box', minX, maxX, minZ, maxZ };
+}
+
+function wallObstacles(): BoxObstacle[] {
+  const pad = 0.42;
+  const { minX, maxX, minZ, maxZ } = SCENE_WALK_BOUNDS;
+  return [
+    boxObstacle(minX - 2, maxX + 2, minZ - 2, minZ + pad),
+    boxObstacle(minX - 2, minX + pad, minZ - 2, maxZ + 2),
+    boxObstacle(maxX - pad, maxX + 2, minZ - 2, maxZ + 2),
+    boxObstacle(minX - 2, maxX + 2, maxZ - pad, maxZ + 2),
+  ];
+}
+
+function rotateXZ(x: number, z: number, angle: number): [number, number] {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [x * c - z * s, x * s + z * c];
+}
+
+function hubDeskSegmentBox(
+  deskOffsetX: number,
+  deskOffsetZ: number,
+  rotation: number,
+  localCx: number,
+  localCz: number,
+  localHalfX: number,
+  localHalfZ: number,
+  padding = 0.05,
+): BoxObstacle {
+  const cx = localCx * DESK_SCALE;
+  const cz = localCz * DESK_SCALE;
+  const hx = localHalfX * DESK_SCALE + padding;
+  const hz = localHalfZ * DESK_SCALE + padding;
+
+  const corners = [
+    [cx - hx, cz - hz],
+    [cx + hx, cz - hz],
+    [cx - hx, cz + hz],
+    [cx + hx, cz + hz],
+  ].map(([lx, lz]) => rotateXZ(lx, lz, rotation));
+
+  const xs = corners.map(([x]) => HUB_X + deskOffsetX + x);
+  const zs = corners.map(([, z]) => HUB_Z + deskOffsetZ + z);
+  return boxObstacle(Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs));
+}
+
+function hubObstacles(): OfficeObstacle[] {
+  const chairLocalZ = workstationChairOffsetZ(DESK_SCALE);
+  const obstacles: OfficeObstacle[] = [circleObstacle(HUB_X, HUB_Z, 0.36)];
+
+  for (const { offset, rotation } of HUB_DESK_PLACEMENTS) {
+    const [dx, dz] = offset;
+
+    obstacles.push(
+      hubDeskSegmentBox(
+        dx,
+        dz,
+        rotation,
+        0,
+        0,
+        HUB_WORKSTATION_HALF_X,
+        HUB_WORKSTATION_HALF_Z,
+      ),
+    );
+
+    const [chairX, chairZ] = rotateXZ(0, chairLocalZ, rotation);
+    obstacles.push(circleObstacle(HUB_X + dx + chairX, HUB_Z + dz + chairZ, 0.32));
+  }
+
+  return obstacles;
+}
+
+function meetingObstacles(): OfficeObstacle[] {
+  const table = meetingWorld(0, 0);
+  const board = meetingWorld(-1.62, 0.05);
+
+  return [
+    circleObstacle(table.x, table.z, MEETING_TABLE_RADIUS + 0.14),
+    boxObstacle(board.x - 0.2, board.x + 0.95, board.z - 0.55, board.z + 0.55),
+    ...MEETING_PUFF_LAYOUT.map(({ position, scale }) => {
+      const world = meetingWorld(position[0], position[2]);
+      return circleObstacle(world.x, world.z, 0.44 * scale + 0.14);
+    }),
+  ];
+}
+
+function coffeeLoungeObstacles(): OfficeObstacle[] {
+  const table = loungeWorld(LOUNGE_TABLE_LOCAL[0], LOUNGE_TABLE_LOCAL[2]);
+  const bar = loungeWorld(0, BAR_STATION_LOCAL_Z);
+  const highTable = loungeWorld(CAFE_HIGH_TABLE_LOCAL[0], CAFE_HIGH_TABLE_LOCAL[2]);
+
+  const obstacles: OfficeObstacle[] = [
+    boxObstacle(bar.x - 1.35, bar.x + 1.35, bar.z - 0.38, bar.z + 0.38),
+    boxObstacle(table.x - 0.62, table.x + 0.62, table.z - 0.42, table.z + 0.42),
+    circleObstacle(highTable.x, highTable.z, 0.38),
+    ...CAFE_WALL_PLANT_LOCAL.map(([lx, , lz]) => {
+      const world = loungeWorld(lx, lz);
+      return circleObstacle(world.x, world.z, PLANT_RADIUS.snake + 0.06);
+    }),
+  ];
+
+  for (const angle of CAFE_STOOL_ANGLES) {
+    const lx = CAFE_HIGH_TABLE_LOCAL[0] + Math.sin(angle) * CAFE_BAR_STOOL_RADIUS;
+    const lz = CAFE_HIGH_TABLE_LOCAL[2] + Math.cos(angle) * CAFE_BAR_STOOL_RADIUS;
+    const stool = loungeWorld(lx, lz);
+    obstacles.push(circleObstacle(stool.x, stool.z, 0.34));
+  }
+
+  return obstacles;
+}
+
+function privateDeskObstacles(): OfficeObstacle[] {
+  const chairReach = workstationChairOffsetZ(DESK_SCALE) * 0.55 + 0.35;
+  const obstacles: OfficeObstacle[] = PRIVATE_DESK_POSITIONS.map(([, , z]) =>
+    circleObstacle(PRIVATE_DESK_X - chairReach * 0.35, z, 0.78),
+  );
+
+  const gapA = PRIVATE_DESK_MIN_Z + PRIVATE_DESK_SPACING_Z / 2;
+  const gapB = PRIVATE_DESK_MAX_Z - PRIVATE_DESK_SPACING_Z / 2;
+
+  obstacles.push(
+    circleObstacle(PRIVATE_WALL_X, gapA, PLANT_RADIUS.snake),
+    circleObstacle(PRIVATE_WALL_X, gapB, PLANT_RADIUS.medium),
+    circleObstacle(PRIVATE_WALL_X, PRIVATE_DESK_MIN_Z - 0.58, PLANT_RADIUS.tall),
+    circleObstacle(PRIVATE_WALL_X, PRIVATE_DESK_MAX_Z + 0.52, PLANT_RADIUS.fiddle),
+    circleObstacle(PRIVATE_WALL_X - 0.06, PRIVATE_DESK_MAX_Z + 0.12, 0.24),
+    circleObstacle(PRIVATE_WALL_X, PRIVATE_DESK_MIN_Z - 0.18, PLANT_RADIUS.small),
+  );
+
+  return obstacles;
+}
+
+function scatteredPlants(): CircleObstacle[] {
+  const placements: {
+    position: [number, number, number];
+    variant: keyof typeof PLANT_RADIUS;
+  }[] = [
+    { position: [-5.85, 0, 4.25], variant: 'fiddle' },
+    { position: [6.55, 0, 3.35], variant: 'fiddle' },
+    { position: [2.6, 0, 4.1], variant: 'medium' },
+    { position: [-1.6, 0, 3.6], variant: 'small' },
+    { position: [-5.2, 0, -2.4], variant: 'snake' },
+    { position: [5.8, 0, -1.8], variant: 'snake' },
+    { position: [-3.2, 0, 4.5], variant: 'tall' },
+    ...PERIMETER_PLANTS,
+  ];
+
+  return placements.map(({ position, variant }) =>
+    circleObstacle(position[0], position[2], PLANT_RADIUS[variant]),
+  );
+}
 
 export const OFFICE_OBSTACLES: OfficeObstacle[] = [
-  { kind: 'circle', x: HUB_X, z: HUB_Z, radius: HUB_BLOCK_RADIUS },
-  { kind: 'box', minX: -3.0, maxX: 3.0, minZ: -6.35, maxZ: -1.85 },
-  { kind: 'box', minX: -3.0, maxX: 3.65, minZ: LOUNGE_Z - 1.35, maxZ: LOUNGE_Z + 2.15 },
-  { kind: 'circle', x: MEETING_X, z: MEETING_Z, radius: 0.82 },
-  { kind: 'circle', x: MEETING_X + 0.72, z: MEETING_Z + 0.88, radius: 0.32 },
-  { kind: 'circle', x: MEETING_X + 0.48, z: MEETING_Z - 0.92, radius: 0.3 },
-  { kind: 'circle', x: MEETING_X - 0.22, z: MEETING_Z + 0.72, radius: 0.28 },
-  { kind: 'circle', x: MEETING_X + 0.95, z: MEETING_Z - 0.08, radius: 0.28 },
-  { kind: 'box', minX: PRIVATE_X - 0.95, maxX: PRIVATE_X + 0.6, minZ: PRIVATE_CENTER_Z - PRIVATE_HALF_SPAN_Z, maxZ: PRIVATE_CENTER_Z + PRIVATE_HALF_SPAN_Z },
-  ...PRIVATE_DESK_POSITIONS.map(([, , z]) => ({ kind: 'circle' as const, x: PRIVATE_X, z, radius: 0.85 })),
-  { kind: 'circle', x: -5.85, z: 4.25, radius: 0.45 },
-  { kind: 'circle', x: 6.55, z: 3.35, radius: 0.45 },
-  { kind: 'circle', x: PRIVATE_X - 0.3, z: PRIVATE_DESK_MIN_Z - 0.58, radius: 0.32 },
-  { kind: 'circle', x: PRIVATE_X - 0.3, z: PRIVATE_DESK_MAX_Z + 0.52, radius: 0.35 },
-  { kind: 'circle', x: PRIVATE_X - 0.3, z: PRIVATE_DESK_MIN_Z + PRIVATE_DESK_SPACING_Z / 2, radius: 0.24 },
-  { kind: 'circle', x: PRIVATE_X - 0.3, z: PRIVATE_DESK_MAX_Z - PRIVATE_DESK_SPACING_Z / 2, radius: 0.24 },
+  ...wallObstacles(),
+  ...hubObstacles(),
+  ...meetingObstacles(),
+  ...coffeeLoungeObstacles(),
+  ...privateDeskObstacles(),
+  ...scatteredPlants(),
 ];
 
+export const HUB_PERIMETER_RADIUS =
+  HUB_DESK_RADIUS + workstationChairOffsetZ(DESK_SCALE) + AGENT_COLLISION_RADIUS + 0.18;
+
 export function hubPerimeterPosition(angleRad: number, margin = 0.35): [number, number, number] {
-  const dist = HUB_BLOCK_RADIUS + AGENT_COLLISION_RADIUS + margin;
+  const dist = HUB_PERIMETER_RADIUS + margin - HUB_PERIMETER_MARGIN;
   return [HUB_X + Math.cos(angleRad) * dist, 0, HUB_Z + Math.sin(angleRad) * dist];
+}
+
+export function isWithinWalkBounds(x: number, z: number): boolean {
+  return (
+    x >= SCENE_WALK_BOUNDS.minX + AGENT_COLLISION_RADIUS &&
+    x <= SCENE_WALK_BOUNDS.maxX - AGENT_COLLISION_RADIUS &&
+    z >= SCENE_WALK_BOUNDS.minZ + AGENT_COLLISION_RADIUS &&
+    z <= SCENE_WALK_BOUNDS.maxZ - AGENT_COLLISION_RADIUS
+  );
+}
+
+export function clampToWalkBounds(x: number, z: number): [number, number] {
+  const pad = AGENT_COLLISION_RADIUS + 0.04;
+  return [
+    Math.max(SCENE_WALK_BOUNDS.minX + pad, Math.min(SCENE_WALK_BOUNDS.maxX - pad, x)),
+    Math.max(SCENE_WALK_BOUNDS.minZ + pad, Math.min(SCENE_WALK_BOUNDS.maxZ - pad, z)),
+  ];
+}
+
+export function isFurnitureOccupiedPosition(
+  x: number,
+  z: number,
+  radius = 0.14,
+): boolean {
+  return OFFICE_OBSTACLES.some((obs) => {
+    if (obs.kind === 'circle') {
+      const dx = x - obs.x;
+      const dz = z - obs.z;
+      return dx * dx + dz * dz < (obs.radius + radius) ** 2;
+    }
+    return x >= obs.minX - radius && x <= obs.maxX + radius && z >= obs.minZ - radius && z <= obs.maxZ + radius;
+  });
 }

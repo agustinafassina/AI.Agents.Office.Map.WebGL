@@ -8,6 +8,7 @@ import {
 } from './CoffeeBar';
 import {
   BAR_STATION_LOCAL_Z,
+  CAFE_WALL_PLANT_LOCAL,
   COFFEE_LOUNGE_POSITION,
   LIVING_WALL_LOCAL_Z,
 } from './coffeeLoungeConstants';
@@ -166,8 +167,9 @@ export function CoffeeLounge() {
           ))}
         </group>
 
-        <Plant position={[-2.5, 0, 0.55]} variant="snake" />
-        <Plant position={[2.5, 0, 0.55]} variant="snake" />
+        {CAFE_WALL_PLANT_LOCAL.map((position, i) => (
+          <Plant key={`wall-plant-${i}`} position={position} variant="snake" />
+        ))}
 
         <CoffeeBarStation />
         <CoffeeTable />

@@ -1,6 +1,6 @@
 import type { OfficeZoneId } from '@/config/officeZones';
 
-export type AgentStatus = 'idle' | 'walking' | 'chatting' | 'coffee';
+export type AgentStatus = 'idle' | 'walking' | 'chatting' | 'coffee' | 'coffee-queue';
 
 export type AgentHomeZone = Exclude<OfficeZoneId, 'all'>;
 
@@ -30,5 +30,6 @@ export interface AgentRuntimeState {
   pendingChat: boolean;
   pendingCoffee: boolean;
   coffeeTimer: number;
+  coffeeQueueTicket: number;
   posture: 'stand' | 'sit';
 }

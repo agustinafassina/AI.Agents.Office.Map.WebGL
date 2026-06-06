@@ -3,6 +3,7 @@ import { CoffeeLounge } from './furniture/CoffeeLounge';
 import { MeetingZone } from './furniture/MeetingZone';
 import { PrivateDesk } from './furniture/PrivateDesk';
 import { Plant } from './furniture/Plants';
+import { BACK_WALL_PLANTS } from '@/config/officePerimeterPlants';
 
 export function OfficeLayout() {
   return (
@@ -11,6 +12,10 @@ export function OfficeLayout() {
       <CoffeeLounge />
       <MeetingZone />
       <PrivateDesk />
+
+      {BACK_WALL_PLANTS.map((plant, index) => (
+        <Plant key={`back-wall-${index}`} position={plant.position} variant={plant.variant} />
+      ))}
 
       <Plant position={[-5.85, 0, 4.25]} variant="fiddle" />
       <Plant position={[6.55, 0, 3.35]} variant="fiddle" />
