@@ -156,43 +156,83 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       return;
     }
 
+    const assistantId = createId('msg');
+    const assistantPlaceholder: ChatMessage = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+      streaming: true,
+    };
+
     const history = [...conv.messages, userMessage];
 
     conversations[agentId] = {
       ...conv,
-      messages: history,
+      messages: [...history, assistantPlaceholder],
       isLoading: true,
       error: null,
     };
     set({ conversations });
 
+    const appendDelta = (chunk: string) => {
+      const current = get().conversations[agentId];
+      if (!current) return;
+
+      const messages = current.messages.map((msg) =>
+        msg.id === assistantId ? { ...msg, content: msg.content + chunk } : msg,
+      );
+
+      set({
+        conversations: {
+          ...get().conversations,
+          [agentId]: { ...current, messages },
+        },
+      });
+    };
+
     try {
-      const result = await liteLLMService.sendMessage({
+      const result = await liteLLMService.sendMessageStream({
         model: agent.modelId,
         agentName: agent.name,
         systemPrompt: agent.systemPrompt,
         history: conv.messages,
         userContent: userMessage.content,
+        onDelta: appendDelta,
       });
 
-      const assistantMessage: ChatMessage = {
-        id: createId('msg'),
-        role: 'assistant',
-        content: result.content,
-        timestamp: Date.now(),
-      };
+      const current = get().conversations[agentId];
+      if (!current) return;
+
+      const messages = current.messages.map((msg) =>
+        msg.id === assistantId
+          ? {
+              ...msg,
+              content: result.content || msg.content,
+              streaming: false,
+            }
+          : msg,
+      );
 
       conversations[agentId] = {
-        ...conversations[agentId],
-        messages: [...history, assistantMessage],
+        ...current,
+        messages,
         isLoading: false,
         error: null,
       };
       set({ conversations, serviceMode: liteLLMService.mode });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send message';
+      const current = get().conversations[agentId];
+      if (!current) return;
+
+      const messages = current.messages
+        .filter((msg) => msg.id !== assistantId || msg.content.length > 0)
+        .map((msg) => (msg.id === assistantId ? { ...msg, streaming: false } : msg));
+
       conversations[agentId] = {
-        ...conversations[agentId],
+        ...current,
+        messages,
         isLoading: false,
         error: message,
       };

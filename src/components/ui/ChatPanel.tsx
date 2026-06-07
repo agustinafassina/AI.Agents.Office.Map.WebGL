@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useChatStore } from '@/stores/chat.store';
 import { useSceneStore } from '@/stores/scene.store';
 import { AGENT_COMMAND_HINTS } from '@/utils/chatAgentCommands';
+import { ChatMessageBody } from './ChatMessageBody';
 import './ChatPanel.css';
 
 export function ChatPanel() {
@@ -20,10 +21,11 @@ export function ChatPanel() {
   const [input, setInput] = useState('');
   const [sendPulse, setSendPulse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageContent = conversation?.messages.at(-1)?.content ?? '';
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages.length, conversation?.isLoading]);
+  }, [conversation?.messages.length, conversation?.isLoading, lastMessageContent]);
 
   if (!isOpen || !agent) return null;
 
@@ -104,22 +106,13 @@ export function ChatPanel() {
             <span className="chat-panel__message-role">
               {msg.role === 'user' ? 'You' : agent.name}
             </span>
-            <p className="chat-panel__message-text">{msg.content}</p>
+            {msg.role === 'assistant' ? (
+              <ChatMessageBody content={msg.content} streaming={msg.streaming} />
+            ) : (
+              <p className="chat-panel__message-text">{msg.content}</p>
+            )}
           </div>
         ))}
-        {conversation?.isLoading && (
-          <div className="chat-panel__message chat-panel__message--assistant">
-            <span className="chat-panel__message-role">{agent.name}</span>
-            <p className="chat-panel__typing" aria-live="polite">
-              Thinking
-              <span className="chat-panel__typing-dots" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-            </p>
-          </div>
-        )}
         {conversation?.error && (
           <p className="chat-panel__error" role="alert">
             {conversation.error}

@@ -20,5 +20,5 @@ export function getMockAssistantReply(agentName: string, userMessage: string): s
   const snippet =
     userMessage.length > 60 ? `${userMessage.slice(0, 60)}…` : userMessage;
   const base = pool[Math.floor(Math.random() * pool.length)];
-  return `${base}\n\n*(Mock mode — you asked: "${snippet}")*`;
+  return `${base}\n\nYou asked about **"${snippet}"**. Here's a quick take:\n\n- Break it into smaller steps\n- Test one change at a time\n- Check the \`CHECKLIST.md\` for next ideas\n\n*(Mock mode — enable live LiteLLM in \`.env\`)*`;
 }

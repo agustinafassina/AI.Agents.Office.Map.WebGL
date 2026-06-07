@@ -19,6 +19,24 @@ export interface ChatCompletionRequest {
   messages: ChatCompletionMessage[];
   temperature?: number;
   max_tokens?: number;
+  stream?: boolean;
+}
+
+export interface ChatCompletionStreamDelta {
+  role?: string;
+  content?: string;
+}
+
+export interface ChatCompletionStreamChoice {
+  index: number;
+  delta: ChatCompletionStreamDelta;
+  finish_reason: string | null;
+}
+
+export interface ChatCompletionStreamChunk {
+  id?: string;
+  model?: string;
+  choices: ChatCompletionStreamChoice[];
 }
 
 export interface ChatCompletionChoice {

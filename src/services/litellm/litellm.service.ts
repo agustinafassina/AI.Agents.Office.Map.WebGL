@@ -20,6 +20,11 @@ export interface SendMessageResult {
   mock: boolean;
 }
 
+export interface StreamMessageParams extends SendMessageParams {
+  onDelta: (chunk: string) => void;
+  signal?: AbortSignal;
+}
+
 function toApiMessages(
   systemPrompt: string | undefined,
   history: ChatMessage[],
@@ -40,6 +45,15 @@ function toApiMessages(
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function streamMockReply(full: string, onDelta: (chunk: string) => void): Promise<void> {
+  const tokens = full.match(/\S+\s*|\s+/g) ?? [full];
+  for (const token of tokens) {
+    if (token.length === 0) continue;
+    onDelta(token);
+    await delay(18 + Math.random() * 28);
+  }
 }
 
 class LiteLLMService {
@@ -79,35 +93,46 @@ class LiteLLMService {
     return env.useMockLitellm || !hasLiteLLMCredentials() ? MOCK_MODELS : [];
   }
 
-  async sendMessage(params: SendMessageParams): Promise<SendMessageResult> {
-    const { model, agentName, systemPrompt, history, userContent } = params;
+  async sendMessageStream(params: StreamMessageParams): Promise<SendMessageResult> {
+    const { model, agentName, systemPrompt, history, userContent, onDelta, signal } = params;
 
     if (env.useMockLitellm || !hasLiteLLMCredentials()) {
-      await delay(600 + Math.random() * 400);
-      return {
-        content: getMockAssistantReply(agentName, userContent),
-        model,
-        mock: true,
-      };
+      await delay(200 + Math.random() * 200);
+      const content = getMockAssistantReply(agentName, userContent);
+      await streamMockReply(content, onDelta);
+      return { content, model, mock: true };
     }
 
     try {
-      const response = await litellmClient.chatCompletion({
-        model,
-        messages: toApiMessages(systemPrompt, history, userContent),
-        temperature: 0.7,
-      });
-      const choice = response.choices[0]?.message?.content ?? '';
+      const { model: resolvedModel, content } = await litellmClient.streamChatCompletion(
+        {
+          model,
+          messages: toApiMessages(systemPrompt, history, userContent),
+          temperature: 0.7,
+        },
+        onDelta,
+        signal,
+      );
       this.lastError = null;
-      return { content: choice, model: response.model, mock: false };
+      return { content, model: resolvedModel, mock: false };
     } catch (err) {
       const message =
-        err instanceof LiteLLMClientError
-          ? err.message
-          : 'Chat completion failed';
+        err instanceof LiteLLMClientError ? err.message : 'Chat completion failed';
       this.lastError = message;
       throw new Error(message);
     }
+  }
+
+  /** @deprecated Use sendMessageStream for UI streaming. */
+  async sendMessage(params: SendMessageParams): Promise<SendMessageResult> {
+    let content = '';
+    const result = await this.sendMessageStream({
+      ...params,
+      onDelta: (chunk) => {
+        content += chunk;
+      },
+    });
+    return { ...result, content: result.content || content };
   }
 }
 
