@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useChatStore } from '@/stores/chat.store';
 import { useSceneStore } from '@/stores/scene.store';
+import { AGENT_COMMAND_HINTS } from '@/utils/chatAgentCommands';
 import './ChatPanel.css';
 
 export function ChatPanel() {
@@ -17,6 +18,7 @@ export function ChatPanel() {
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
   const [input, setInput] = useState('');
+  const [sendPulse, setSendPulse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +40,8 @@ export function ChatPanel() {
     const text = input.trim();
     if (!text || conversation?.isLoading) return;
     setInput('');
+    setSendPulse(true);
+    window.setTimeout(() => setSendPulse(false), 320);
     await sendMessage(text);
   };
 
@@ -85,9 +89,12 @@ export function ChatPanel() {
 
       <div className="chat-panel__messages">
         {conversation?.messages.length === 0 && (
-          <p className="chat-panel__empty">
-            Say hello to {agent.name}. Conversation stays here while you explore the map.
-          </p>
+          <div className="chat-panel__empty">
+            <p>Say hello to {agent.name}. Conversation stays here while you explore the map.</p>
+            <p className="chat-panel__hints">
+              Try: {AGENT_COMMAND_HINTS.map((hint) => `"${hint}"`).join(' · ')}
+            </p>
+          </div>
         )}
         {conversation?.messages.map((msg) => (
           <div
@@ -103,7 +110,14 @@ export function ChatPanel() {
         {conversation?.isLoading && (
           <div className="chat-panel__message chat-panel__message--assistant">
             <span className="chat-panel__message-role">{agent.name}</span>
-            <p className="chat-panel__typing">Thinking…</p>
+            <p className="chat-panel__typing" aria-live="polite">
+              Thinking
+              <span className="chat-panel__typing-dots" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </p>
           </div>
         )}
         {conversation?.error && (
@@ -131,7 +145,7 @@ export function ChatPanel() {
         />
         <button
           type="submit"
-          className="chat-panel__send"
+          className={`chat-panel__send${sendPulse ? ' chat-panel__send--pulse' : ''}`}
           disabled={!input.trim() || conversation?.isLoading}
         >
           Send

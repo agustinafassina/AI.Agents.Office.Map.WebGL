@@ -9,6 +9,7 @@ import {
 import {
   COFFEE_BAR_MAX_SERVING,
   getCoffeeBarQueueAnchor,
+  getCoffeeBarQueueWalkTarget,
   isAtCoffeeBarQueueSlot,
 } from '@/config/coffeeBarQueue';
 import { SCENE_CONFIG } from '@/config/agents.config';
@@ -17,13 +18,17 @@ import type { ChatAnchor } from '@/types/scene';
 import {
   distance2D,
   lerpPosition,
+  lerpAngle,
+  computeWalkRotation,
   pickNextWaypointIndex,
   randomIdleDuration,
   rotationTowards,
 } from '@/utils/movement';
+import type { AgentChatCommand } from '@/utils/chatAgentCommands';
 import {
   moveWithAgentAwareness,
   findChatApproachPosition,
+  nudgeAlongPath,
   resolveAllAgentOverlaps,
   sanitizeAgentPosition,
   sanitizeWalkPosition,
@@ -39,12 +44,14 @@ interface AgentsStore {
   tick: (delta: number) => void;
   beginChatSession: (id: string) => void;
   endChatSession: (id: string) => void;
+  dispatchAgentCommand: (id: string, command: AgentChatCommand) => boolean;
   setAgentStatus: (id: string, status: AgentStatus) => void;
   getRuntime: (id: string) => AgentRuntimeState | undefined;
 }
 
 const stuckSecondsByAgent = new Map<string, number>();
-const STUCK_THRESHOLD = 0.55;
+const STUCK_THRESHOLD = 0.38;
+const STUCK_NUDGE_AFTER = 0.12;
 const MOVE_EPSILON = 0.004;
 let coffeeQueueTicketSeq = 1;
 
@@ -78,6 +85,7 @@ function applyChatAnchor(state: AgentRuntimeState, anchor: ChatAnchor): AgentRun
     position: anchorPosition(anchor),
     targetPosition: null,
     rotation: anchor.rotation,
+    moveSpeed: 0,
     posture: anchor.posture,
   };
 }
@@ -106,6 +114,7 @@ function createInitialRuntime(def: AgentDefinition): AgentRuntimeState {
     targetPosition: null,
     waypointIndex: nearestZoneWaypointIndex(def.homeZone, spawn),
     rotation: anchor.rotation,
+    moveSpeed: 0,
     pendingChat: false,
     pendingCoffee: false,
     coffeeTimer: 0,
@@ -175,7 +184,7 @@ function applyCoffeeQueueSync(
     if (!state || state.status === 'chatting') continue;
 
     const anchor = getCoffeeBarQueueAnchor(i);
-    const target = sanitizeWalkPosition([...anchor.position], { allowFurniture: true });
+    const target = getCoffeeBarQueueWalkTarget(i);
     const atSlot = isAtCoffeeBarQueueSlot(state.position, i);
     const servingSlot = i < COFFEE_BAR_MAX_SERVING;
 
@@ -307,6 +316,66 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     });
   },
 
+  dispatchAgentCommand: (id, command) => {
+    const def = get().definitions.find((agent) => agent.id === id);
+    const state = get().runtime[id];
+    if (!def || !state) return false;
+
+    stuckSecondsByAgent.set(id, 0);
+
+    if (command === 'coffee') {
+      set({
+        runtime: {
+          ...get().runtime,
+          [id]: {
+            ...state,
+            coffeeQueueTicket: coffeeQueueTicketSeq++,
+            pendingCoffee: true,
+            coffeeTimer: 0,
+            status: 'walking',
+            targetPosition: null,
+            posture: 'stand',
+            pendingChat: false,
+          },
+        },
+      });
+      return true;
+    }
+
+    const zone = command === 'relax' ? 'living' : def.homeZone;
+    const zoneWaypoints = getZoneWaypoints(zone);
+    if (zoneWaypoints.length === 0) return false;
+
+    const wpIndex =
+      command === 'relax'
+        ? (() => {
+            const puffIdx = zoneWaypoints.findIndex((wp) => wp.id === 'wp-living-puff');
+            return puffIdx >= 0 ? puffIdx : nearestZoneWaypointIndex(zone, state.position);
+          })()
+        : nearestZoneWaypointIndex(def.homeZone, state.position);
+
+    const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
+      number,
+      number,
+      number,
+    ]);
+
+    set({
+      runtime: {
+        ...get().runtime,
+        [id]: {
+          ...clearCoffeeQueue(state),
+          status: 'walking',
+          targetPosition: target,
+          waypointIndex: wpIndex,
+          posture: 'stand',
+          pendingChat: false,
+        },
+      },
+    });
+    return true;
+  },
+
   setAgentStatus: (id, status) => {
     const current = get().runtime[id];
     if (!current) return;
@@ -434,10 +503,14 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                 [...state.targetPosition],
                 def.id,
                 otherAgents(nextRuntime, def.id),
-                { allowFurniture: true },
               ),
-              rotation: rotationTowards(state.position, state.targetPosition),
+              rotation: lerpAngle(
+                state.rotation,
+                rotationTowards(state.position, state.targetPosition),
+                0.85,
+              ),
               targetPosition: null,
+              moveSpeed: 0,
             };
             continue;
           }
@@ -451,9 +524,14 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
               otherAgents(nextRuntime, def.id),
             ),
             targetPosition: null,
-            rotation: rotationTowards(state.position, state.targetPosition),
+            rotation: lerpAngle(
+              state.rotation,
+              rotationTowards(state.position, state.targetPosition),
+              0.85,
+            ),
             pendingChat: false,
             pendingCoffee: false,
+            moveSpeed: 0,
           };
           nextTimers[def.id] = randomIdleDuration(
             SCENE_CONFIG.idlePauseMin,
@@ -474,42 +552,102 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
             stuckSecondsByAgent.set(def.id, stuck);
 
-            if (
-              stuck >= STUCK_THRESHOLD &&
-              zoneWaypoints.length > 0 &&
-              !state.pendingCoffee &&
-              state.coffeeQueueTicket === 0
-            ) {
-              const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
-              const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-                number,
-                number,
-                number,
-              ]);
-              stuckSecondsByAgent.set(def.id, 0);
-              nextRuntime[def.id] = {
-                ...state,
-                status: 'walking',
-                targetPosition: escape,
-                waypointIndex: wpIndex,
-                rotation: state.rotation,
-              };
-              continue;
+            if (stuck >= STUCK_NUDGE_AFTER && state.targetPosition) {
+              const escape = nudgeAlongPath(state.position, state.targetPosition);
+              if (distance2D(state.position, escape) > MOVE_EPSILON) {
+                stuckSecondsByAgent.set(def.id, 0);
+                const { rotation, moveSpeed } = computeWalkRotation(
+                  state.rotation,
+                  state.position,
+                  escape,
+                  state.targetPosition,
+                  delta,
+                );
+                nextRuntime[def.id] = {
+                  ...state,
+                  position: escape,
+                  rotation,
+                  moveSpeed,
+                };
+                continue;
+              }
+            }
+
+            if (stuck >= STUCK_THRESHOLD) {
+              if (state.pendingCoffee || state.coffeeQueueTicket > 0) {
+                const queue = getCoffeeQueueOrder(nextRuntime, definitions);
+                const queueIndex = queue.indexOf(def.id);
+
+                if (queueIndex >= 0 && stuck < STUCK_THRESHOLD * 2.5) {
+                  const escape = getCoffeeBarQueueWalkTarget(queueIndex);
+                  stuckSecondsByAgent.set(def.id, 0);
+                  nextRuntime[def.id] = {
+                    ...state,
+                    status: 'walking',
+                    targetPosition: escape,
+                    pendingCoffee: true,
+                  };
+                  continue;
+                }
+
+                if (zoneWaypoints.length > 0) {
+                  const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+                  const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
+                    number,
+                    number,
+                    number,
+                  ]);
+                  stuckSecondsByAgent.set(def.id, 0);
+                  nextRuntime[def.id] = {
+                    ...clearCoffeeQueue(state),
+                    status: 'walking',
+                    targetPosition: escape,
+                    waypointIndex: wpIndex,
+                  };
+                  continue;
+                }
+              } else if (zoneWaypoints.length > 0) {
+                const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+                const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
+                  number,
+                  number,
+                  number,
+                ]);
+                stuckSecondsByAgent.set(def.id, 0);
+                nextRuntime[def.id] = {
+                  ...state,
+                  status: 'walking',
+                  targetPosition: escape,
+                  waypointIndex: wpIndex,
+                  rotation: state.rotation,
+                };
+                continue;
+              }
             }
           } else {
             stuckSecondsByAgent.set(def.id, 0);
           }
 
+          const safePos = newPos;
+          const { rotation, moveSpeed } = computeWalkRotation(
+            state.rotation,
+            state.position,
+            safePos,
+            state.targetPosition,
+            delta,
+          );
+
           nextRuntime[def.id] = {
             ...state,
-            position: newPos,
-            rotation: rotationTowards(state.position, newPos),
+            position: safePos,
+            rotation,
+            moveSpeed,
           };
         }
       }
     }
 
     nextRuntime = applyCoffeeQueueSync(nextRuntime, definitions);
-    set({ runtime: resolveAllAgentOverlaps(nextRuntime), idleTimers: nextTimers });
+    set({ runtime: resolveAllAgentOverlaps(nextRuntime, 2), idleTimers: nextTimers });
   },
 }));

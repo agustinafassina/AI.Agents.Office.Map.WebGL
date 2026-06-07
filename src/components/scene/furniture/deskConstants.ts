@@ -13,6 +13,9 @@ export function hubChairOffsetZ(scale = DESK_SCALE): number {
 export const HUB_WORKSTATION_HALF_X = 0.525;
 export const HUB_WORKSTATION_HALF_Z = 0.3;
 
+export const HUB_COLLISION_HALF_X = HUB_WORKSTATION_HALF_X + 0.05;
+export const HUB_COLLISION_HALF_Z = HUB_WORKSTATION_HALF_Z + 0.08;
+
 export const HUB_DESK_PLACEMENTS = [
   { offset: [0, -HUB_DESK_RADIUS] as const, rotation: Math.PI },
   { offset: [0, HUB_DESK_RADIUS] as const, rotation: 0 },

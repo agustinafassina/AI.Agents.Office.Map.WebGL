@@ -102,6 +102,36 @@ function canMoveTo(
   return !isPositionBlocked(x, z, AGENT_COLLISION_RADIUS, OFFICE_OBSTACLES, options);
 }
 
+function isSegmentWalkable(
+  from: [number, number, number],
+  to: [number, number, number],
+  options: WalkCollisionOptions,
+  sampleSpacing = 0.09,
+): boolean {
+  const dist = distance2D(from, to);
+  if (dist < 0.001) return canMoveTo(to[0], to[2], options);
+
+  const steps = Math.max(1, Math.ceil(dist / sampleSpacing));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const x = from[0] + (to[0] - from[0]) * t;
+    const z = from[2] + (to[2] - from[2]) * t;
+    if (!canMoveTo(x, z, options)) return false;
+  }
+  return true;
+}
+
+function acceptMove(
+  from: [number, number, number],
+  candidate: [number, number, number],
+  options: WalkCollisionOptions,
+): [number, number, number] | null {
+  const bounded = withBounds(candidate);
+  if (!canMoveTo(bounded[0], bounded[2], options)) return null;
+  if (!isSegmentWalkable(from, bounded, options)) return null;
+  return bounded;
+}
+
 function withBounds(position: [number, number, number]): [number, number, number] {
   const [x, z] = clampToWalkBounds(position[0], position[2]);
   return [x, position[1], z];
@@ -140,13 +170,14 @@ export function moveWithCollision(
 ): [number, number, number] {
   const target = withBounds(to);
 
-  if (canMoveTo(target[0], target[2], options)) return target;
+  const direct = acceptMove(from, target, options);
+  if (direct) return direct;
 
-  const tryX = withBounds([target[0], from[1], from[2]]);
-  if (canMoveTo(tryX[0], tryX[2], options)) return tryX;
+  const tryX = acceptMove(from, [target[0], from[1], from[2]], options);
+  if (tryX) return tryX;
 
-  const tryZ = withBounds([from[0], from[1], target[2]]);
-  if (canMoveTo(tryZ[0], tryZ[2], options)) return tryZ;
+  const tryZ = acceptMove(from, [from[0], from[1], target[2]], options);
+  if (tryZ) return tryZ;
 
   const dx = target[0] - from[0];
   const dz = target[2] - from[2];
@@ -156,12 +187,12 @@ export function moveWithCollision(
   let bestDist = -1;
 
   const tryCandidate = (candidate: [number, number, number]) => {
-    const bounded = withBounds(candidate);
-    if (!canMoveTo(bounded[0], bounded[2], options)) return;
-    const progress = distance2D(from, bounded);
+    const accepted = acceptMove(from, candidate, options);
+    if (!accepted) return;
+    const progress = distance2D(from, accepted);
     if (progress > bestDist) {
       bestDist = progress;
-      best = bounded;
+      best = accepted;
     }
   };
 
@@ -175,6 +206,11 @@ export function moveWithCollision(
 
   if (best) return best;
 
+  for (const fraction of [0.55, 0.32, 0.18]) {
+    const accepted = acceptMove(from, [from[0] + dx * fraction, from[1], from[2] + dz * fraction], options);
+    if (accepted) return accepted;
+  }
+
   return withBounds(from);
 }
 
@@ -187,7 +223,7 @@ export function resolvePenetration(
 
   const r = AGENT_COLLISION_RADIUS;
 
-  for (let pass = 0; pass < 8; pass++) {
+  for (let pass = 0; pass < 12; pass++) {
     let moved = false;
     for (const obs of OFFICE_OBSTACLES) {
       if (obs.kind === 'circle') {
@@ -319,10 +355,15 @@ export function findStandPositionNearSeat(
 export function ejectFromFurniture(
   position: [number, number, number],
 ): [number, number, number] {
-  if (!isFurnitureOccupiedPosition(position[0], position[2], AGENT_COLLISION_RADIUS * 0.35)) {
-    return withBounds(position);
-  }
-  return findNearestWalkablePosition(position, 2);
+  const resolved = resolvePenetration(withBounds(position));
+  if (isWalkablePosition(resolved)) return resolved;
+  return findNearestWalkablePosition(resolved, 2);
+}
+
+export function clampToWalkable(
+  position: [number, number, number],
+): [number, number, number] {
+  return ejectFromFurniture(position);
 }
 
 export function sanitizeWalkPosition(
@@ -369,6 +410,35 @@ export function separateFromAgents(
   return resolvePenetration([x, y, z], skipFurniture);
 }
 
+export function nudgeAlongPath(
+  from: [number, number, number],
+  to: [number, number, number],
+): [number, number, number] {
+  const dx = to[0] - from[0];
+  const dz = to[2] - from[2];
+  const len = Math.sqrt(dx * dx + dz * dz) || 1;
+  const perpX = -dz / len;
+  const perpZ = dx / len;
+
+  for (const scale of [0.2, 0.35, 0.5, 0.7]) {
+    for (const sign of [-1, 1]) {
+      for (const side of [0.32, 0.52, 0.72]) {
+        const candidate: [number, number, number] = [
+          from[0] + dx * scale + perpX * side * sign,
+          from[1],
+          from[2] + dz * scale + perpZ * side * sign,
+        ];
+        const safe = findNearestWalkablePosition(candidate, 0.85);
+        if (distance2D(from, safe) > 0.025 && isWalkablePosition(safe)) {
+          return safe;
+        }
+      }
+    }
+  }
+
+  return findNearestWalkablePosition(from, 1.75);
+}
+
 export function moveWithAgentAwareness(
   from: [number, number, number],
   to: [number, number, number],
@@ -410,6 +480,10 @@ export function moveWithAgentAwareness(
     }
   }
 
+  if (!isWalkablePosition(result)) {
+    result = ejectFromFurniture(result);
+  }
+
   return result;
 }
 
@@ -424,7 +498,7 @@ export function sanitizeAgentPosition(
 }
 
 function shouldSkipFurniture<T extends { status: string }>(state: T): boolean {
-  return state.status === 'chatting' || state.status === 'coffee' || state.status === 'coffee-queue';
+  return state.status === 'chatting';
 }
 
 export function resolveAllAgentOverlaps<
@@ -445,12 +519,14 @@ export function resolveAllAgentOverlaps<
           position: next[otherId].position,
         }));
 
-      next[id] = {
-        ...state,
-        position: shouldSkipFurniture(state)
-          ? separateFromAgents(state.position, id, others, true)
-          : ejectFromFurniture(separateFromAgents(state.position, id, others, false)),
-      };
+      const skipFurniture = shouldSkipFurniture(state);
+      let position = separateFromAgents(state.position, id, others, skipFurniture);
+
+      if (!skipFurniture && !isWalkablePosition(position)) {
+        position = ejectFromFurniture(position);
+      }
+
+      next[id] = { ...state, position };
     }
   }
 

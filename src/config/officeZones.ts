@@ -43,7 +43,7 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     icon: 'living',
     pan: [MEETING_ZONE_POSITION[0], 0, MEETING_ZONE_POSITION[2]],
     zoom: 0.82,
-    accent: '#c8ccd0',
+    accent: '#e8dcc8',
     identity: {
       subtitle: 'Puffs · meeting table',
       plaquePosition: [-4.35, 0, 0.82],
@@ -61,7 +61,7 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     icon: 'center-desk',
     pan: [0.5, 0, 1.05],
     zoom: 0.78,
-    accent: '#d4a574',
+    accent: '#c9925a',
     identity: {
       subtitle: 'Four-desk team hub',
       plaquePosition: [0.5, 0, 2.72],
@@ -76,7 +76,7 @@ export const OFFICE_ZONE_LINKS: OfficeZoneLink[] = [
     icon: 'cafeteria',
     pan: [0, 0, COFFEE_LOUNGE_CENTER_Z + 0.15],
     zoom: 0.82,
-    accent: '#9aab9e',
+    accent: '#b8c9a8',
     identity: {
       subtitle: 'Coffee bar · lounge',
       plaquePosition: [0, 0, -3.35],

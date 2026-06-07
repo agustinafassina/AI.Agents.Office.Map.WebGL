@@ -6,7 +6,10 @@ export function useAgentMovement() {
   useAgentBootstrap();
   const tick = useAgentsStore((state) => state.tick);
 
-  useFrame((_, delta) => {
-    tick(delta);
-  });
+  useFrame(
+    (_, delta) => {
+      tick(delta);
+    },
+    -1,
+  );
 }

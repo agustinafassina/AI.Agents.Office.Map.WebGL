@@ -73,15 +73,15 @@ export function OfficeLighting() {
       <AccentSpot
         position={[0.2, 3.4, -6.15]}
         target={[0, 1.1, -5.5]}
-        intensity={0.32}
-        color="#dcefdc"
+        intensity={0.36}
+        color="#e8f5e0"
         angle={0.65}
       />
       <AccentSpot
         position={[-5.8, 2.6, 0.6]}
         target={[-4.9, 1.05, 0.08]}
-        intensity={0.28}
-        color="#fafcfd"
+        intensity={0.3}
+        color="#f5ebe0"
         angle={0.45}
       />
       <AccentSpot
@@ -93,8 +93,8 @@ export function OfficeLighting() {
       <AccentSpot
         position={[0.5, 2.8, 3.2]}
         target={[0.5, 0.5, 1.05]}
-        intensity={0.2}
-        color="#f5f0e6"
+        intensity={0.26}
+        color="#f0e0c8"
         angle={0.55}
       />
 

@@ -8,3 +8,5 @@ dist-ssr
 *.log
 .vscode/*
 !.vscode/extensions.json
+src copy/*
+ai-suggestions/*

@@ -2,8 +2,8 @@ import {
   DESK_SCALE,
   HUB_DESK_PLACEMENTS,
   HUB_DESK_RADIUS,
-  HUB_WORKSTATION_HALF_X,
-  HUB_WORKSTATION_HALF_Z,
+  HUB_COLLISION_HALF_X,
+  HUB_COLLISION_HALF_Z,
   PRIVATE_DESK_MAX_Z,
   PRIVATE_DESK_MIN_Z,
   PRIVATE_DESK_POSITIONS,
@@ -25,7 +25,7 @@ import {
 } from '@/components/scene/furniture/meetingConstants';
 import { PERIMETER_PLANTS } from '@/config/officePerimeterPlants';
 
-export const AGENT_COLLISION_RADIUS = 0.22;
+export const AGENT_COLLISION_RADIUS = 0.25;
 
 export const SCENE_WALK_BOUNDS = {
   minX: -6.5,
@@ -114,7 +114,7 @@ function hubDeskSegmentBox(
   localCz: number,
   localHalfX: number,
   localHalfZ: number,
-  padding = 0.05,
+  padding = 0.08,
 ): BoxObstacle {
   const cx = localCx * DESK_SCALE;
   const cz = localCz * DESK_SCALE;
@@ -133,9 +133,15 @@ function hubDeskSegmentBox(
   return boxObstacle(Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs));
 }
 
+const HUB_DESK_COLLISION_PADDING = 0.14;
+const HUB_CHAIR_RADIUS = 0.32;
+/** Bloquea atajos diagonales entre mesas sin cerrar el pasillo central. */
+const HUB_INNER_CORNER_OFFSET = 0.4;
+const HUB_INNER_CORNER_RADIUS = 0.36;
+
 function hubObstacles(): OfficeObstacle[] {
   const chairLocalZ = workstationChairOffsetZ(DESK_SCALE);
-  const obstacles: OfficeObstacle[] = [circleObstacle(HUB_X, HUB_Z, 0.36)];
+  const obstacles: OfficeObstacle[] = [];
 
   for (const { offset, rotation } of HUB_DESK_PLACEMENTS) {
     const [dx, dz] = offset;
@@ -147,13 +153,30 @@ function hubObstacles(): OfficeObstacle[] {
         rotation,
         0,
         0,
-        HUB_WORKSTATION_HALF_X,
-        HUB_WORKSTATION_HALF_Z,
+        HUB_COLLISION_HALF_X,
+        HUB_COLLISION_HALF_Z,
+        HUB_DESK_COLLISION_PADDING,
       ),
     );
 
     const [chairX, chairZ] = rotateXZ(0, chairLocalZ, rotation);
-    obstacles.push(circleObstacle(HUB_X + dx + chairX, HUB_Z + dz + chairZ, 0.32));
+    obstacles.push(
+      circleObstacle(HUB_X + dx + chairX, HUB_Z + dz + chairZ, HUB_CHAIR_RADIUS),
+    );
+  }
+
+  obstacles.push(circleObstacle(HUB_X, HUB_Z, 0.24 * DESK_SCALE));
+
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      obstacles.push(
+        circleObstacle(
+          HUB_X + sx * HUB_INNER_CORNER_OFFSET,
+          HUB_Z + sz * HUB_INNER_CORNER_OFFSET,
+          HUB_INNER_CORNER_RADIUS,
+        ),
+      );
+    }
   }
 
   return obstacles;
@@ -164,11 +187,11 @@ function meetingObstacles(): OfficeObstacle[] {
   const board = meetingWorld(-1.62, 0.05);
 
   return [
-    circleObstacle(table.x, table.z, MEETING_TABLE_RADIUS + 0.14),
+    circleObstacle(table.x, table.z, MEETING_TABLE_RADIUS + 0.22),
     boxObstacle(board.x - 0.2, board.x + 0.95, board.z - 0.55, board.z + 0.55),
     ...MEETING_PUFF_LAYOUT.map(({ position, scale }) => {
       const world = meetingWorld(position[0], position[2]);
-      return circleObstacle(world.x, world.z, 0.44 * scale + 0.14);
+      return circleObstacle(world.x, world.z, 0.44 * scale + 0.08);
     }),
   ];
 }
@@ -178,8 +201,8 @@ function coffeeLoungeObstacles(): OfficeObstacle[] {
   const highTable = loungeWorld(CAFE_HIGH_TABLE_LOCAL[0], CAFE_HIGH_TABLE_LOCAL[2]);
 
   const obstacles: OfficeObstacle[] = [
-    boxObstacle(bar.x - 1.35, bar.x + 1.35, bar.z - 0.38, bar.z + 0.38),
-    circleObstacle(highTable.x, highTable.z, 0.38),
+    boxObstacle(bar.x - 1.35, bar.x + 1.35, bar.z - 0.28, bar.z + 0.32),
+    circleObstacle(highTable.x, highTable.z, 0.3),
     ...CAFE_WALL_PLANT_LOCAL.map(([lx, , lz]) => {
       const world = loungeWorld(lx, lz);
       return circleObstacle(world.x, world.z, PLANT_RADIUS.snake + 0.06);
@@ -190,7 +213,7 @@ function coffeeLoungeObstacles(): OfficeObstacle[] {
     const lx = CAFE_HIGH_TABLE_LOCAL[0] + Math.sin(angle) * CAFE_BAR_STOOL_RADIUS;
     const lz = CAFE_HIGH_TABLE_LOCAL[2] + Math.cos(angle) * CAFE_BAR_STOOL_RADIUS;
     const stool = loungeWorld(lx, lz);
-    obstacles.push(circleObstacle(stool.x, stool.z, 0.34));
+    obstacles.push(circleObstacle(stool.x, stool.z, 0.24));
   }
 
   return obstacles;
@@ -199,7 +222,7 @@ function coffeeLoungeObstacles(): OfficeObstacle[] {
 function privateDeskObstacles(): OfficeObstacle[] {
   const chairReach = workstationChairOffsetZ(DESK_SCALE) * 0.55 + 0.35;
   const obstacles: OfficeObstacle[] = PRIVATE_DESK_POSITIONS.map(([, , z]) =>
-    circleObstacle(PRIVATE_DESK_X - chairReach * 0.35, z, 0.78),
+    circleObstacle(PRIVATE_DESK_X - chairReach * 0.35, z, 0.58),
   );
 
   const gapA = PRIVATE_DESK_MIN_Z + PRIVATE_DESK_SPACING_Z / 2;
@@ -218,21 +241,7 @@ function privateDeskObstacles(): OfficeObstacle[] {
 }
 
 function scatteredPlants(): CircleObstacle[] {
-  const placements: {
-    position: [number, number, number];
-    variant: keyof typeof PLANT_RADIUS;
-  }[] = [
-    { position: [-5.85, 0, 4.25], variant: 'fiddle' },
-    { position: [6.55, 0, 3.35], variant: 'fiddle' },
-    { position: [2.6, 0, 4.1], variant: 'medium' },
-    { position: [-1.6, 0, 3.6], variant: 'small' },
-    { position: [-5.2, 0, -2.4], variant: 'snake' },
-    { position: [5.8, 0, -1.8], variant: 'snake' },
-    { position: [-3.2, 0, 4.5], variant: 'tall' },
-    ...PERIMETER_PLANTS,
-  ];
-
-  return placements.map(({ position, variant }) =>
+  return PERIMETER_PLANTS.map(({ position, variant }) =>
     circleObstacle(position[0], position[2], PLANT_RADIUS[variant]),
   );
 }

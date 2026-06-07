@@ -1,20 +1,21 @@
 import { COFFEE_LOUNGE_CENTER_Z } from '@/components/scene/furniture/coffeeLoungeConstants';
 import type { ChatAnchor } from '@/types/scene';
 import { CHAT_ARRIVAL_RADIUS, isNearChatAnchor } from '@/config/agentZones.config';
+import { findChatApproachPosition } from '@/utils/collision';
 
 export const COFFEE_BAR_MAX_SERVING = 2;
 
-const COFFEE_BAR_FRONT_Z = COFFEE_LOUNGE_CENTER_Z + 0.22;
+export const COFFEE_BAR_FRONT_Z = COFFEE_LOUNGE_CENTER_Z + 0.22;
 const COFFEE_BAR_COUNTER: [number, number, number] = [0.1, 0, COFFEE_LOUNGE_CENTER_Z + 0.12];
 
 const SERVE_SLOTS: [number, number, number][] = [
-  [-0.18, 0, COFFEE_BAR_FRONT_Z],
-  [0.32, 0, COFFEE_BAR_FRONT_Z],
+  [0.08, 0, COFFEE_BAR_FRONT_Z + 0.14],
+  [0.55, 0, COFFEE_BAR_FRONT_Z + 0.14],
 ];
 
-const QUEUE_LINE_X = 0.06;
-const QUEUE_START_Z = COFFEE_BAR_FRONT_Z + 0.52;
-const QUEUE_SPACING_Z = 0.44;
+const QUEUE_LINE_X = 0.92;
+const QUEUE_START_Z = COFFEE_BAR_FRONT_Z + 0.48;
+const QUEUE_SPACING_Z = 0.42;
 
 function rotationTowardBar(position: [number, number, number]): number {
   return Math.atan2(
@@ -38,6 +39,10 @@ export function getCoffeeBarQueueAnchor(queueIndex: number): ChatAnchor {
     rotation: rotationTowardBar(position),
     posture: 'stand',
   };
+}
+
+export function getCoffeeBarQueueWalkTarget(queueIndex: number): [number, number, number] {
+  return findChatApproachPosition(getCoffeeBarQueuePosition(queueIndex), CHAT_ARRIVAL_RADIUS);
 }
 
 export function isAtCoffeeBarQueueSlot(

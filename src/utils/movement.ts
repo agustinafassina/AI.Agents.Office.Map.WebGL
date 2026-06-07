@@ -34,6 +34,42 @@ export function rotationTowards(
   return Math.atan2(to[0] - from[0], to[2] - from[2]);
 }
 
+export function lerpAngle(current: number, target: number, t: number): number {
+  const delta = Math.atan2(Math.sin(target - current), Math.cos(target - current));
+  return current + delta * Math.max(0, Math.min(1, t));
+}
+
+export function rotationFromDelta(
+  dx: number,
+  dz: number,
+  fallback: number,
+): number {
+  if (dx * dx + dz * dz < 1e-10) return fallback;
+  return Math.atan2(dx, dz);
+}
+
+export function computeWalkRotation(
+  currentRotation: number,
+  from: [number, number, number],
+  to: [number, number, number],
+  targetPosition: [number, number, number] | null,
+  delta: number,
+): { rotation: number; moveSpeed: number } {
+  const moveDx = to[0] - from[0];
+  const moveDz = to[2] - from[2];
+  const moveSpeed = Math.sqrt(moveDx * moveDx + moveDz * moveDz) / Math.max(delta, 1e-5);
+  const velocityFacing = rotationFromDelta(moveDx, moveDz, currentRotation);
+  const goalFacing = targetPosition
+    ? rotationTowards(from, targetPosition)
+    : velocityFacing;
+  const desiredFacing = moveSpeed > 0.14 ? velocityFacing : goalFacing;
+  const turnRate = moveSpeed > 0.14 ? 20 : 12;
+  return {
+    rotation: lerpAngle(currentRotation, desiredFacing, Math.min(1, delta * turnRate)),
+    moveSpeed,
+  };
+}
+
 export function pickNextWaypointIndex(
   currentIndex: number,
   waypoints: Waypoint[],

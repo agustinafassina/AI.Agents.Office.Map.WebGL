@@ -26,7 +26,7 @@ export interface AgentRuntimeState {
   targetPosition: [number, number, number] | null;
   waypointIndex: number;
   rotation: number;
-  
+  moveSpeed: number;
   pendingChat: boolean;
   pendingCoffee: boolean;
   coffeeTimer: number;

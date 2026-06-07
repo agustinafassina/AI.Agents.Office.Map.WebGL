@@ -1,4 +1,3 @@
-import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
@@ -11,6 +10,18 @@ import { AgentLabel } from './AgentLabel';
 import { AgentRoleLogo } from './AgentRoleLogo';
 import { AVATAR_SCALE } from './avatarConstants';
 import {
+  AgentArmSegment,
+  AgentFace,
+  AgentShinFoot,
+  AgentThigh,
+  AgentTorso,
+  AVATAR_PANTS,
+  AVATAR_SHOE,
+  AVATAR_SKIN,
+  AVATAR_SOLE,
+  type HairVariant,
+} from './AgentAvatarVisuals';
+import {
   easeSitBlend,
   getSeatStyle,
   getSitPoseTargets,
@@ -22,8 +33,11 @@ import {
   getCoffeePoseFrame,
   lerpCoffeeValue,
 } from './agentCoffeePose';
+import { getWalkPoseFrame } from './agentWalkPose';
 import { CoffeeHandCup } from './CoffeeHandCup';
 import { OUTLINE_COLOR, softColor } from '../materials';
+import { clampToWalkable } from '@/utils/collision';
+import { lerpAngle } from '@/utils/movement';
 
 interface AgentAvatarProps {
   definition: AgentDefinition;
@@ -31,12 +45,11 @@ interface AgentAvatarProps {
 }
 
 const POS_SMOOTH = 9;
-const ROT_SMOOTH = 11;
+const ROT_SMOOTH_WALK = 16;
+const ROT_SMOOTH_IDLE = 10;
 const TARGET = new THREE.Vector3();
-const SKIN_TONE = '#e8ceb8';
-const PANTS_COLOR = '#4f5d62';
-const SHOE_COLOR = '#2e343c';
-const EYE_MAT = softColor('#2e343c');
+const EYE_MAT = softColor('#1e2428');
+const EYE_WHITE = softColor('#f7f4ef', { roughness: 0.92 });
 const CHEEK_MAT = softColor('#e8a898', { roughness: 0.98, emissive: '#e8a898', emissiveIntensity: 0.08 });
 const NOSE_MAT = softColor('#c89080', { roughness: 0.95 });
 
@@ -46,10 +59,10 @@ function hashPhase(id: string): number {
   return (h % 628) / 100;
 }
 
-function hashVariant(id: string): 0 | 1 | 2 {
+function hashVariant(id: string): HairVariant {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 17 + id.charCodeAt(i)) >>> 0;
-  return (h % 3) as 0 | 1 | 2;
+  return (h % 4) as HairVariant;
 }
 
 function SpeechBubble() {
@@ -95,6 +108,8 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const rightShinRef = useRef<THREE.Group>(null);
   const sitBlendRef = useRef(0);
   const coffeeBlendRef = useRef(0);
+  const walkBlendRef = useRef(0);
+  const visualRotRef = useRef<number | null>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const hoverRef = useRef(0);
   const selectedId = useSceneStore((s) => s.selectedAgentId);
@@ -115,36 +130,70 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     () =>
       softColor(definition.avatarColor, {
         emissive: definition.avatarColor,
-        emissiveIntensity: isSelected ? 0.1 : 0.03,
+        emissiveIntensity: isSelected ? 0.12 : 0.05,
+        roughness: 0.82,
       }),
     [definition.avatarColor, isSelected],
   );
-  const hairMat = useMemo(() => softColor(definition.accentColor), [definition.accentColor]);
+  const hairMat = useMemo(() => softColor(definition.accentColor, { roughness: 0.86 }), [definition.accentColor]);
   const accentMat = useMemo(
-    () => softColor(definition.accentColor, { roughness: 0.88 }),
+    () => softColor(definition.accentColor, { roughness: 0.84, metalness: 0.04 }),
     [definition.accentColor],
   );
-  const skinMat = useMemo(() => softColor(SKIN_TONE, { roughness: 0.92 }), []);
-  const pantsMat = useMemo(() => softColor(PANTS_COLOR, { roughness: 0.94 }), []);
-  const shoeMat = useMemo(() => softColor(SHOE_COLOR, { roughness: 0.82 }), []);
+  const skinMat = useMemo(() => softColor(AVATAR_SKIN, { roughness: 0.9 }), []);
+  const pantsMat = useMemo(() => softColor(AVATAR_PANTS, { roughness: 0.93 }), []);
+  const shoeMat = useMemo(() => softColor(AVATAR_SHOE, { roughness: 0.8 }), []);
+  const soleMat = useMemo(() => softColor(AVATAR_SOLE, { roughness: 0.95 }), []);
+  const eyeWhiteMat = useMemo(() => EYE_WHITE.clone(), []);
+  const eyeMat = useMemo(() => EYE_MAT.clone(), []);
+  const cheekMat = useMemo(() => CHEEK_MAT.clone(), []);
+  const noseMat = useMemo(() => NOSE_MAT.clone(), []);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
     const [x, , z] = runtime.position;
-    TARGET.set(x, 0, z);
-    groupRef.current.position.lerp(TARGET, 1 - Math.exp(-POS_SMOOTH * delta));
-
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(
-      groupRef.current.rotation.y,
-      runtime.rotation,
-      1 - Math.exp(-ROT_SMOOTH * delta),
-    );
-
-    const t = state.clock.elapsedTime + phase;
     const walking = runtime.status === 'walking';
     const chatting = runtime.status === 'chatting';
+
+    if (walking) {
+      groupRef.current.position.x = x;
+      groupRef.current.position.z = z;
+    } else {
+      TARGET.set(x, 0, z);
+      groupRef.current.position.lerp(TARGET, 1 - Math.exp(-POS_SMOOTH * delta));
+      if (!chatting) {
+        const clamped = clampToWalkable([
+          groupRef.current.position.x,
+          groupRef.current.position.y,
+          groupRef.current.position.z,
+        ]);
+        groupRef.current.position.x = clamped[0];
+        groupRef.current.position.z = clamped[2];
+      }
+    }
+
+    walkBlendRef.current = THREE.MathUtils.lerp(
+      walkBlendRef.current,
+      walking ? 1 : 0,
+      1 - Math.exp(-(walking ? 10 : 7) * delta),
+    );
+
+    const rotSmooth = walking ? ROT_SMOOTH_WALK : ROT_SMOOTH_IDLE;
+    if (visualRotRef.current === null) {
+      visualRotRef.current = runtime.rotation;
+    }
+    visualRotRef.current = lerpAngle(
+      visualRotRef.current,
+      runtime.rotation,
+      1 - Math.exp(-rotSmooth * delta),
+    );
+    groupRef.current.rotation.y = visualRotRef.current;
+
+    const t = state.clock.elapsedTime + phase;
     const atCoffee = runtime.status === 'coffee';
+    const walkPose = getWalkPoseFrame(t, phase, runtime.moveSpeed, walkBlendRef.current);
+    const walkingAnim = walkPose.walkBlend > 0.02;
     const atSeat = isNearChatAnchor(runtime.position, chatAnchor);
     const shouldSit =
       runtime.posture === 'sit' &&
@@ -168,8 +217,8 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     const coffeeEase = easeCoffeeBlend(coffeeBlendRef.current);
     const coffeePose = atCoffee ? getCoffeePoseFrame(state.clock.elapsedTime, phase) : null;
 
-    const standBob = walking
-      ? Math.sin(t * 14) * 0.032
+    const standBob = walkingAnim
+      ? walkPose.bodyBob
       : chatting
         ? Math.sin(t * 5) * 0.016
         : atCoffee
@@ -179,8 +228,13 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     groupRef.current.position.y = lerpSitValue(standBob, 0, sitEase) + sitPose.groupY * sitEase;
 
     if (bodyRef.current) {
+      bodyRef.current.position.x = THREE.MathUtils.lerp(
+        bodyRef.current.position.x,
+        walkPose.hipOffsetX * (1 - sitEase),
+        0.22,
+      );
       bodyRef.current.position.y = lerpSitValue(0, sitPose.bodyY, sitEase);
-      const walkLean = walking && sitEase < 0.5 ? Math.sin(t * 14) * 0.05 : 0;
+      const walkLean = walkingAnim && sitEase < 0.5 ? walkPose.bodyLeanX : 0;
       const chatLean = chatting && sitEase > 0.6 ? 0.02 : 0;
       const coffeeLean = coffeePose ? coffeePose.bodyRotX * coffeeEase : 0;
       bodyRef.current.rotation.x = lerpSitValue(
@@ -188,37 +242,45 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         sitPose.bodyRotX,
         sitEase,
       );
-      const sway = walking && sitEase < 0.35 ? Math.sin(t * 7) * 0.035 : 0;
+      const sway = walkingAnim && sitEase < 0.35 ? walkPose.bodySwayZ : 0;
       bodyRef.current.rotation.z = lerpSitValue(sway, sitPose.bodyRotZ, sitEase);
     }
 
-    const armSwing =
-      walking && sitEase < 0.25
-        ? Math.sin(t * 10) * 0.42
-        : chatting && sitEase > 0.5
-          ? Math.sin(t * 4) * 0.14
-          : atCoffee
-            ? Math.sin(t * 3.5) * 0.08
-            : 0;
-    const legSwing = walking && sitEase < 0.25 ? Math.sin(t * 10) * 0.55 : 0;
-
     const idleArm = sitting && !walking ? sitPose.armRotX : 0;
-    const leftArmBase = lerpSitValue(armSwing, idleArm, sitEase);
-    const rightArmBase = lerpSitValue(-armSwing, idleArm, sitEase);
+    const idleArmSwing =
+      chatting && sitEase > 0.5
+        ? Math.sin(t * 4) * 0.14
+        : atCoffee
+          ? Math.sin(t * 3.5) * 0.08
+          : 0;
+    const leftArmBase = walkingAnim
+      ? lerpSitValue(walkPose.leftArmX, idleArm, sitEase)
+      : lerpSitValue(idleArmSwing, idleArm, sitEase);
+    const rightArmBase = walkingAnim
+      ? lerpSitValue(walkPose.rightArmX, idleArm, sitEase)
+      : lerpSitValue(-idleArmSwing, idleArm, sitEase);
 
     const leftArmTarget = {
       rotX: coffeePose
         ? lerpCoffeeValue(leftArmBase, coffeePose.leftArm.rotX, coffeeEase)
         : leftArmBase,
       rotY: coffeePose ? coffeePose.leftArm.rotY * coffeeEase : 0,
-      rotZ: coffeePose ? coffeePose.leftArm.rotZ * coffeeEase : 0,
+      rotZ: coffeePose
+        ? coffeePose.leftArm.rotZ * coffeeEase
+        : walkingAnim
+          ? walkPose.leftArmZ
+          : 0,
     };
     const rightArmTarget = {
       rotX: coffeePose
         ? lerpCoffeeValue(rightArmBase, coffeePose.rightArm.rotX, coffeeEase)
         : rightArmBase,
       rotY: coffeePose ? coffeePose.rightArm.rotY * coffeeEase : 0,
-      rotZ: coffeePose ? coffeePose.rightArm.rotZ * coffeeEase : 0,
+      rotZ: coffeePose
+        ? coffeePose.rightArm.rotZ * coffeeEase
+        : walkingAnim
+          ? walkPose.rightArmZ
+          : 0,
     };
 
     if (leftArmRef.current) {
@@ -228,9 +290,18 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       lerpArmRotation(rightArmRef.current, rightArmTarget, 0.22);
     }
 
-    const leftThighX = lerpSitValue(-legSwing, sitPose.thighRotX, sitEase);
-    const rightThighX = lerpSitValue(legSwing, sitPose.thighRotX, sitEase);
-    const shinX = lerpSitValue(0, sitPose.shinRotX, sitEase);
+    const leftThighX = walkingAnim
+      ? lerpSitValue(walkPose.leftThighX, sitPose.thighRotX, sitEase)
+      : lerpSitValue(0, sitPose.thighRotX, sitEase);
+    const rightThighX = walkingAnim
+      ? lerpSitValue(walkPose.rightThighX, sitPose.thighRotX, sitEase)
+      : lerpSitValue(0, sitPose.thighRotX, sitEase);
+    const leftShinX = walkingAnim
+      ? lerpSitValue(walkPose.leftShinX, sitPose.shinRotX, sitEase)
+      : lerpSitValue(0, sitPose.shinRotX, sitEase);
+    const rightShinX = walkingAnim
+      ? lerpSitValue(walkPose.rightShinX, sitPose.shinRotX, sitEase)
+      : lerpSitValue(0, sitPose.shinRotX, sitEase);
     const spread = sitPose.legSpreadZ * sitEase;
     const legZ = sitPose.legOffsetZ * sitEase;
 
@@ -253,24 +324,38 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       rightLegRef.current.position.z = THREE.MathUtils.lerp(rightLegRef.current.position.z, legZ, 0.2);
     }
     if (leftShinRef.current) {
-      leftShinRef.current.rotation.x = THREE.MathUtils.lerp(leftShinRef.current.rotation.x, shinX, 0.22);
+      leftShinRef.current.rotation.x = THREE.MathUtils.lerp(
+        leftShinRef.current.rotation.x,
+        leftShinX,
+        0.22,
+      );
     }
     if (rightShinRef.current) {
-      rightShinRef.current.rotation.x = THREE.MathUtils.lerp(rightShinRef.current.rotation.x, shinX, 0.22);
+      rightShinRef.current.rotation.x = THREE.MathUtils.lerp(
+        rightShinRef.current.rotation.x,
+        rightShinX,
+        0.22,
+      );
     }
 
     if (headRef.current) {
-      const lookAmp = chatting ? sitPose.headRotYChat : atCoffee ? 0.02 : walking ? 0.04 : 0.03;
-      const look = Math.sin(t * (chatting ? 2.5 : atCoffee ? 1.6 : walking ? 8 : 1.8)) * lookAmp;
+      const lookAmp = chatting ? sitPose.headRotYChat : atCoffee ? 0.02 : walkingAnim ? 0.02 : 0.03;
+      const look = Math.sin(t * (chatting ? 2.5 : atCoffee ? 1.6 : walkingAnim ? 5 : 1.8)) * lookAmp;
       const coffeeHeadY = coffeePose ? coffeePose.headRotY * coffeeEase : 0;
+      const walkHeadY = walkingAnim ? walkPose.headRotY : 0;
       headRef.current.rotation.y = THREE.MathUtils.lerp(
         headRef.current.rotation.y,
-        look + coffeeHeadY,
+        look + coffeeHeadY + walkHeadY,
         0.12,
       );
       const nod = chatting ? Math.sin(t * 3.2) * 0.06 : 0;
       const coffeeNod = coffeePose ? coffeePose.headRotX * coffeeEase : 0;
-      headRef.current.rotation.x = lerpSitValue(nod + coffeeNod, sitPose.headRotX + nod * 0.5, sitEase);
+      const walkNod = walkingAnim ? walkPose.headRotX : 0;
+      headRef.current.rotation.x = lerpSitValue(
+        nod + coffeeNod + walkNod,
+        sitPose.headRotX + nod * 0.5,
+        sitEase,
+      );
       headRef.current.rotation.z = THREE.MathUtils.lerp(
         headRef.current.rotation.z,
         coffeePose ? coffeePose.headRotZ * coffeeEase : 0,
@@ -338,112 +423,59 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         }}
       >
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, 0]}>
-          <circleGeometry args={[0.2, 20]} />
-          <meshBasicMaterial color="#1a2820" transparent opacity={0.22} />
+          <circleGeometry args={[0.22, 24]} />
+          <meshBasicMaterial color="#1a2820" transparent opacity={0.2} />
         </mesh>
 
-        <group ref={leftLegRef} position={[-0.055, 0.18, 0]}>
-          <mesh position={[0, -0.06, 0]} castShadow material={pantsMat}>
-            <capsuleGeometry args={[0.038, 0.1, 4, 8]} />
-          </mesh>
+        <group ref={leftLegRef} position={[-0.058, 0.18, 0]}>
+          <AgentThigh pantsMat={pantsMat} />
           <group ref={leftShinRef} position={[0, -0.12, 0]}>
-            <mesh position={[0, -0.02, 0.02]} castShadow material={pantsMat}>
-              <capsuleGeometry args={[0.034, 0.08, 4, 8]} />
-            </mesh>
-            <mesh position={[0, -0.08, 0.03]} castShadow material={shoeMat}>
-              <boxGeometry args={[0.06, 0.04, 0.1]} />
-            </mesh>
+            <AgentShinFoot pantsMat={pantsMat} shoeMat={shoeMat} soleMat={soleMat} />
           </group>
         </group>
-        <group ref={rightLegRef} position={[0.055, 0.18, 0]}>
-          <mesh position={[0, -0.06, 0]} castShadow material={pantsMat}>
-            <capsuleGeometry args={[0.038, 0.1, 4, 8]} />
-          </mesh>
+        <group ref={rightLegRef} position={[0.058, 0.18, 0]}>
+          <AgentThigh pantsMat={pantsMat} />
           <group ref={rightShinRef} position={[0, -0.12, 0]}>
-            <mesh position={[0, -0.02, 0.02]} castShadow material={pantsMat}>
-              <capsuleGeometry args={[0.034, 0.08, 4, 8]} />
-            </mesh>
-            <mesh position={[0, -0.08, 0.03]} castShadow material={shoeMat}>
-              <boxGeometry args={[0.06, 0.04, 0.1]} />
-            </mesh>
+            <AgentShinFoot pantsMat={pantsMat} shoeMat={shoeMat} soleMat={soleMat} />
           </group>
         </group>
 
-        <mesh position={[0, 0.34, 0]} castShadow material={shirtMat}>
-          <boxGeometry args={[0.2, 0.22, 0.13]} />
-          <Edges color={OUTLINE_COLOR} threshold={14} />
-        </mesh>
-        <mesh position={[0, 0.44, 0.055]} material={accentMat}>
-          <boxGeometry args={[0.08, 0.03, 0.02]} />
-        </mesh>
+        <AgentTorso
+          shirtMat={shirtMat}
+          pantsMat={pantsMat}
+          accentMat={accentMat}
+          outlineColor={OUTLINE_COLOR}
+        />
 
-        <group ref={leftArmRef} position={[-0.13, 0.38, 0]}>
-          <mesh position={[0, -0.05, 0]} castShadow material={shirtMat}>
-            <capsuleGeometry args={[0.032, 0.1, 4, 8]} />
-          </mesh>
-          <mesh position={[0, -0.12, 0.01]} castShadow material={skinMat}>
-            <sphereGeometry args={[0.034, 7, 6]} />
-          </mesh>
+        <group ref={leftArmRef} position={[-0.135, 0.38, 0]}>
+          <AgentArmSegment
+            shirtMat={shirtMat}
+            skinMat={skinMat}
+            accentMat={accentMat}
+            side={-1}
+          />
         </group>
-        <group ref={rightArmRef} position={[0.13, 0.38, 0]}>
-          <mesh position={[0, -0.05, 0]} castShadow material={shirtMat}>
-            <capsuleGeometry args={[0.032, 0.1, 4, 8]} />
-          </mesh>
-          <group position={[0, -0.12, 0.01]}>
-            <mesh castShadow material={skinMat}>
-              <sphereGeometry args={[0.034, 7, 6]} />
-            </mesh>
-            {runtime.status === 'coffee' && <CoffeeHandCup />}
-          </group>
+        <group ref={rightArmRef} position={[0.135, 0.38, 0]}>
+          <AgentArmSegment
+            shirtMat={shirtMat}
+            skinMat={skinMat}
+            accentMat={accentMat}
+            side={1}
+            handAccessory={runtime.status === 'coffee' ? <CoffeeHandCup /> : undefined}
+          />
         </group>
 
-        <group ref={headRef} position={[0, 0.52, 0]}>
-          <mesh castShadow material={skinMat}>
-            <sphereGeometry args={[0.125, 12, 10]} />
-            <Edges color={OUTLINE_COLOR} threshold={12} />
-          </mesh>
-
-          {hairVariant === 0 && (
-            <mesh position={[0, 0.06, -0.02]} castShadow material={hairMat}>
-              <sphereGeometry args={[0.13, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-            </mesh>
-          )}
-          {hairVariant === 1 && (
-            <>
-              <mesh position={[0, 0.05, -0.03]} castShadow material={hairMat}>
-                <boxGeometry args={[0.24, 0.08, 0.18]} />
-              </mesh>
-              <mesh position={[0, 0.12, 0.02]} castShadow material={hairMat}>
-                <boxGeometry args={[0.06, 0.1, 0.06]} />
-              </mesh>
-            </>
-          )}
-          {hairVariant === 2 && (
-            <>
-              <mesh position={[0, 0.04, -0.04]} castShadow material={hairMat}>
-                <boxGeometry args={[0.22, 0.07, 0.16]} />
-              </mesh>
-              <mesh position={[0.07, 0.02, 0.04]} rotation={[0, 0, -0.35]} castShadow material={hairMat}>
-                <boxGeometry args={[0.08, 0.05, 0.06]} />
-              </mesh>
-            </>
-          )}
-
-          <mesh position={[-0.042, 0.01, 0.1]} material={EYE_MAT}>
-            <sphereGeometry args={[0.016, 6, 6]} />
-          </mesh>
-          <mesh position={[0.042, 0.01, 0.1]} material={EYE_MAT}>
-            <sphereGeometry args={[0.016, 6, 6]} />
-          </mesh>
-          <mesh position={[0, -0.03, 0.108]} material={NOSE_MAT}>
-            <sphereGeometry args={[0.012, 6, 6]} />
-          </mesh>
-          <mesh position={[-0.07, -0.01, 0.09]} material={CHEEK_MAT}>
-            <sphereGeometry args={[0.014, 6, 6]} />
-          </mesh>
-          <mesh position={[0.07, -0.01, 0.09]} material={CHEEK_MAT}>
-            <sphereGeometry args={[0.014, 6, 6]} />
-          </mesh>
+        <group ref={headRef} position={[0, 0.525, 0]}>
+          <AgentFace
+            skinMat={skinMat}
+            hairMat={hairMat}
+            eyeWhiteMat={eyeWhiteMat}
+            eyeMat={eyeMat}
+            cheekMat={cheekMat}
+            noseMat={noseMat}
+            outlineColor={OUTLINE_COLOR}
+            variant={hairVariant}
+          />
         </group>
 
         {runtime.status === 'chatting' && <SpeechBubble />}

@@ -1,4 +1,5 @@
 import { COFFEE_LOUNGE_CENTER_Z, COFFEE_LOUNGE_POSITION, CAFE_HIGH_TABLE_LOCAL, CAFE_PRIMARY_STOOL_LOCAL } from '@/components/scene/furniture/coffeeLoungeConstants';
+import { COFFEE_BAR_FRONT_Z } from '@/config/coffeeBarQueue';
 import {
   PRIVATE_DESK_CENTER,
   PRIVATE_DESK_POSITIONS,
@@ -35,11 +36,25 @@ function walkWaypoint(x: number, z: number): [number, number, number] {
   return findNearestWalkablePosition([x, 0, z]);
 }
 
+const HUB_WAYPOINT_ANGLE = Math.PI / 4 + 0.12;
+
 export const ZONE_WAYPOINTS: Waypoint[] = [
-  { id: 'wp-center-north', zone: 'center-desk', position: hubPerimeterPosition(-Math.PI / 2) },
-  { id: 'wp-center-east', zone: 'center-desk', position: hubPerimeterPosition(0) },
-  { id: 'wp-center-west', zone: 'center-desk', position: hubPerimeterPosition(Math.PI) },
-  { id: 'wp-center-south', zone: 'center-desk', position: hubPerimeterPosition(Math.PI / 2) },
+  { id: 'wp-center-ne', zone: 'center-desk', position: hubPerimeterPosition(-HUB_WAYPOINT_ANGLE) },
+  {
+    id: 'wp-center-se',
+    zone: 'center-desk',
+    position: hubPerimeterPosition(HUB_WAYPOINT_ANGLE),
+  },
+  {
+    id: 'wp-center-nw',
+    zone: 'center-desk',
+    position: hubPerimeterPosition(-Math.PI + HUB_WAYPOINT_ANGLE),
+  },
+  {
+    id: 'wp-center-sw',
+    zone: 'center-desk',
+    position: hubPerimeterPosition(Math.PI - HUB_WAYPOINT_ANGLE),
+  },
   {
     id: 'wp-living-puff',
     zone: 'living',
@@ -66,20 +81,17 @@ export const ZONE_WAYPOINTS: Waypoint[] = [
   {
     id: 'wp-cafeteria-table',
     zone: 'cafeteria',
-    position: walkWaypoint(-0.55, COFFEE_LOUNGE_CENTER_Z + 1.05),
+    position: walkWaypoint(0.75, COFFEE_LOUNGE_CENTER_Z + 0.85),
   },
   {
     id: 'wp-cafeteria-bar',
     zone: 'cafeteria',
-    position: walkWaypoint(0.35, COFFEE_LOUNGE_CENTER_Z + 0.35),
+    position: walkWaypoint(0.55, COFFEE_BAR_FRONT_Z + 0.05),
   },
   {
     id: 'wp-cafeteria-high-table',
     zone: 'cafeteria',
-    position: walkWaypoint(
-      COFFEE_LOUNGE_POSITION[0] + CAFE_HIGH_TABLE_LOCAL[0] + 0.95,
-      COFFEE_LOUNGE_POSITION[2] + CAFE_HIGH_TABLE_LOCAL[2] + 0.35,
-    ),
+    position: walkWaypoint(0.35, COFFEE_LOUNGE_CENTER_Z + 1.05),
   },
   { id: 'wp-wall-desks-path', zone: 'wall-desks', position: walkWaypoint(4.2, PRIVATE_DESK_CENTER[2]) },
   {
@@ -109,8 +121,8 @@ const ZONE_CHAT_ANCHORS: Record<AgentHomeZone, ChatAnchor> = {
     posture: 'sit',
   },
   'center-desk': {
-    position: hubPerimeterPosition(Math.PI / 2 + 0.15),
-    rotation: Math.PI,
+    position: hubPerimeterPosition(HUB_WAYPOINT_ANGLE + 0.08),
+    rotation: Math.PI * 0.75,
     posture: 'stand',
   },
   cafeteria: {

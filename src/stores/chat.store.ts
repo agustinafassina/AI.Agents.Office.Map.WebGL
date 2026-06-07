@@ -8,6 +8,10 @@ import {
   isAgentModelAvailableOnApi,
   resolveAgentModelLabel,
 } from '@/utils/agentModel';
+import {
+  AGENT_COMMAND_ACK,
+  parseAgentChatCommand,
+} from '@/utils/chatAgentCommands';
 import { createId } from '@/utils/id';
 import { useAgentsStore } from './agents.store';
 
@@ -119,15 +123,39 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const agent = get().getActiveAgent();
     if (!agent) return;
 
+    const trimmed = content.trim();
+    const command = parseAgentChatCommand(trimmed);
+
     const userMessage: ChatMessage = {
       id: createId('msg'),
       role: 'user',
-      content: content.trim(),
+      content: trimmed,
       timestamp: Date.now(),
     };
 
     const conversations = { ...get().conversations };
     const conv = conversations[agentId] ?? emptyConversation(agentId);
+
+    if (command) {
+      const dispatched = useAgentsStore.getState().dispatchAgentCommand(agentId, command);
+      const assistantMessage: ChatMessage = {
+        id: createId('msg'),
+        role: 'assistant',
+        content: dispatched
+          ? AGENT_COMMAND_ACK[command]
+          : 'No pude moverme ahora; probá de nuevo en un momento.',
+        timestamp: Date.now(),
+      };
+      conversations[agentId] = {
+        ...conv,
+        messages: [...conv.messages, userMessage, assistantMessage],
+        isLoading: false,
+        error: null,
+      };
+      set({ conversations });
+      return;
+    }
+
     const history = [...conv.messages, userMessage];
 
     conversations[agentId] = {
