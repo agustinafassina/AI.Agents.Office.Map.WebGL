@@ -1,5 +1,6 @@
 import { useAgentsStore } from '@/stores/agents.store';
 import { AgentAvatar } from './AgentAvatar';
+import { AgentConversationLinks } from './AgentConversationLinks';
 
 export function AgentsLayer() {
   const definitions = useAgentsStore((s) => s.definitions);
@@ -7,6 +8,7 @@ export function AgentsLayer() {
 
   return (
     <group>
+      <AgentConversationLinks />
       {definitions.map((def) => {
         const state = runtime[def.id];
         if (!state) return null;

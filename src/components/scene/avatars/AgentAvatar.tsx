@@ -35,9 +35,12 @@ import {
 } from './agentCoffeePose';
 import { getWalkPoseFrame } from './agentWalkPose';
 import { CoffeeHandCup } from './CoffeeHandCup';
+import { ConversationSpeechBubble } from './ConversationSpeechBubble';
 import { OUTLINE_COLOR, softColor } from '../materials';
 import { clampToWalkable } from '@/utils/collision';
 import { lerpAngle } from '@/utils/movement';
+import { useConversationVisualsStore } from '@/stores/conversationVisuals.store';
+import { useAgentsStore } from '@/stores/agents.store';
 
 interface AgentAvatarProps {
   definition: AgentDefinition;
@@ -63,27 +66,6 @@ function hashVariant(id: string): HairVariant {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 17 + id.charCodeAt(i)) >>> 0;
   return (h % 4) as HairVariant;
-}
-
-function SpeechBubble() {
-  return (
-    <group position={[0.38, 0.58, 0.04]} rotation={[0, -0.35, 0.08]}>
-      <mesh>
-        <boxGeometry args={[0.16, 0.1, 0.02]} />
-        <meshBasicMaterial color="#faf8f4" transparent opacity={0.94} />
-      </mesh>
-      <mesh position={[-0.06, -0.03, 0]} rotation={[0, 0, 0.55]}>
-        <boxGeometry args={[0.04, 0.04, 0.015]} />
-        <meshBasicMaterial color="#faf8f4" transparent opacity={0.94} />
-      </mesh>
-      {[0.04, 0, -0.04].map((x, i) => (
-        <mesh key={i} position={[x, 0.01, 0.014]}>
-          <sphereGeometry args={[0.012, 6, 6]} />
-          <meshBasicMaterial color="#8fa38c" />
-        </mesh>
-      ))}
-    </group>
-  );
 }
 
 function lerpArmRotation(
@@ -115,6 +97,12 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const selectedId = useSceneStore((s) => s.selectedAgentId);
   const focusOnAgent = useSceneStore((s) => s.focusOnAgent);
   const openChat = useChatStore((s) => s.openChat);
+  const peerPartnerId = useConversationVisualsStore((s) => s.getPeerPartner(definition.id));
+  const userChatAgentId = useConversationVisualsStore((s) => s.userChatAgentId);
+  const userChatStreaming = useConversationVisualsStore((s) => s.userChatStreaming);
+  const peerPosition = useAgentsStore((s) =>
+    peerPartnerId ? s.runtime[peerPartnerId]?.position : undefined,
+  );
   const isSelected = selectedId === definition.id;
   const phase = useMemo(() => hashPhase(definition.id), [definition.id]);
   const hairVariant = useMemo(() => hashVariant(definition.id), [definition.id]);
@@ -155,6 +143,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     const [x, , z] = runtime.position;
     const walking = runtime.status === 'walking';
     const chatting = runtime.status === 'chatting';
+    const socialChat = Boolean(peerPartnerId) && !chatting;
 
     if (walking) {
       groupRef.current.position.x = x;
@@ -179,13 +168,19 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       1 - Math.exp(-(walking ? 10 : 7) * delta),
     );
 
-    const rotSmooth = walking ? ROT_SMOOTH_WALK : ROT_SMOOTH_IDLE;
+    const rotSmooth = walking ? ROT_SMOOTH_WALK : socialChat ? 8 : ROT_SMOOTH_IDLE;
     if (visualRotRef.current === null) {
       visualRotRef.current = runtime.rotation;
     }
+
+    let targetRotation = runtime.rotation;
+    if (socialChat && peerPosition) {
+      targetRotation = Math.atan2(peerPosition[0] - x, peerPosition[2] - z);
+    }
+
     visualRotRef.current = lerpAngle(
       visualRotRef.current,
-      runtime.rotation,
+      targetRotation,
       1 - Math.exp(-rotSmooth * delta),
     );
     groupRef.current.rotation.y = visualRotRef.current;
@@ -248,11 +243,13 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
 
     const idleArm = sitting && !walking ? sitPose.armRotX : 0;
     const idleArmSwing =
-      chatting && sitEase > 0.5
-        ? Math.sin(t * 4) * 0.14
-        : atCoffee
-          ? Math.sin(t * 3.5) * 0.08
-          : 0;
+      socialChat && sitEase < 0.5
+        ? Math.sin(t * 4.5) * 0.12
+        : chatting && sitEase > 0.5
+          ? Math.sin(t * 4) * 0.14
+          : atCoffee
+            ? Math.sin(t * 3.5) * 0.08
+            : 0;
     const leftArmBase = walkingAnim
       ? lerpSitValue(walkPose.leftArmX, idleArm, sitEase)
       : lerpSitValue(idleArmSwing, idleArm, sitEase);
@@ -339,13 +336,24 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     }
 
     if (headRef.current) {
-      const lookAmp = chatting ? sitPose.headRotYChat : atCoffee ? 0.02 : walkingAnim ? 0.02 : 0.03;
-      const look = Math.sin(t * (chatting ? 2.5 : atCoffee ? 1.6 : walkingAnim ? 5 : 1.8)) * lookAmp;
+      let peerLookY = 0;
+      if (socialChat && peerPosition) {
+        const dx = peerPosition[0] - x;
+        const dz = peerPosition[2] - z;
+        peerLookY = THREE.MathUtils.clamp(
+          Math.atan2(dx, dz) - groupRef.current.rotation.y,
+          -0.42,
+          0.42,
+        );
+      }
+
+      const lookAmp = chatting ? sitPose.headRotYChat : atCoffee ? 0.02 : walkingAnim ? 0.02 : socialChat ? 0.03 : 0.03;
+      const look = Math.sin(t * (chatting ? 2.5 : atCoffee ? 1.6 : socialChat ? 3.2 : walkingAnim ? 5 : 1.8)) * lookAmp;
       const coffeeHeadY = coffeePose ? coffeePose.headRotY * coffeeEase : 0;
       const walkHeadY = walkingAnim ? walkPose.headRotY : 0;
       headRef.current.rotation.y = THREE.MathUtils.lerp(
         headRef.current.rotation.y,
-        look + coffeeHeadY + walkHeadY,
+        look + coffeeHeadY + walkHeadY + peerLookY,
         0.12,
       );
       const nod = chatting ? Math.sin(t * 3.2) * 0.06 : 0;
@@ -396,6 +404,16 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           : runtime.status === 'walking'
             ? 'walking'
             : 'idle';
+
+  const socialChat = Boolean(peerPartnerId) && runtime.status !== 'chatting';
+  const speechVariant =
+    runtime.status === 'chatting' && userChatAgentId === definition.id
+      ? userChatStreaming
+        ? 'user-streaming'
+        : 'user-chat'
+      : socialChat
+        ? 'peer'
+        : null;
 
   return (
     <group ref={groupRef} position={runtime.position} userData={{ blockPan: true }}>
@@ -478,7 +496,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           />
         </group>
 
-        {runtime.status === 'chatting' && <SpeechBubble />}
+        {speechVariant && <ConversationSpeechBubble variant={speechVariant} />}
       </group>
 
       <AgentRoleLogo logoUrl={definition.logoUrl} accentColor={definition.accentColor} />
@@ -488,6 +506,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         role={definition.role}
         modelId={definition.modelId}
         status={status}
+        socialChat={socialChat}
         accentColor={definition.accentColor}
         selected={isSelected}
       />

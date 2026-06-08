@@ -4,12 +4,47 @@ import type { AgentDefinition } from '@/types/agent';
 import type { LiteLLMModel } from '@/types/litellm';
 import type { LiteLLMServiceStatus } from '@/services/litellm/litellm.service';
 
+function mergeExternalOntoGenerated(
+  generated: AgentDefinition[],
+  external: AgentDefinition[],
+): AgentDefinition[] {
+  const byModelId = new Map(external.map((agent) => [agent.modelId, agent]));
+  const byId = new Map(external.map((agent) => [agent.id, agent]));
+
+  return generated.map((agent) => {
+    const overlay = byModelId.get(agent.modelId) ?? byId.get(agent.id);
+    if (!overlay) return agent;
+
+    return {
+      ...agent,
+      ...overlay,
+      id: agent.id,
+      modelId: agent.modelId,
+    };
+  });
+}
+
 export function resolveAgentDefinitions(
   serviceMode: LiteLLMServiceStatus,
   models: LiteLLMModel[],
+  externalAgents: AgentDefinition[] | null,
 ): AgentDefinition[] {
+  if (externalAgents && externalAgents.length > 0) {
+    if (serviceMode === 'live' && models.length > 0) {
+      const modelIds = new Set(models.map((model) => model.id));
+      const fromJson = externalAgents.filter((agent) => modelIds.has(agent.modelId));
+      if (fromJson.length > 0) return fromJson;
+
+      const generated = buildAgentsFromModels(models);
+      return mergeExternalOntoGenerated(generated, externalAgents);
+    }
+
+    return externalAgents;
+  }
+
   if (serviceMode === 'live') {
     return buildAgentsFromModels(models);
   }
+
   return AGENT_DEFINITIONS;
 }

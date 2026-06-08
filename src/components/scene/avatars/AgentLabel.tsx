@@ -6,11 +6,13 @@ interface AgentLabelProps {
   role?: string;
   modelId?: string;
   status: AgentStatus;
+  socialChat?: boolean;
   accentColor: string;
   selected: boolean;
 }
 
-function statusColor(status: AgentStatus): string {
+function statusColor(status: AgentStatus, socialChat: boolean): string {
+  if (socialChat) return '#a8c4a0';
   if (status === 'chatting') return '#d4a574';
   if (status === 'coffee') return '#c8a882';
   if (status === 'coffee-queue') return '#a8b5a0';
@@ -18,7 +20,8 @@ function statusColor(status: AgentStatus): string {
   return '#9aab9e';
 }
 
-function statusLabel(status: AgentStatus): string {
+function statusLabel(status: AgentStatus, socialChat: boolean): string {
+  if (socialChat) return 'Talking';
   if (status === 'chatting') return 'In chat';
   if (status === 'coffee') return 'Coffee break';
   if (status === 'coffee-queue') return 'In line';
@@ -26,7 +29,7 @@ function statusLabel(status: AgentStatus): string {
   return 'Available';
 }
 
-export function AgentLabel({ name, status, accentColor, selected }: AgentLabelProps) {
+export function AgentLabel({ name, status, socialChat = false, accentColor, selected }: AgentLabelProps) {
   return (
     <Billboard position={[0, 1.16, 0]} follow lockX lockZ>
       <group>
@@ -50,12 +53,12 @@ export function AgentLabel({ name, status, accentColor, selected }: AgentLabelPr
         <Text
           position={[0, -0.055, 0]}
           fontSize={0.034}
-          color={statusColor(status)}
+          color={statusColor(status, socialChat)}
           anchorX="center"
           anchorY="top"
           letterSpacing={0.03}
         >
-          {statusLabel(status)}
+          {statusLabel(status, socialChat)}
         </Text>
       </group>
     </Billboard>

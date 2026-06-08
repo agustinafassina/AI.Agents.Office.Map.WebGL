@@ -1,64 +1,76 @@
 # 🏢 AI Agents Office Map (WebGL)
-Interactive isometric office diorama (L-shaped open plan, sage/terracotta palette) where AI agents appear as avatars, walk autonomously, and open a LiteLLM-powered chat when selected.
+Isometric office diorama rendered with **WebGL** (Three.js + React Three Fiber). AI agents appear as avatars, walk autonomously, and open a LiteLLM-powered chat when selected.
+
+## 🎬 Demo
+![Select an agent, chat with LiteLLM, send them for coffee](docs/demo.gif)
+
+If the GIF is missing, record one following [docs/RECORD_DEMO.md](docs/RECORD_DEMO.md) and save it as `docs/demo.gif`.
+
+**~30 s flow:** map pan → click agent → chat message → `ve a tomar cafe` → avatar walks to the café.
+
+## ✨ Features
+- **LiteLLM** — agents from `/v1/models`, or mock mode without a backend
+- **Per-agent chat** — sidebar history; map zoom on selection
+- **Scene commands** — `ve a tomar cafe`, `relajate`, `vuelve al escritorio`
+- **Office sim** — coffee breaks, bar queue, zone waypoints, collision-aware movement
+- **Procedural textures** — illustrated look without external assets (optional PNGs in `public/textures/`)
+
+Roadmap: **[CHECKLIST.md](CHECKLIST.md)**
 
 ## 🛠️ Stack
 - **React 19 + TypeScript + Vite**
-- **Three.js** via **React Three Fiber** and **Drei**
-- **Zustand** for predictable, decoupled state
-- **LiteLLM** (OpenAI-compatible API) behind a service abstraction
+- **Three.js** via **React Three Fiber** + **Drei** (WebGL scene)
+- **Zustand** — agents, selection, chat state
+- **LiteLLM** — OpenAI-compatible API behind `src/services/litellm/`
 
 ## 🚀 Quick start
 ```bash
 npm install
-npm run dev
+npm run dev    # http://localhost:5173
+npm run build
+npm run preview
 ```
 
-Open [http://localhost:5173](http://localhost:5173). By default **mock LiteLLM** is enabled so you can test without a backend.
+Mock LiteLLM is on by default — no backend required for a first run.
 
 ## 🤖 LiteLLM configuration
 1. Copy `.env.example` to `.env`
-2. Point `VITE_LITELLM_BASE_URL` at your LiteLLM instance (or keep `/api/litellm` for the Vite dev proxy)
+2. Set `VITE_LITELLM_BASE_URL` (or keep `/api/litellm` for the Vite dev proxy → `localhost:4000`)
 3. Set `VITE_LITELLM_API_KEY` and `VITE_USE_MOCK_LITELLM=false`
 
-The dev server proxies `/api/litellm` → `http://localhost:4000` (override with `VITE_LITELLM_BASE_URL`).
+## 💡 Batch ideas (`try.py`)
+With LiteLLM on `localhost:4000`:
+
+```bash
+python try.py           # writes ai-suggestions/session-*/consola.txt
+python try.py --apply   # optional; review validation before touching src/
+```
+
+Use `@consola.txt` in Cursor Agent to implement viable suggestions.
 
 ## 📁 Project structure
 ```
 src/
-  app/                 # Root layout
-  components/
-    scene/             # WebGL office, furniture, avatars, camera
-    ui/                # Chat panel, HUD (no Three.js imports)
-  config/              # Agents, waypoints, palette, env
-  hooks/               # Movement loop, bootstrap
-  services/litellm/    # API client + service (swap/extend here)
-  stores/              # agents, scene selection, chat
-  types/               # Shared TypeScript contracts
-  utils/               # Movement math, IDs
+  components/scene/    # WebGL office, furniture, avatars
+  components/ui/       # Chat panel, HUD (no Three.js)
+  config/              # Agents, waypoints, obstacles
+  services/litellm/    # API client + service layer
+  stores/              # agents, scene, chat
+  utils/               # Movement, collision, chat commands
+docs/                  # demo GIF + recording guide
 ```
 
-## 🎨 Textures (illustrative style)
-At runtime the app paints **procedural textures** (tiles, plaster walls, wood grain, jute rugs, foliage) so the scene feels hand-illustrated without external assets.
-
-To use your own images (e.g. exports from the reference art), add PNGs under `public/textures/` — see `public/textures/README.md` for filenames. They load automatically when present.
-
 ## 🔧 Extending
-| Goal | Where to look |
-|------|----------------|
-| Add agents | `src/config/agents.config.ts` |
-| Change models per agent | `modelId` on each agent definition |
-| New furniture / rooms | `src/components/scene/furniture/` — L-shaped hub (`LShapedDesk`, `CentralWorkHub`), lounge, meeting, private nook |
-| Movement paths | `OFFICE_WAYPOINTS` in `agents.config.ts` |
-| LiteLLM behavior | `src/services/litellm/` |
-| Chat UI | `src/components/ui/ChatPanel.tsx` |
+| Goal | Where |
+|------|--------|
+| Agents from models | `src/config/agentsFromModels.ts` |
+| Chat commands | `src/utils/chatAgentCommands.ts`, `chat.store.ts` |
+| Furniture / rooms | `src/components/scene/furniture/` |
+| Movement / collision | `src/utils/collision.ts`, `officeObstacles.ts` |
+| LiteLLM | `src/services/litellm/` |
 
-## 🏗️ Architecture principles
-- **Rendering vs UI**: Scene components never import chat UI; stores bridge selection and chat.
-- **LiteLLM isolation**: UI and stores call `liteLLMService`, not `fetch` directly.
-- **Agent config vs runtime**: Definitions are static; `agents.store` owns positions and status.
-- **Per-agent conversations**: History keyed by `agentId` so closing the panel preserves threads.
-
-## ⚡ Scripts
-- `npm run dev` — development server
-- `npm run build` — production build
-- `npm run preview` — preview production build
+## 🏗️ Architecture
+- **Scene vs UI** — WebGL components never import chat UI; stores connect them.
+- **LiteLLM isolation** — call `liteLLMService`, not `fetch` directly.
+- **Config vs runtime** — definitions from config/API; `agents.store` owns positions and status.
+- **Per-agent threads** — chat history keyed by `agentId`.

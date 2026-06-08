@@ -1,21 +1,27 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useChatStore } from '@/stores/chat.store';
+import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
 import { AGENT_COMMAND_HINTS } from '@/utils/chatAgentCommands';
+import { formatModelDisplayName } from '@/utils/agentModel';
 import { ChatMessageBody } from './ChatMessageBody';
 import './ChatPanel.css';
 
 export function ChatPanel() {
   const isOpen = useChatStore((s) => s.isPanelOpen);
+  const activeAgentId = useChatStore((s) => s.activeAgentId);
   const closeChat = useChatStore((s) => s.closeChat);
   const sendMessage = useChatStore((s) => s.sendMessage);
-  const agent = useChatStore((s) => s.getActiveAgent());
+  const agent = useAgentsStore((s) =>
+    activeAgentId ? s.definitions.find((d) => d.id === activeAgentId) ?? null : null,
+  );
   const conversation = useChatStore((s) => s.getActiveConversation());
   const connectionStatus = useChatStore((s) => s.connectionStatus);
   const serviceMode = useChatStore((s) => s.serviceMode);
   const models = useChatStore((s) => s.models);
   const resolveModelLabel = useChatStore((s) => s.resolveModelLabel);
   const isModelAvailableOnApi = useChatStore((s) => s.isModelAvailableOnApi);
+  const setActiveAgentModel = useChatStore((s) => s.setActiveAgentModel);
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
   const [input, setInput] = useState('');
@@ -54,15 +60,34 @@ export function ChatPanel() {
           <img src={agent.logoUrl} alt="" className="chat-panel__logo" />
           <div>
             <h2 className="chat-panel__title">{agent.name}</h2>
-            <p className="chat-panel__model">
-              Model:{' '}
-              <code className={serviceMode === 'live' && !modelAvailable ? 'chat-panel__model--missing' : ''}>
-                {modelLabel}
-              </code>
-              {serviceMode === 'live' && modelAvailable && (
-                <span className="chat-panel__model-source"> · from LiteLLM</span>
+            <label className="chat-panel__model">
+              <span className="chat-panel__model-label">Model</span>
+              {models.length > 0 ? (
+                <select
+                  className={`chat-panel__model-picker${
+                    serviceMode === 'live' && !modelAvailable ? ' chat-panel__model-picker--missing' : ''
+                  }`}
+                  value={agent.modelId}
+                  disabled={conversation?.isLoading}
+                  aria-label={`LiteLLM model for ${agent.name}`}
+                  onChange={(e) => setActiveAgentModel(e.target.value)}
+                >
+                  {!models.some((model) => model.id === agent.modelId) && (
+                    <option value={agent.modelId}>{agent.modelId} (unavailable)</option>
+                  )}
+                  {models.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {formatModelDisplayName(model.id)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <code className="chat-panel__model-code">{modelLabel}</code>
               )}
-            </p>
+              {serviceMode === 'live' && modelAvailable && models.length > 0 && (
+                <span className="chat-panel__model-source"> · LiteLLM</span>
+              )}
+            </label>
           </div>
         </div>
         <button

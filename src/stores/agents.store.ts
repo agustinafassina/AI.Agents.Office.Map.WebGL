@@ -46,6 +46,7 @@ interface AgentsStore {
   endChatSession: (id: string) => void;
   dispatchAgentCommand: (id: string, command: AgentChatCommand) => boolean;
   setAgentStatus: (id: string, status: AgentStatus) => void;
+  setAgentModelId: (id: string, modelId: string) => void;
   getRuntime: (id: string) => AgentRuntimeState | undefined;
 }
 
@@ -260,6 +261,16 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
 
   setDefinitions: (definitions) => {
     set({ definitions, runtime: {}, idleTimers: {} });
+  },
+
+  setAgentModelId: (id, modelId) => {
+    const current = get().definitions.find((def) => def.id === id);
+    if (!current || current.modelId === modelId) return;
+    set({
+      definitions: get().definitions.map((def) =>
+        def.id === id ? { ...def, modelId } : def,
+      ),
+    });
   },
 
   initialize: () => {

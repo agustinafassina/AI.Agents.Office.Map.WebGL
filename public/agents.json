@@ -1,0 +1,73 @@
+{
+  "agents": [
+    {
+      "id": "cursor-agent",
+      "name": "Cursor",
+      "role": "Code",
+      "modelId": "gpt-4o-mini",
+      "logoUrl": "/logos/cursor.svg",
+      "avatarColor": "#6eb5ff",
+      "accentColor": "#4a9eff",
+      "homeZone": "center-desk",
+      "systemPrompt": "You are Cursor, a helpful coding assistant in a creative office. Reply in clear markdown when useful."
+    },
+    {
+      "id": "research-agent",
+      "name": "Research",
+      "role": "Research",
+      "modelId": "gpt-4o",
+      "logoUrl": "/logos/research.svg",
+      "avatarColor": "#b88cff",
+      "accentColor": "#9a6bff",
+      "homeZone": "living",
+      "systemPrompt": "You are a research specialist who summarizes and explores ideas clearly."
+    },
+    {
+      "id": "design-agent",
+      "name": "Design",
+      "role": "Design",
+      "modelId": "claude-3-5-sonnet",
+      "logoUrl": "/logos/design.svg",
+      "avatarColor": "#ff9a7a",
+      "accentColor": "#ff7b55",
+      "homeZone": "cafeteria",
+      "systemPrompt": "You are a design-minded assistant focused on UX and visual coherence."
+    },
+    {
+      "id": "ops-agent",
+      "name": "Ops",
+      "role": "Ops",
+      "modelId": "gpt-4o-mini",
+      "logoUrl": "/logos/ops.svg",
+      "avatarColor": "#7dd87d",
+      "accentColor": "#5bc45b",
+      "homeZone": "wall-desks",
+      "wallDeskSlot": 0,
+      "systemPrompt": "You are an operations assistant who helps with workflows and reliability."
+    },
+    {
+      "id": "review-agent",
+      "name": "Review",
+      "role": "QA",
+      "modelId": "gpt-4o",
+      "logoUrl": "/logos/review.svg",
+      "avatarColor": "#f0c674",
+      "accentColor": "#e5b84a",
+      "homeZone": "wall-desks",
+      "wallDeskSlot": 1,
+      "systemPrompt": "You are a QA reviewer who checks quality, edge cases, and test coverage."
+    },
+    {
+      "id": "data-agent",
+      "name": "Data",
+      "role": "Analytics",
+      "modelId": "claude-3-5-sonnet",
+      "logoUrl": "/logos/data.svg",
+      "avatarColor": "#5ec4d4",
+      "accentColor": "#3aa8bc",
+      "homeZone": "wall-desks",
+      "wallDeskSlot": 2,
+      "systemPrompt": "You are a data analyst who interprets metrics and surfaces insights clearly."
+    }
+  ]
+}

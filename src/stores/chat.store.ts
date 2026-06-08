@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { loadExternalAgentsConfig } from '@/config/loadAgentsConfig';
 import { resolveAgentDefinitions } from '@/config/resolveAgents';
 import { liteLLMService } from '@/services/litellm';
 import type { AgentDefinition } from '@/types/agent';
@@ -8,6 +9,10 @@ import {
   isAgentModelAvailableOnApi,
   resolveAgentModelLabel,
 } from '@/utils/agentModel';
+import {
+  applyModelOverrides,
+  writeAgentModelOverride,
+} from '@/utils/agentModelOverrides';
 import {
   AGENT_COMMAND_ACK,
   parseAgentChatCommand,
@@ -26,6 +31,7 @@ interface ChatStore {
   openChat: (agentId: string) => void;
   closeChat: () => void;
   sendMessage: (content: string) => Promise<void>;
+  setActiveAgentModel: (modelId: string) => void;
   getActiveConversation: () => ConversationState | null;
   getActiveAgent: () => AgentDefinition | null;
   getAvailableAgents: () => AgentDefinition[];
@@ -38,7 +44,7 @@ function emptyConversation(agentId: string): ConversationState {
 }
 
 function syncSceneAgents(agents: AgentDefinition[]) {
-  useAgentsStore.getState().setDefinitions(agents);
+  useAgentsStore.getState().setDefinitions(applyModelOverrides(agents));
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -52,9 +58,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   bootstrap: async () => {
     set({ connectionStatus: 'connecting' });
     try {
-      const models = await liteLLMService.fetchModels();
+      const [models, externalAgents] = await Promise.all([
+        liteLLMService.fetchModels(),
+        loadExternalAgentsConfig(),
+      ]);
       const serviceMode = liteLLMService.mode;
-      const agents = resolveAgentDefinitions(serviceMode, models);
+      const agents = resolveAgentDefinitions(serviceMode, models, externalAgents);
       syncSceneAgents(agents);
       set({
         models,
@@ -62,7 +71,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         serviceMode,
       });
     } catch {
-      const agents = resolveAgentDefinitions('mock', []);
+      const externalAgents = await loadExternalAgentsConfig();
+      const agents = resolveAgentDefinitions('mock', [], externalAgents);
       syncSceneAgents(agents);
       set({
         connectionStatus: 'error',
@@ -114,6 +124,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isModelAvailableOnApi: (configuredModelId) => {
     const { models, serviceMode } = get();
     return isAgentModelAvailableOnApi(configuredModelId, models, serviceMode);
+  },
+
+  setActiveAgentModel: (modelId) => {
+    const agentId = get().activeAgentId;
+    if (!agentId || !modelId) return;
+
+    const { models } = get();
+    if (!models.some((model) => model.id === modelId)) return;
+
+    writeAgentModelOverride(agentId, modelId);
+    useAgentsStore.getState().setAgentModelId(agentId, modelId);
   },
 
   sendMessage: async (content) => {
