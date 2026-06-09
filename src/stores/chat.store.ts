@@ -27,6 +27,7 @@ import {
   writeChatConversations,
 } from '@/utils/chatConversationsStorage';
 import { createId } from '@/utils/id';
+import { buildSystemPromptWithSceneContext } from '@/utils/buildAgentSceneContext';
 import { useAgentsStore } from './agents.store';
 import { useSceneStore } from './scene.store';
 
@@ -65,6 +66,7 @@ interface ChatStore {
   closeChat: () => void;
   sendMessage: (content: string) => Promise<void>;
   setActiveAgentModel: (modelId: string) => void;
+  clearActiveConversation: () => void;
   getActiveConversation: () => ConversationState | null;
   getActiveAgent: () => AgentDefinition | null;
   getAvailableAgents: () => AgentDefinition[];
@@ -170,6 +172,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     useAgentsStore.getState().setAgentModelId(agentId, modelId);
   },
 
+  clearActiveConversation: () => {
+    const agentId = get().activeAgentId;
+    if (!agentId) return;
+
+    const conv = get().conversations[agentId];
+    if (conv?.isLoading) return;
+
+    const conversations = { ...get().conversations };
+    conversations[agentId] = emptyConversation(agentId);
+    set({ conversations });
+    persistConversations(get, true);
+  },
+
   sendMessage: async (content) => {
     const agentId = get().activeAgentId;
     if (!agentId || !content.trim()) return;
@@ -250,10 +265,23 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     };
 
     try {
+      const locale = useLocaleStore.getState().locale;
+      const runtime = useAgentsStore.getState().getRuntime(agentId);
+      const { focusedZoneId, followAgentId } = useSceneStore.getState();
+      const systemPrompt = buildSystemPromptWithSceneContext(agent.systemPrompt, {
+        agent,
+        runtime,
+        focusedZoneId,
+        followAgentId,
+        locale,
+        serviceMode: get().serviceMode,
+        models: get().models,
+      });
+
       const result = await liteLLMService.sendMessageStream({
         model: agent.modelId,
         agentName: agent.name,
-        systemPrompt: agent.systemPrompt,
+        systemPrompt,
         history: conv.messages,
         userContent: userMessage.content,
         onDelta: appendDelta,

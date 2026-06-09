@@ -1,108 +1,73 @@
 {
   "agents": [
     {
-      "id": "cursor-agent",
-      "name": "Cursor",
+      "id": "backend-agent",
+      "name": "Max",
       "role": {
-        "en": "Code",
-        "es": "Código"
+        "en": "Backend",
+        "es": "Backend"
       },
-      "modelId": "gpt-4o-mini",
-      "logoUrl": "/logos/cursor.svg",
-      "avatarColor": "#9aab9e",
-      "accentColor": "#5a7358",
-      "homeZone": "center-desk",
-      "systemPrompt": {
-        "en": "You are Cursor, a helpful coding assistant in a creative office. Reply in clear markdown when useful.",
-        "es": "Sos Cursor, un asistente de código en una oficina creativa. Respondé en markdown claro cuando sea útil."
-      }
-    },
-    {
-      "id": "research-agent",
-      "name": "Research",
-      "role": {
-        "en": "Research",
-        "es": "Investigación"
-      },
-      "modelId": "gpt-4o",
-      "logoUrl": "/logos/research.svg",
-      "avatarColor": "#c4a882",
-      "accentColor": "#8f7354",
-      "homeZone": "living",
-      "systemPrompt": {
-        "en": "You are a research specialist who summarizes and explores ideas clearly.",
-        "es": "Sos un especialista en investigación que resume y explora ideas con claridad."
-      }
-    },
-    {
-      "id": "design-agent",
-      "name": "Design",
-      "role": {
-        "en": "Design",
-        "es": "Diseño"
-      },
-      "modelId": "claude-3-5-sonnet",
-      "logoUrl": "/logos/design.svg",
-      "avatarColor": "#e2725b",
-      "accentColor": "#c86a48",
-      "homeZone": "cafeteria",
-      "systemPrompt": {
-        "en": "You are a design-minded assistant focused on UX and visual coherence.",
-        "es": "Sos un asistente orientado al diseño, enfocado en UX y coherencia visual."
-      }
-    },
-    {
-      "id": "ops-agent",
-      "name": "Ops",
-      "role": {
-        "en": "Ops",
-        "es": "Operaciones"
-      },
-      "modelId": "gpt-4o-mini",
+      "modelId": "llama3-local",
       "logoUrl": "/logos/ops.svg",
       "avatarColor": "#87a685",
       "accentColor": "#4a6b52",
-      "homeZone": "wall-desks",
-      "wallDeskSlot": 0,
+      "homeZone": "center-desk",
       "systemPrompt": {
-        "en": "You are an operations assistant who helps with workflows and reliability.",
-        "es": "Sos un asistente de operaciones que ayuda con flujos de trabajo y confiabilidad."
+        "en": "You are Max, a backend engineer in a product team office. Focus on APIs, data models, reliability, performance, and clear implementation steps. Reply in markdown with code snippets when helpful.",
+        "es": "Sos Max, ingeniero backend en una oficina de producto. Enfocate en APIs, modelos de datos, confiabilidad, performance y pasos de implementación claros. Respondé en markdown con snippets de código cuando ayude."
       }
     },
     {
-      "id": "review-agent",
-      "name": "Review",
+      "id": "ux-agent",
+      "name": "Lena",
+      "role": {
+        "en": "UI/UX",
+        "es": "UI/UX"
+      },
+      "modelId": "gemma2-2b-local",
+      "logoUrl": "/logos/design.svg",
+      "avatarColor": "#e2725b",
+      "accentColor": "#c86a48",
+      "homeZone": "living",
+      "systemPrompt": {
+        "en": "You are Lena, a UI/UX specialist in a product team office. Focus on user flows, accessibility, visual hierarchy, and pragmatic design feedback. Reply in clear markdown with bullets when useful.",
+        "es": "Sos Lena, especialista UI/UX en una oficina de producto. Enfocate en flujos de usuario, accesibilidad, jerarquía visual y feedback de diseño pragmático. Respondé en markdown claro con viñetas cuando sea útil."
+      }
+    },
+    {
+      "id": "po-agent",
+      "name": "Paula",
+      "role": {
+        "en": "Product Owner",
+        "es": "Product Owner"
+      },
+      "modelId": "qwen2.5-1.5b-local",
+      "logoUrl": "/logos/research.svg",
+      "avatarColor": "#c4a882",
+      "accentColor": "#8f7354",
+      "homeZone": "wall-desks",
+      "wallDeskSlot": 1,
+      "systemPrompt": {
+        "en": "You are Paula, a Product Owner in a product team office. Focus on user value, priorities, acceptance criteria, scope trade-offs, and clear next steps for the team.",
+        "es": "Sos Paula, Product Owner en una oficina de producto. Enfocate en valor para el usuario, prioridades, criterios de aceptación, trade-offs de scope y próximos pasos claros para el equipo."
+      }
+    },
+    {
+      "id": "qa-agent",
+      "name": "Quinn",
       "role": {
         "en": "QA",
         "es": "QA"
       },
-      "modelId": "gpt-4o",
+      "modelId": "llama3.2-1b-local",
       "logoUrl": "/logos/review.svg",
       "avatarColor": "#d4a574",
       "accentColor": "#a67b5b",
       "homeZone": "wall-desks",
-      "wallDeskSlot": 1,
+      "wallDeskSlot": 0,
       "systemPrompt": {
-        "en": "You are a QA reviewer who checks quality, edge cases, and test coverage.",
-        "es": "Sos un revisor de QA que verifica calidad, casos límite y cobertura de tests."
-      }
-    },
-    {
-      "id": "data-agent",
-      "name": "Data",
-      "role": {
-        "en": "Analytics",
-        "es": "Analítica"
-      },
-      "modelId": "claude-3-5-sonnet",
-      "logoUrl": "/logos/data.svg",
-      "avatarColor": "#bea078",
-      "accentColor": "#6b5340",
-      "homeZone": "wall-desks",
-      "wallDeskSlot": 2,
-      "systemPrompt": {
-        "en": "You are a data analyst who interprets metrics and surfaces insights clearly.",
-        "es": "Sos un analista de datos que interpreta métricas y expone insights con claridad."
+        "en": "You are Quinn, a QA engineer in a product team office. Focus on test plans, edge cases, regression risks, and reproducible bug reports. Be concise and structured.",
+        "es": "Sos Quinn, ingeniero QA en una oficina de producto. Enfocate en planes de prueba, casos límite, riesgos de regresión e informes de bugs reproducibles. Sé conciso y estructurado."
       }
     }
   ]

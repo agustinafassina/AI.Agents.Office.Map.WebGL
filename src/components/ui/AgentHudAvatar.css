@@ -10,39 +10,104 @@
   position: absolute;
   left: 50%;
   bottom: 1px;
-  width: calc(var(--avatar-size) * 0.52);
-  height: calc(var(--avatar-size) * 0.38);
+  width: calc(var(--avatar-size) * 0.54);
+  height: calc(var(--avatar-size) * 0.4);
   transform: translateX(-50%);
-  border-radius: 3px 3px 2px 2px;
+  border-radius: 2px;
   background: var(--shirt);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.agent-hud-avatar__body::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  width: 42%;
+  height: 28%;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: var(--hair);
+  opacity: 0.85;
 }
 
 .agent-hud-avatar__head {
   position: absolute;
   left: 50%;
-  top: calc(var(--avatar-size) * 0.18);
-  width: calc(var(--avatar-size) * 0.42);
-  height: calc(var(--avatar-size) * 0.42);
+  top: calc(var(--avatar-size) * 0.16);
+  width: calc(var(--avatar-size) * 0.44);
+  height: calc(var(--avatar-size) * 0.38);
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: #e8ceb8;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  background: #9aa3ac;
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 1;
 }
 
-.agent-hud-avatar__hair {
+.agent-hud-avatar__head::before,
+.agent-hud-avatar__head::after {
+  content: '';
+  position: absolute;
+  top: 38%;
+  width: 22%;
+  height: 18%;
+  border-radius: 1px;
+  background: var(--hair);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--hair) 70%, transparent);
+}
+
+.agent-hud-avatar__head::before {
+  left: 16%;
+}
+
+.agent-hud-avatar__head::after {
+  right: 16%;
+}
+
+.agent-hud-avatar__dreads {
   position: absolute;
   left: 50%;
-  top: calc(var(--avatar-size) * 0.12);
-  width: calc(var(--avatar-size) * 0.46);
-  height: calc(var(--avatar-size) * 0.24);
+  top: calc(var(--avatar-size) * 0.02);
+  width: calc(var(--avatar-size) * 0.52);
+  height: calc(var(--avatar-size) * 0.34);
   transform: translateX(-50%);
-  border-radius: 999px 999px 4px 4px;
-  background: var(--hair);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.agent-hud-avatar__dread {
+  position: absolute;
+  top: 0;
+  width: calc(var(--avatar-size) * 0.07);
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--hair) 88%, #1a1410) 0%,
+    var(--hair) 55%,
+    color-mix(in srgb, var(--hair) 72%, #000) 100%
+  );
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.12);
+  transform-origin: top center;
 }
 
 .agent-hud-avatar--selected .agent-hud-avatar__body {
   box-shadow:
     0 0 0 1px rgba(255, 233, 168, 0.85),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.agent-hud-avatar--selected .agent-hud-avatar__head::before,
+.agent-hud-avatar--selected .agent-hud-avatar__head::after {
+  box-shadow: 0 0 5px color-mix(in srgb, var(--hair) 90%, transparent);
+}
+
+.agent-hud-avatar--selected .agent-hud-avatar__dread {
+  box-shadow:
+    inset -1px 0 0 rgba(0, 0, 0, 0.12),
+    0 0 3px color-mix(in srgb, var(--hair) 45%, transparent);
 }

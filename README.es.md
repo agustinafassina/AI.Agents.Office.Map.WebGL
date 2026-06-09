@@ -11,6 +11,7 @@ Diorama isométrico de oficina renderizado con **WebGL** (Three.js + React Three
 ## ✨ Funcionalidades
 - **LiteLLM** — agentes desde `/v1/models`, o modo mock sin backend
 - **Chat por agente** — historial en sidebar; zoom del mapa al seleccionar
+- **Roles de equipo** — UI/UX, Backend, QA, Product Owner (`public/agents.json` + prompts por rol)
 - **Comandos de escena** — `ve a tomar cafe`, `relajate`, `vuelve al escritorio`, `ve al hub`
 - **Simulación de oficina** — pausas de café, cola en la barra, waypoints por zona, movimiento con colisiones
 - **Texturas procedurales** — look ilustrado sin assets externos (PNGs opcionales en `public/textures/`)

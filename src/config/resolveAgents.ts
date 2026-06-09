@@ -1,4 +1,5 @@
 import { AGENT_DEFINITIONS } from '@/config/agents.config';
+import { bindExternalAgentsToModels } from '@/config/bindAgentsToModels';
 import { buildAgentsFromModels } from '@/config/agentsFromModels';
 import type { AgentDefinition } from '@/types/agent';
 import type { LiteLLMModel } from '@/types/litellm';
@@ -31,9 +32,8 @@ export function resolveAgentDefinitions(
 ): AgentDefinition[] {
   if (externalAgents && externalAgents.length > 0) {
     if (serviceMode === 'live' && models.length > 0) {
-      const modelIds = new Set(models.map((model) => model.id));
-      const fromJson = externalAgents.filter((agent) => modelIds.has(agent.modelId));
-      if (fromJson.length > 0) return fromJson;
+      const bound = bindExternalAgentsToModels(externalAgents, models);
+      if (bound.length > 0) return bound;
 
       const generated = buildAgentsFromModels(models);
       return mergeExternalOntoGenerated(generated, externalAgents);

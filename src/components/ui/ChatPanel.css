@@ -56,6 +56,15 @@
   font-weight: 600;
 }
 
+.chat-panel__role {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .chat-panel__model {
   margin: 4px 0 0;
   font-size: 0.8rem;
@@ -138,8 +147,10 @@
 
 .chat-panel__meta {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  padding: 0 20px 12px;
+  padding: 14px 20px 12px;
 }
 
 .chat-panel__badge {
@@ -168,6 +179,37 @@
 .chat-panel__badge--mode {
   color: var(--accent);
   background: var(--accent-soft);
+}
+
+.chat-panel__badge--role {
+  color: var(--accent);
+  background: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.28);
+}
+
+.chat-panel__clear {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.chat-panel__clear:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: rgba(200, 90, 90, 0.45);
+  background: rgba(200, 90, 90, 0.08);
+}
+
+.chat-panel__clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .chat-panel__messages {

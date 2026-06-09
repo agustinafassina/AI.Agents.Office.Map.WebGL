@@ -11,15 +11,14 @@ import { AgentRoleLogo } from './AgentRoleLogo';
 import { AVATAR_SCALE } from './avatarConstants';
 import {
   AgentArmSegment,
-  AgentFace,
+  AgentRobotHead,
   AgentShinFoot,
   AgentThigh,
   AgentTorso,
-  AVATAR_PANTS,
-  AVATAR_SHOE,
-  AVATAR_SKIN,
+  AVATAR_FOOT,
+  AVATAR_JOINT,
   AVATAR_SOLE,
-  type HairVariant,
+  type RobotHeadVariant,
 } from './AgentAvatarVisuals';
 import {
   easeSitBlend,
@@ -53,10 +52,7 @@ const ROT_SMOOTH_WALK = 16;
 const ROT_SMOOTH_IDLE = 10;
 const MIN_WALK_SPEED = 0.1;
 const TARGET = new THREE.Vector3();
-const EYE_MAT = softColor('#2a3228');
-const EYE_WHITE = softColor('#f7f4ef', { roughness: 0.92 });
-const CHEEK_MAT = softColor('#d8a090', { roughness: 0.98, emissive: '#d8a090', emissiveIntensity: 0.08 });
-const NOSE_MAT = softColor('#c08878', { roughness: 0.95 });
+const EYE_CORE = softColor('#1a2820', { roughness: 0.5, metalness: 0.1 });
 
 function hashPhase(id: string): number {
   let h = 0;
@@ -64,10 +60,10 @@ function hashPhase(id: string): number {
   return (h % 628) / 100;
 }
 
-function hashVariant(id: string): HairVariant {
+function hashVariant(id: string): RobotHeadVariant {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 17 + id.charCodeAt(i)) >>> 0;
-  return (h % 4) as HairVariant;
+  return (h % 4) as RobotHeadVariant;
 }
 
 function lerpArmRotation(
@@ -108,7 +104,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   );
   const isSelected = selectedId === definition.id;
   const phase = useMemo(() => hashPhase(definition.id), [definition.id]);
-  const hairVariant = useMemo(() => hashVariant(definition.id), [definition.id]);
+  const headVariant = useMemo(() => hashVariant(definition.id), [definition.id]);
   const seatStyle = useMemo(() => getSeatStyle(definition), [definition]);
   const puffScale = useMemo(() => getAgentPuffScale(definition), [definition]);
   const chatAnchor = useMemo(() => getAgentChatAnchor(definition), [definition]);
@@ -117,28 +113,51 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
     [seatStyle, puffScale],
   );
 
-  const shirtMat = useMemo(
+  const chassisMat = useMemo(
     () =>
       softColor(definition.avatarColor, {
         emissive: definition.avatarColor,
-        emissiveIntensity: isSelected ? 0.12 : 0.05,
-        roughness: 0.82,
+        emissiveIntensity: isSelected ? 0.1 : 0.03,
+        roughness: 0.72,
+        metalness: 0.12,
       }),
     [definition.avatarColor, isSelected],
   );
-  const hairMat = useMemo(() => softColor(definition.accentColor, { roughness: 0.86 }), [definition.accentColor]);
-  const accentMat = useMemo(
-    () => softColor(definition.accentColor, { roughness: 0.84, metalness: 0.04 }),
+  const panelMat = useMemo(
+    () =>
+      softColor(definition.accentColor, {
+        roughness: 0.65,
+        metalness: 0.18,
+        emissive: definition.accentColor,
+        emissiveIntensity: 0.06,
+      }),
     [definition.accentColor],
   );
-  const skinMat = useMemo(() => softColor(AVATAR_SKIN, { roughness: 0.9 }), []);
-  const pantsMat = useMemo(() => softColor(AVATAR_PANTS, { roughness: 0.93 }), []);
-  const shoeMat = useMemo(() => softColor(AVATAR_SHOE, { roughness: 0.8 }), []);
-  const soleMat = useMemo(() => softColor(AVATAR_SOLE, { roughness: 0.95 }), []);
-  const eyeWhiteMat = useMemo(() => EYE_WHITE.clone(), []);
-  const eyeMat = useMemo(() => EYE_MAT.clone(), []);
-  const cheekMat = useMemo(() => CHEEK_MAT.clone(), []);
-  const noseMat = useMemo(() => NOSE_MAT.clone(), []);
+  const jointMat = useMemo(
+    () => softColor(AVATAR_JOINT, { roughness: 0.78, metalness: 0.08 }),
+    [],
+  );
+  const footMat = useMemo(() => softColor(AVATAR_FOOT, { roughness: 0.82, metalness: 0.06 }), []);
+  const soleMat = useMemo(() => softColor(AVATAR_SOLE, { roughness: 0.9 }), []);
+  const eyeGlowMat = useMemo(
+    () =>
+      softColor(definition.accentColor, {
+        emissive: definition.accentColor,
+        emissiveIntensity: 0.55,
+        roughness: 0.35,
+        metalness: 0.05,
+      }),
+    [definition.accentColor],
+  );
+  const dreadMat = useMemo(
+    () =>
+      softColor(definition.accentColor, {
+        roughness: 0.92,
+        metalness: 0.02,
+      }),
+    [definition.accentColor],
+  );
+  const eyeCoreMat = useMemo(() => EYE_CORE.clone(), []);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -456,53 +475,53 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         </mesh>
 
         <group ref={leftLegRef} position={[-0.058, 0.18, 0]}>
-          <AgentThigh pantsMat={pantsMat} />
+          <AgentThigh jointMat={jointMat} />
           <group ref={leftShinRef} position={[0, -0.12, 0]}>
-            <AgentShinFoot pantsMat={pantsMat} shoeMat={shoeMat} soleMat={soleMat} />
+            <AgentShinFoot jointMat={jointMat} footMat={footMat} soleMat={soleMat} />
           </group>
         </group>
         <group ref={rightLegRef} position={[0.058, 0.18, 0]}>
-          <AgentThigh pantsMat={pantsMat} />
+          <AgentThigh jointMat={jointMat} />
           <group ref={rightShinRef} position={[0, -0.12, 0]}>
-            <AgentShinFoot pantsMat={pantsMat} shoeMat={shoeMat} soleMat={soleMat} />
+            <AgentShinFoot jointMat={jointMat} footMat={footMat} soleMat={soleMat} />
           </group>
         </group>
 
         <AgentTorso
-          shirtMat={shirtMat}
-          pantsMat={pantsMat}
-          accentMat={accentMat}
+          chassisMat={chassisMat}
+          jointMat={jointMat}
+          panelMat={panelMat}
           outlineColor={OUTLINE_COLOR}
         />
 
         <group ref={leftArmRef} position={[-0.135, 0.38, 0]}>
           <AgentArmSegment
-            shirtMat={shirtMat}
-            skinMat={skinMat}
-            accentMat={accentMat}
+            chassisMat={chassisMat}
+            jointMat={jointMat}
+            panelMat={panelMat}
             side={-1}
           />
         </group>
         <group ref={rightArmRef} position={[0.135, 0.38, 0]}>
           <AgentArmSegment
-            shirtMat={shirtMat}
-            skinMat={skinMat}
-            accentMat={accentMat}
+            chassisMat={chassisMat}
+            jointMat={jointMat}
+            panelMat={panelMat}
             side={1}
             handAccessory={runtime.status === 'coffee' ? <CoffeeHandCup /> : undefined}
           />
         </group>
 
         <group ref={headRef} position={[0, 0.525, 0]}>
-          <AgentFace
-            skinMat={skinMat}
-            hairMat={hairMat}
-            eyeWhiteMat={eyeWhiteMat}
-            eyeMat={eyeMat}
-            cheekMat={cheekMat}
-            noseMat={noseMat}
+          <AgentRobotHead
+            chassisMat={chassisMat}
+            jointMat={jointMat}
+            panelMat={panelMat}
+            dreadMat={dreadMat}
+            eyeGlowMat={eyeGlowMat}
+            eyeCoreMat={eyeCoreMat}
             outlineColor={OUTLINE_COLOR}
-            variant={hairVariant}
+            variant={headVariant}
           />
         </group>
 

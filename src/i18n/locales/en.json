@@ -30,8 +30,14 @@
     "model": "Model",
     "liveSource": " · LiteLLM",
     "close": "Close chat",
+    "clearHistory": "Clear chat",
+    "clearHistoryAria": "Clear saved conversation with {{name}}",
     "emptyState": "Say hello to {{name}}. Conversation stays here while you explore the map.",
     "hintsPrefix": "Try:",
+    "roleHintsPrefix": "Ask:",
+    "sceneHintsPrefix": "Scene:",
+    "sceneContextTitle": "Scene context (sent to model)",
+    "sceneContextNote": "Live preview — appended to the system prompt on each message you send.",
     "you": "You",
     "placeholder": "Message {{name}}…",
     "send": "Send",
@@ -121,5 +127,35 @@
     "stop": "Stop following",
     "startAria": "Follow {{name}} while moving",
     "stopAria": "Stop following {{name}}"
+  },
+  "roles": {
+    "ux": {
+      "hint1": "Review this screen flow",
+      "hint2": "Suggest accessibility improvements"
+    },
+    "backend": {
+      "hint1": "Design an API for this feature",
+      "hint2": "Review this endpoint sketch"
+    },
+    "qa": {
+      "hint1": "List edge cases for this flow",
+      "hint2": "Draft a test plan from this story"
+    },
+    "po": {
+      "hint1": "Write acceptance criteria",
+      "hint2": "Prioritize these three ideas"
+    }
+  },
+  "sceneContext": {
+    "header": "Live office context (refreshed each message):",
+    "role": "Role",
+    "model": "Model",
+    "homeZone": "Home zone",
+    "status": "Avatar status",
+    "posture": "Posture",
+    "postureSit": "Sitting",
+    "mapZone": "Map focused on",
+    "userFollowing": "The user is following your avatar on the map",
+    "footer": "Use this context when relevant and stay in your role."
   }
 }

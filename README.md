@@ -11,6 +11,7 @@ Isometric office diorama rendered with **WebGL** (Three.js + React Three Fiber).
 ## ✨ Features
 - **LiteLLM** — agents from `/v1/models`, or mock mode without a backend
 - **Per-agent chat** — sidebar history; map zoom on selection
+- **Team roles** — UI/UX, Backend, QA, Product Owner (`public/agents.json` + prompts per role)
 - **Scene commands** — `ve a tomar cafe`, `relajate`, `vuelve al escritorio`, `ve al hub`
 - **Office sim** — coffee breaks, bar queue, zone waypoints, collision-aware movement
 - **Procedural textures** — illustrated look without external assets (optional PNGs in `public/textures/`)
@@ -52,7 +53,7 @@ docs/                  # demo GIF + recording guide
 ## 🔧 Extending
 | Goal | Where |
 |------|--------|
-| Agents from models | `src/config/agentsFromModels.ts` |
+| Agents from models | `src/config/agentsFromModels.ts`, `public/agents.json` |
 | Chat commands | `src/utils/chatAgentCommands.ts`, `chat.store.ts` |
 | Furniture / rooms | `src/components/scene/furniture/` |
 | Movement / collision | `src/utils/collision.ts`, `officeObstacles.ts` |

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { getCommandHints } from '@/i18n/commandMessages';
+import { getRoleHints } from '@/i18n/roleHints';
 import { useConnectionLabel } from '@/i18n/connectionLabel';
 import { useTranslation } from '@/i18n';
 import { useChatStore } from '@/stores/chat.store';
@@ -26,6 +27,7 @@ export function ChatPanel() {
   const resolveModelLabel = useChatStore((s) => s.resolveModelLabel);
   const isModelAvailableOnApi = useChatStore((s) => s.isModelAvailableOnApi);
   const setActiveAgentModel = useChatStore((s) => s.setActiveAgentModel);
+  const clearActiveConversation = useChatStore((s) => s.clearActiveConversation);
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
   const [input, setInput] = useState('');
@@ -33,14 +35,14 @@ export function ChatPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageContent = conversation?.messages.at(-1)?.content ?? '';
 
-  const commandHints = getCommandHints(locale);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages.length, conversation?.isLoading, lastMessageContent]);
 
   if (!isOpen || !agent) return null;
 
+  const commandHints = getCommandHints(locale);
+  const roleHints = getRoleHints(locale, agent.id);
   const modelLabel = resolveModelLabel(agent.modelId);
   const modelAvailable = isModelAvailableOnApi(agent.modelId);
 
@@ -73,6 +75,7 @@ export function ChatPanel() {
           <img src={agent.logoUrl} alt="" className="chat-panel__logo" />
           <div>
             <h2 className="chat-panel__title">{agent.name}</h2>
+            <p className="chat-panel__role">{agent.role}</p>
             <label className="chat-panel__model">
               <span className="chat-panel__model-label">{t('chat.model')}</span>
               {models.length > 0 ? (
@@ -116,6 +119,7 @@ export function ChatPanel() {
       </header>
 
       <div className="chat-panel__meta">
+        <span className="chat-panel__badge chat-panel__badge--role">{agent.role}</span>
         <span className={`chat-panel__badge chat-panel__badge--${connectionStatus}`}>
           {connectionLabel}
         </span>
@@ -125,14 +129,29 @@ export function ChatPanel() {
             {t('chat.modelsBadge', { count: models.length })}
           </span>
         )}
+        <button
+          type="button"
+          className="chat-panel__clear"
+          onClick={clearActiveConversation}
+          disabled={conversation?.isLoading || (conversation?.messages.length ?? 0) === 0}
+          aria-label={t('chat.clearHistoryAria', { name: agent.name })}
+        >
+          {t('chat.clearHistory')}
+        </button>
       </div>
 
       <div className="chat-panel__messages">
         {conversation?.messages.length === 0 && (
           <div className="chat-panel__empty">
             <p>{t('chat.emptyState', { name: agent.name })}</p>
+            {roleHints.length > 0 && (
+              <p className="chat-panel__hints chat-panel__hints--role">
+                {t('chat.roleHintsPrefix')}{' '}
+                {roleHints.map((hint) => `"${hint}"`).join(' · ')}
+              </p>
+            )}
             <p className="chat-panel__hints">
-              {t('chat.hintsPrefix')}{' '}
+              {t('chat.sceneHintsPrefix')}{' '}
               {commandHints.map((hint) => `"${hint}"`).join(' · ')}
             </p>
           </div>

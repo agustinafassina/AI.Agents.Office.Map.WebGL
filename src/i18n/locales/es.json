@@ -30,8 +30,14 @@
     "model": "Modelo",
     "liveSource": " · LiteLLM",
     "close": "Cerrar chat",
+    "clearHistory": "Borrar chat",
+    "clearHistoryAria": "Borrar conversación guardada con {{name}}",
     "emptyState": "Saludá a {{name}}. La conversación queda acá mientras explorás el mapa.",
     "hintsPrefix": "Probá:",
+    "roleHintsPrefix": "Preguntá:",
+    "sceneHintsPrefix": "Escena:",
+    "sceneContextTitle": "Contexto de escena (enviado al modelo)",
+    "sceneContextNote": "Vista en vivo — se agrega al system prompt en cada mensaje que enviés.",
     "you": "Vos",
     "placeholder": "Mensaje para {{name}}…",
     "send": "Enviar",
@@ -121,5 +127,35 @@
     "stop": "Dejar de seguir",
     "startAria": "Seguir a {{name}} mientras se mueve",
     "stopAria": "Dejar de seguir a {{name}}"
+  },
+  "roles": {
+    "ux": {
+      "hint1": "Revisá este flujo de pantalla",
+      "hint2": "Sugerí mejoras de accesibilidad"
+    },
+    "backend": {
+      "hint1": "Diseñá una API para esta feature",
+      "hint2": "Revisá este boceto de endpoint"
+    },
+    "qa": {
+      "hint1": "Listá casos límite para este flujo",
+      "hint2": "Armá un plan de prueba desde esta historia"
+    },
+    "po": {
+      "hint1": "Escribí criterios de aceptación",
+      "hint2": "Priorizá estas tres ideas"
+    }
+  },
+  "sceneContext": {
+    "header": "Contexto de oficina en vivo (se actualiza en cada mensaje):",
+    "role": "Rol",
+    "model": "Modelo",
+    "homeZone": "Zona base",
+    "status": "Estado del avatar",
+    "posture": "Postura",
+    "postureSit": "Sentado",
+    "mapZone": "Mapa enfocado en",
+    "userFollowing": "El usuario te está siguiendo en el mapa",
+    "footer": "Usá este contexto cuando sea relevante y mantené tu rol."
   }
 }
