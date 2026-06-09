@@ -70,11 +70,27 @@ export function computeWalkRotation(
   };
 }
 
+function isHubPerimeterWaypoints(waypoints: Waypoint[]): boolean {
+  return waypoints.length === 4 && waypoints.every((wp) => wp.zone === 'center-desk');
+}
+
 export function pickNextWaypointIndex(
   currentIndex: number,
   waypoints: Waypoint[],
 ): number {
   if (waypoints.length <= 1) return 0;
+
+  if (isHubPerimeterWaypoints(waypoints)) {
+    const adjacent = [
+      (currentIndex + 1) % waypoints.length,
+      (currentIndex + waypoints.length - 1) % waypoints.length,
+    ].filter(
+      (index) => index !== currentIndex && isWalkablePosition(waypoints[index].position),
+    );
+    if (adjacent.length > 0) {
+      return adjacent[Math.floor(Math.random() * adjacent.length)];
+    }
+  }
 
   const walkable = waypoints
     .map((wp, index) => ({ index, walkable: isWalkablePosition(wp.position) }))

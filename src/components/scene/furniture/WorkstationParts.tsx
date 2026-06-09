@@ -39,7 +39,7 @@ export function CurvedMonitorGroup({ dual = false, thin = true }: { dual?: boole
     <group position={[0, 0.64, -0.14]}>
       <MonitorScreen x={dual ? -0.26 : 0} w={w} h={h} d={d} />
       {dual && <MonitorScreen x={0.26} w={w} h={h} d={d} />}
-      {!dual && <pointLight position={[0, 0, 0.08]} intensity={0.14} color="#a8c8e8" distance={1.2} />}
+      {!dual && <pointLight position={[0, 0, 0.08]} intensity={0.14} color="#c8dcc8" distance={1.2} />}
     </group>
   );
 }

@@ -8,6 +8,9 @@ import {
 
 export const AGENT_BODY_RADIUS = AGENT_COLLISION_RADIUS;
 export const AGENT_PERSONAL_SPACE = AGENT_BODY_RADIUS * 2 + 0.1;
+export const AGENT_WALK_GAP = AGENT_BODY_RADIUS * 2 + 0.05;
+
+const SHORT_STEP_DISTANCE = 0.16;
 
 export type AgentCircle = {
   id: string;
@@ -128,6 +131,9 @@ function acceptMove(
 ): [number, number, number] | null {
   const bounded = withBounds(candidate);
   if (!canMoveTo(bounded[0], bounded[2], options)) return null;
+
+  const stepDist = distance2D(from, bounded);
+  if (stepDist <= SHORT_STEP_DISTANCE) return bounded;
   if (!isSegmentWalkable(from, bounded, options)) return null;
   return bounded;
 }
@@ -163,6 +169,68 @@ function arcCandidates(
   return candidates;
 }
 
+function obstacleRepulsionVector(x: number, z: number, radius = AGENT_COLLISION_RADIUS): [number, number] {
+  let rx = 0;
+  let rz = 0;
+
+  for (const obs of OFFICE_OBSTACLES) {
+    if (obs.kind === 'circle') {
+      const dx = x - obs.x;
+      const dz = z - obs.z;
+      const dist = Math.sqrt(dx * dx + dz * dz) || 0.0001;
+      const minDist = obs.radius + radius + 0.02;
+      if (dist < minDist) {
+        const push = (minDist - dist) / dist;
+        rx += dx * push;
+        rz += dz * push;
+      }
+    } else {
+      const cx = (obs.minX + obs.maxX) / 2;
+      const cz = (obs.minZ + obs.maxZ) / 2;
+      const halfW = (obs.maxX - obs.minX) / 2 + radius + 0.02;
+      const halfD = (obs.maxZ - obs.minZ) / 2 + radius + 0.02;
+      const dx = x - cx;
+      const dz = z - cz;
+      if (Math.abs(dx) < halfW && Math.abs(dz) < halfD) {
+        const overlapX = halfW - Math.abs(dx);
+        const overlapZ = halfD - Math.abs(dz);
+        if (overlapX < overlapZ) {
+          rx += dx > 0 ? overlapX : -overlapX;
+        } else {
+          rz += dz > 0 ? overlapZ : -overlapZ;
+        }
+      }
+    }
+  }
+
+  return [rx, rz];
+}
+
+function tryTangentSlides(
+  from: [number, number, number],
+  stepLen: number,
+  tryCandidate: (candidate: [number, number, number]) => void,
+): void {
+  const [rx, rz] = obstacleRepulsionVector(from[0], from[2]);
+  const repLen = Math.sqrt(rx * rx + rz * rz);
+  if (repLen < 1e-5) return;
+
+  const nx = rx / repLen;
+  const nz = rz / repLen;
+  const tanX = -nz;
+  const tanZ = nx;
+
+  for (const sign of [-1, 1]) {
+    for (const scale of [0.72, 0.95, 1.1]) {
+      tryCandidate([
+        from[0] + tanX * sign * stepLen * scale,
+        from[1],
+        from[2] + tanZ * sign * stepLen * scale,
+      ]);
+    }
+  }
+}
+
 export function moveWithCollision(
   from: [number, number, number],
   to: [number, number, number],
@@ -182,16 +250,23 @@ export function moveWithCollision(
   const dx = target[0] - from[0];
   const dz = target[2] - from[2];
   const stepLen = Math.sqrt(dx * dx + dz * dz) || 0.0001;
+  const goalNx = dx / stepLen;
+  const goalNz = dz / stepLen;
 
   let best: [number, number, number] | null = null;
-  let bestDist = -1;
+  let bestScore = -1;
 
   const tryCandidate = (candidate: [number, number, number]) => {
     const accepted = acceptMove(from, candidate, options);
     if (!accepted) return;
-    const progress = distance2D(from, accepted);
-    if (progress > bestDist) {
-      bestDist = progress;
+    const ax = accepted[0] - from[0];
+    const az = accepted[2] - from[2];
+    const progress = Math.sqrt(ax * ax + az * az);
+    if (progress < 1e-5) return;
+    const toward = (ax * goalNx + az * goalNz) / progress;
+    const score = progress * (0.55 + 0.45 * Math.max(0, toward));
+    if (score > bestScore) {
+      bestScore = score;
       best = accepted;
     }
   };
@@ -203,6 +278,8 @@ export function moveWithCollision(
   for (const candidate of arcCandidates(from, target)) {
     tryCandidate(candidate);
   }
+
+  tryTangentSlides(from, stepLen, tryCandidate);
 
   if (best) return best;
 
@@ -381,9 +458,9 @@ export function separateFromAgents(
   selfId: string,
   others: AgentCircle[],
   skipFurniture = false,
+  minDist = AGENT_PERSONAL_SPACE,
 ): [number, number, number] {
   let [x, y, z] = position;
-  const minDist = AGENT_PERSONAL_SPACE;
 
   for (const other of others) {
     if (other.id === selfId) continue;
@@ -420,9 +497,9 @@ export function nudgeAlongPath(
   const perpX = -dz / len;
   const perpZ = dx / len;
 
-  for (const scale of [0.2, 0.35, 0.5, 0.7]) {
+  for (const scale of [0.2, 0.35, 0.5, 0.7, 0.85]) {
     for (const sign of [-1, 1]) {
-      for (const side of [0.32, 0.52, 0.72]) {
+      for (const side of [0.28, 0.42, 0.58, 0.75, 0.92]) {
         const candidate: [number, number, number] = [
           from[0] + dx * scale + perpX * side * sign,
           from[1],
@@ -439,6 +516,29 @@ export function nudgeAlongPath(
   return findNearestWalkablePosition(from, 1.75);
 }
 
+export function isDirectPathWalkable(
+  from: [number, number, number],
+  to: [number, number, number],
+  options: WalkCollisionOptions = {},
+): boolean {
+  return isSegmentWalkable(from, to, options, 0.11);
+}
+
+export function resolveWalkTarget(
+  from: [number, number, number],
+  target: [number, number, number],
+): [number, number, number] {
+  const safe = sanitizeWalkPosition(target);
+  if (isDirectPathWalkable(from, safe)) return safe;
+
+  const nudged = nudgeAlongPath(from, safe);
+  if (isDirectPathWalkable(from, nudged) && distance2D(from, nudged) > 0.04) {
+    return nudged;
+  }
+
+  return findNearestWalkablePosition(from, 1.1);
+}
+
 export function moveWithAgentAwareness(
   from: [number, number, number],
   to: [number, number, number],
@@ -447,7 +547,13 @@ export function moveWithAgentAwareness(
   options: WalkCollisionOptions = {},
 ): [number, number, number] {
   const obstacleSafe = moveWithCollision(from, to, options);
-  let result = separateFromAgents(obstacleSafe, selfId, others, options.allowFurniture);
+  let result = separateFromAgents(
+    obstacleSafe,
+    selfId,
+    others,
+    options.allowFurniture,
+    AGENT_WALK_GAP,
+  );
 
   const progress = distance2D(from, result);
   const ideal = distance2D(from, to);
@@ -460,7 +566,7 @@ export function moveWithAgentAwareness(
     const perpZ = dx / len;
 
     for (const sign of [-1, 1]) {
-      for (const scale of [0.28, 0.42, 0.56]) {
+      for (const scale of [0.28, 0.42, 0.56, 0.72]) {
         const sidestep: [number, number, number] = [
           from[0] + dx * 0.45 + perpX * sign * scale,
           from[1],
@@ -471,6 +577,7 @@ export function moveWithAgentAwareness(
           selfId,
           others,
           options.allowFurniture,
+          AGENT_WALK_GAP,
         );
         if (distance2D(from, candidate) > progress + 0.01) {
           result = candidate;
@@ -480,7 +587,7 @@ export function moveWithAgentAwareness(
     }
   }
 
-  if (!isWalkablePosition(result)) {
+  if (!options.allowFurniture && !isWalkablePosition(result)) {
     result = ejectFromFurniture(result);
   }
 
@@ -501,9 +608,26 @@ function shouldSkipFurniture<T extends { status: string }>(state: T): boolean {
   return state.status === 'chatting';
 }
 
+function agentsOverlap(
+  position: [number, number, number],
+  selfId: string,
+  others: AgentCircle[],
+): boolean {
+  const minDist = AGENT_BODY_RADIUS * 2 + 0.02;
+  for (const other of others) {
+    if (other.id === selfId) continue;
+    if (distance2D(position, other.position) < minDist) return true;
+  }
+  return false;
+}
+
+function separationMinDist(status: string): number {
+  return status === 'walking' ? AGENT_WALK_GAP : AGENT_PERSONAL_SPACE;
+}
+
 export function resolveAllAgentOverlaps<
   T extends { id: string; position: [number, number, number]; status: string },
->(states: Record<string, T>, iterations = 3): Record<string, T> {
+>(states: Record<string, T>, iterations = 4): Record<string, T> {
   const next: Record<string, T> = { ...states };
   const ids = Object.keys(next);
 
@@ -519,8 +643,18 @@ export function resolveAllAgentOverlaps<
           position: next[otherId].position,
         }));
 
+      if (state.status === 'walking' && !agentsOverlap(state.position, id, others)) {
+        continue;
+      }
+
       const skipFurniture = shouldSkipFurniture(state);
-      let position = separateFromAgents(state.position, id, others, skipFurniture);
+      let position = separateFromAgents(
+        state.position,
+        id,
+        others,
+        skipFurniture,
+        separationMinDist(state.status),
+      );
 
       if (!skipFurniture && !isWalkablePosition(position)) {
         position = ejectFromFurniture(position);

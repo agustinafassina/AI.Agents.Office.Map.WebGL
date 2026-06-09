@@ -31,7 +31,7 @@ function CupSteamWisp({
       <sphereGeometry args={[0.014, 5, 5]} />
       <meshBasicMaterial
         ref={matRef}
-        color="#eef5fa"
+        color="#f5efe6"
         transparent
         opacity={0.22}
         depthWrite={false}
@@ -42,14 +42,14 @@ function CupSteamWisp({
 
 export function CoffeeHandCup() {
   return (
-    <group position={[0, -0.02, 0.02]} rotation={[0.15, -0.08, 0.12]}>
+    <group position={[0.012, -0.048, 0.058]} rotation={[-0.42, 0.2, 0.14]}>
       <mesh castShadow>
         <cylinderGeometry args={[0.024, 0.028, 0.048, 10]} />
-        <meshStandardMaterial color="#f2f4f7" roughness={0.82} metalness={0.04} />
+        <meshStandardMaterial color="#faf8f4" roughness={0.82} metalness={0.04} />
       </mesh>
       <mesh position={[0, 0.028, 0]} rotation={[0, 0, 0]}>
         <torusGeometry args={[0.026, 0.004, 6, 12]} />
-        <meshStandardMaterial color="#d8dce2" roughness={0.75} />
+        <meshStandardMaterial color="#e8d9bc" roughness={0.75} />
       </mesh>
       <mesh position={[0, -0.012, 0]}>
         <cylinderGeometry args={[0.018, 0.018, 0.006, 10]} />

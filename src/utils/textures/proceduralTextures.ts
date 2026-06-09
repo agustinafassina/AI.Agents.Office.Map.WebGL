@@ -80,7 +80,7 @@ function createWallMarble(): THREE.CanvasTexture {
   paintNoise(ctx, size, size, 10);
 
   ctx.globalAlpha = 0.12;
-  ctx.strokeStyle = '#b8c4d0';
+  ctx.strokeStyle = '#c4b8a8';
   ctx.lineWidth = 1.5;
   for (let i = 0; i < 12; i++) {
     ctx.beginPath();
@@ -193,7 +193,7 @@ function createPlantFoliage(): THREE.CanvasTexture {
   return canvasTexture(canvas, [1, 1]);
 }
 
-const TEXTURE_VERSION = 4;
+const TEXTURE_VERSION = 5;
 let cached: OfficeTextureSet | null = null;
 let cachedVersion = 0;
 

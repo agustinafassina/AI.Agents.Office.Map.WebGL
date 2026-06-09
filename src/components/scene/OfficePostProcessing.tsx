@@ -25,9 +25,9 @@ export function OfficePostProcessing() {
         mipmapBlur
         blendFunction={BlendFunction.SCREEN}
       />
-      <BrightnessContrast brightness={0.005} contrast={0.1} />
-      <HueSaturation hue={0.01} saturation={0.08} />
-      <Vignette eskil={false} offset={0.2} darkness={0.28} />
+      <BrightnessContrast brightness={0.012} contrast={0.06} />
+      <HueSaturation hue={0.025} saturation={0.14} />
+      <Vignette eskil={false} offset={0.22} darkness={0.32} />
     </EffectComposer>
   );
 }

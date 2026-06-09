@@ -17,23 +17,23 @@ export function getCoffeePoseFrame(elapsed: number, phase: number): CoffeePoseFr
   const t = elapsed + phase;
   const breathe = Math.sin(t * 1.55) * 0.045;
   const blow = Math.max(0, Math.sin(t * 0.9 + 0.35)) ** 2;
-  const cradle = 0.92 + breathe;
+  const cradle = 0.82 + breathe;
 
   return {
     rightArm: {
-      rotX: cradle + blow * 0.22,
-      rotY: -0.14 - blow * 0.1,
-      rotZ: -0.48 - breathe * 0.07,
-    },
-    leftArm: {
-      rotX: cradle * 0.78 + blow * 0.14,
-      rotY: 0.12 + blow * 0.05,
+      rotX: -cradle - blow * 0.2,
+      rotY: 0.2 + blow * 0.08,
       rotZ: 0.42 + breathe * 0.06,
     },
-    bodyRotX: 0.05 + blow * 0.05,
-    headRotX: 0.1 + blow * 0.14,
-    headRotY: -0.1 - blow * 0.06,
-    headRotZ: blow * 0.035,
+    leftArm: {
+      rotX: -cradle * 0.88 - blow * 0.14,
+      rotY: -0.16 - blow * 0.05,
+      rotZ: -0.36 - breathe * 0.05,
+    },
+    bodyRotX: 0.04 + blow * 0.04,
+    headRotX: 0.12 + blow * 0.15,
+    headRotY: 0.08 + blow * 0.05,
+    headRotZ: blow * 0.03,
   };
 }
 

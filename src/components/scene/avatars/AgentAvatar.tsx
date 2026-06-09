@@ -50,11 +50,12 @@ interface AgentAvatarProps {
 const POS_SMOOTH = 9;
 const ROT_SMOOTH_WALK = 16;
 const ROT_SMOOTH_IDLE = 10;
+const MIN_WALK_SPEED = 0.1;
 const TARGET = new THREE.Vector3();
-const EYE_MAT = softColor('#1e2428');
+const EYE_MAT = softColor('#2a3228');
 const EYE_WHITE = softColor('#f7f4ef', { roughness: 0.92 });
-const CHEEK_MAT = softColor('#e8a898', { roughness: 0.98, emissive: '#e8a898', emissiveIntensity: 0.08 });
-const NOSE_MAT = softColor('#c89080', { roughness: 0.95 });
+const CHEEK_MAT = softColor('#d8a090', { roughness: 0.98, emissive: '#d8a090', emissiveIntensity: 0.08 });
+const NOSE_MAT = softColor('#c08878', { roughness: 0.95 });
 
 function hashPhase(id: string): number {
   let h = 0;
@@ -162,13 +163,15 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
       }
     }
 
+    const movingOnFoot = walking && runtime.moveSpeed >= MIN_WALK_SPEED;
+
     walkBlendRef.current = THREE.MathUtils.lerp(
       walkBlendRef.current,
-      walking ? 1 : 0,
-      1 - Math.exp(-(walking ? 10 : 7) * delta),
+      movingOnFoot ? 1 : 0,
+      1 - Math.exp(-(movingOnFoot ? 10 : 12) * delta),
     );
 
-    const rotSmooth = walking ? ROT_SMOOTH_WALK : socialChat ? 8 : ROT_SMOOTH_IDLE;
+    const rotSmooth = movingOnFoot ? ROT_SMOOTH_WALK : socialChat ? 8 : ROT_SMOOTH_IDLE;
     if (visualRotRef.current === null) {
       visualRotRef.current = runtime.rotation;
     }
@@ -187,7 +190,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
 
     const t = state.clock.elapsedTime + phase;
     const atCoffee = runtime.status === 'coffee';
-    const walkPose = getWalkPoseFrame(t, phase, runtime.moveSpeed, walkBlendRef.current);
+    const walkPose = getWalkPoseFrame(t, phase, movingOnFoot ? runtime.moveSpeed : 0, walkBlendRef.current);
     const walkingAnim = walkPose.walkBlend > 0.02;
     const atSeat = isNearChatAnchor(runtime.position, chatAnchor);
     const shouldSit =

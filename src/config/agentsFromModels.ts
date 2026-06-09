@@ -1,16 +1,8 @@
+import { AVATAR_ILLUSTRATED_PALETTE } from '@/config/agents.config';
 import type { AgentDefinition, AgentHomeZone } from '@/types/agent';
 import type { LiteLLMModel } from '@/types/litellm';
 
 const ZONE_CYCLE: AgentHomeZone[] = ['center-desk', 'living', 'cafeteria', 'wall-desks'];
-
-const AVATAR_PALETTE: { avatarColor: string; accentColor: string; logoUrl: string }[] = [
-  { avatarColor: '#6eb5ff', accentColor: '#4a9eff', logoUrl: '/logos/cursor.svg' },
-  { avatarColor: '#b88cff', accentColor: '#9a6bff', logoUrl: '/logos/research.svg' },
-  { avatarColor: '#ff9a7a', accentColor: '#ff7b55', logoUrl: '/logos/design.svg' },
-  { avatarColor: '#7dd87d', accentColor: '#5bc45b', logoUrl: '/logos/ops.svg' },
-  { avatarColor: '#f0c674', accentColor: '#e5b84a', logoUrl: '/logos/review.svg' },
-  { avatarColor: '#5ec4d4', accentColor: '#3aa8bc', logoUrl: '/logos/data.svg' },
-];
 
 const PROVIDER_LOGOS: Record<string, string> = {
   openai: '/logos/cursor.svg',
@@ -42,7 +34,7 @@ function providerFromModel(model: LiteLLMModel): string {
 
 function logoForModel(model: LiteLLMModel, index: number): string {
   const provider = providerFromModel(model).toLowerCase();
-  return PROVIDER_LOGOS[provider] ?? AVATAR_PALETTE[index % AVATAR_PALETTE.length].logoUrl;
+  return PROVIDER_LOGOS[provider] ?? AVATAR_ILLUSTRATED_PALETTE[index % AVATAR_ILLUSTRATED_PALETTE.length].logoUrl;
 }
 
 function assignHome(index: number): Pick<AgentDefinition, 'homeZone' | 'wallDeskSlot'> {
@@ -57,7 +49,7 @@ function assignHome(index: number): Pick<AgentDefinition, 'homeZone' | 'wallDesk
 
 export function buildAgentsFromModels(models: LiteLLMModel[]): AgentDefinition[] {
   return models.map((model, index) => {
-    const palette = AVATAR_PALETTE[index % AVATAR_PALETTE.length];
+    const palette = AVATAR_ILLUSTRATED_PALETTE[index % AVATAR_ILLUSTRATED_PALETTE.length];
     const name = formatModelName(model.id);
     const provider = providerFromModel(model);
 

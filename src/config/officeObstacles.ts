@@ -135,9 +135,8 @@ function hubDeskSegmentBox(
 
 const HUB_DESK_COLLISION_PADDING = 0.14;
 const HUB_CHAIR_RADIUS = 0.32;
-/** Bloquea atajos diagonales entre mesas sin cerrar el pasillo central. */
-const HUB_INNER_CORNER_OFFSET = 0.4;
-const HUB_INNER_CORNER_RADIUS = 0.36;
+const HUB_INNER_CORNER_OFFSET = 0.38;
+const HUB_INNER_CORNER_RADIUS = 0.3;
 
 function hubObstacles(): OfficeObstacle[] {
   const chairLocalZ = workstationChairOffsetZ(DESK_SCALE);
@@ -165,7 +164,7 @@ function hubObstacles(): OfficeObstacle[] {
     );
   }
 
-  obstacles.push(circleObstacle(HUB_X, HUB_Z, 0.24 * DESK_SCALE));
+  obstacles.push(circleObstacle(HUB_X, HUB_Z, 0.2 * DESK_SCALE));
 
   for (const sx of [-1, 1]) {
     for (const sz of [-1, 1]) {
@@ -222,7 +221,7 @@ function coffeeLoungeObstacles(): OfficeObstacle[] {
 function privateDeskObstacles(): OfficeObstacle[] {
   const chairReach = workstationChairOffsetZ(DESK_SCALE) * 0.55 + 0.35;
   const obstacles: OfficeObstacle[] = PRIVATE_DESK_POSITIONS.map(([, , z]) =>
-    circleObstacle(PRIVATE_DESK_X - chairReach * 0.35, z, 0.58),
+    circleObstacle(PRIVATE_DESK_X - chairReach * 0.35, z, 0.52),
   );
 
   const gapA = PRIVATE_DESK_MIN_Z + PRIVATE_DESK_SPACING_Z / 2;

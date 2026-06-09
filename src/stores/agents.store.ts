@@ -30,6 +30,7 @@ import {
   findChatApproachPosition,
   nudgeAlongPath,
   resolveAllAgentOverlaps,
+  resolveWalkTarget,
   sanitizeAgentPosition,
   sanitizeWalkPosition,
   type AgentCircle,
@@ -51,9 +52,9 @@ interface AgentsStore {
 }
 
 const stuckSecondsByAgent = new Map<string, number>();
-const STUCK_THRESHOLD = 0.38;
-const STUCK_NUDGE_AFTER = 0.12;
-const MOVE_EPSILON = 0.004;
+const STUCK_THRESHOLD = 0.24;
+const MOVE_EPSILON = 0.0035;
+const MIN_WALK_SPEED = 0.1;
 let coffeeQueueTicketSeq = 1;
 
 function clearCoffeeQueue(state: AgentRuntimeState): AgentRuntimeState {
@@ -365,11 +366,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           })()
         : nearestZoneWaypointIndex(def.homeZone, state.position);
 
-    const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-      number,
-      number,
-      number,
-    ]);
+    const target = resolveWalkTarget(state.position, [
+      ...zoneWaypoints[wpIndex].position,
+    ] as [number, number, number]);
 
     set({
       runtime: {
@@ -426,11 +425,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
         const coffeeTimer = Math.max(0, state.coffeeTimer - delta);
         if (coffeeTimer <= 0 && zoneWaypoints.length > 0) {
           const wpIndex = nearestZoneWaypointIndex(def.homeZone, state.position);
-          const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-            number,
-            number,
-            number,
-          ]);
+          const target = resolveWalkTarget(state.position, [
+            ...zoneWaypoints[wpIndex].position,
+          ] as [number, number, number]);
           stuckSecondsByAgent.set(def.id, 0);
           nextRuntime[def.id] = {
             ...clearCoffeeQueue(state),
@@ -467,11 +464,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           }
 
           const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
-          const target = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-            number,
-            number,
-            number,
-          ]);
+          const target = resolveWalkTarget(state.position, [
+            ...zoneWaypoints[wpIndex].position,
+          ] as [number, number, number]);
           stuckSecondsByAgent.set(def.id, 0);
           nextRuntime[def.id] = {
             ...state,
@@ -560,10 +555,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           const moved = distance2D(state.position, newPos);
 
           if (moved < MOVE_EPSILON) {
-            const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
-            stuckSecondsByAgent.set(def.id, stuck);
-
-            if (stuck >= STUCK_NUDGE_AFTER && state.targetPosition) {
+            if (state.targetPosition) {
               const escape = nudgeAlongPath(state.position, state.targetPosition);
               if (distance2D(state.position, escape) > MOVE_EPSILON) {
                 stuckSecondsByAgent.set(def.id, 0);
@@ -576,13 +568,20 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                 );
                 nextRuntime[def.id] = {
                   ...state,
-                  position: escape,
+                  position: sanitizeAgentPosition(
+                    escape,
+                    def.id,
+                    otherAgents(nextRuntime, def.id),
+                  ),
                   rotation,
                   moveSpeed,
                 };
                 continue;
               }
             }
+
+            const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
+            stuckSecondsByAgent.set(def.id, stuck);
 
             if (stuck >= STUCK_THRESHOLD) {
               if (state.pendingCoffee || state.coffeeQueueTicket > 0) {
@@ -603,11 +602,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
 
                 if (zoneWaypoints.length > 0) {
                   const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
-                  const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-                    number,
-                    number,
-                    number,
-                  ]);
+                  const escape = resolveWalkTarget(state.position, [
+                    ...zoneWaypoints[wpIndex].position,
+                  ] as [number, number, number]);
                   stuckSecondsByAgent.set(def.id, 0);
                   nextRuntime[def.id] = {
                     ...clearCoffeeQueue(state),
@@ -619,11 +616,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                 }
               } else if (zoneWaypoints.length > 0) {
                 const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
-                const escape = sanitizeWalkPosition([...zoneWaypoints[wpIndex].position] as [
-                  number,
-                  number,
-                  number,
-                ]);
+                const escape = resolveWalkTarget(state.position, [
+                  ...zoneWaypoints[wpIndex].position,
+                ] as [number, number, number]);
                 stuckSecondsByAgent.set(def.id, 0);
                 nextRuntime[def.id] = {
                   ...state,
@@ -635,18 +630,29 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                 continue;
               }
             }
+
+            nextRuntime[def.id] = {
+              ...state,
+              moveSpeed: 0,
+            };
+            continue;
           } else {
             stuckSecondsByAgent.set(def.id, 0);
           }
 
-          const safePos = newPos;
-          const { rotation, moveSpeed } = computeWalkRotation(
+          const safePos = sanitizeAgentPosition(
+            newPos,
+            def.id,
+            otherAgents(nextRuntime, def.id),
+          );
+          const { rotation, moveSpeed: rawSpeed } = computeWalkRotation(
             state.rotation,
             state.position,
             safePos,
             state.targetPosition,
             delta,
           );
+          const moveSpeed = rawSpeed >= MIN_WALK_SPEED ? rawSpeed : 0;
 
           nextRuntime[def.id] = {
             ...state,
@@ -659,6 +665,6 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     }
 
     nextRuntime = applyCoffeeQueueSync(nextRuntime, definitions);
-    set({ runtime: resolveAllAgentOverlaps(nextRuntime, 2), idleTimers: nextTimers });
+    set({ runtime: resolveAllAgentOverlaps(nextRuntime), idleTimers: nextTimers });
   },
 }));

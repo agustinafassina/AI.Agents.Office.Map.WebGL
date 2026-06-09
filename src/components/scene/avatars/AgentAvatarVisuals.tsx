@@ -5,9 +5,9 @@ import type * as THREE from 'three';
 export type HairVariant = 0 | 1 | 2 | 3;
 
 export const AVATAR_SKIN = '#e8ceb8';
-export const AVATAR_PANTS = '#4a5660';
-export const AVATAR_SHOE = '#2e343c';
-export const AVATAR_SOLE = '#1a2028';
+export const AVATAR_PANTS = '#5c4a3a';
+export const AVATAR_SHOE = '#3a3228';
+export const AVATAR_SOLE = '#2a241c';
 
 interface MaterialProps {
   shirtMat: THREE.MeshStandardMaterial;
