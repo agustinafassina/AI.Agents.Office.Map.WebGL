@@ -12,3 +12,6 @@ src copy/*
 ai-suggestions/*
 docs/demo.source.gif
 docs/*.tmp.gif
+try.py
+CHECKLIST.md
+compress_demo.py

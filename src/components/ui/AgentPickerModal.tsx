@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from '@/i18n';
 import type { AgentDefinition } from '@/types/agent';
 import { AgentHudCard } from './AgentHudCard';
 import './AgentPickerModal.css';
@@ -19,6 +20,8 @@ export function AgentPickerModal({
   onClose,
   onSelect,
 }: AgentPickerModalProps) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -49,17 +52,15 @@ export function AgentPickerModal({
         <header className="agent-picker-modal__header">
           <div>
             <h2 id="agent-picker-title" className="agent-picker-modal__title">
-              Choose an agent
+              {t('agentPicker.title')}
             </h2>
-            <p className="agent-picker-modal__subtitle">
-              Select a model to focus the camera and open chat.
-            </p>
+            <p className="agent-picker-modal__subtitle">{t('agentPicker.subtitle')}</p>
           </div>
           <button
             type="button"
             className="agent-picker-modal__close"
             onClick={onClose}
-            aria-label="Close agent picker"
+            aria-label={t('agentPicker.close')}
           >
             ×
           </button>

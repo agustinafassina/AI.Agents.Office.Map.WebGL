@@ -1,0 +1,123 @@
+{
+  "hud": {
+    "eyebrow": "Isometric Workspace",
+    "title": "AI Agents Office",
+    "hint": "Bottom nav for zones · drag to pan · select agents to chat",
+    "loadingAgents": "Loading agents…",
+    "noAgents": "No agents available",
+    "agentsAriaLabel": "Office agents",
+    "viewMore": "View more",
+    "mockMode": "Mock mode",
+    "litellm": "LiteLLM",
+    "apiConfigured": "API configured",
+    "modelsCount": "{{count}} models"
+  },
+  "locale": {
+    "label": "Language",
+    "ariaLabel": "Language",
+    "en": "EN",
+    "es": "ES"
+  },
+  "graphics": {
+    "label": "Quality",
+    "ariaLabel": "Graphics quality",
+    "high": "High",
+    "balanced": "Medium",
+    "low": "Low"
+  },
+  "chat": {
+    "panelAriaLabel": "Chat with {{name}}",
+    "model": "Model",
+    "liveSource": " · LiteLLM",
+    "close": "Close chat",
+    "emptyState": "Say hello to {{name}}. Conversation stays here while you explore the map.",
+    "hintsPrefix": "Try:",
+    "you": "You",
+    "placeholder": "Message {{name}}…",
+    "send": "Send",
+    "thinking": "Thinking",
+    "modelPickerAria": "LiteLLM model for {{name}}",
+    "modelUnavailable": "{{modelId}} (unavailable)",
+    "serviceMock": "Mock LiteLLM",
+    "serviceLive": "Live",
+    "serviceDegraded": "Degraded",
+    "modelsBadge": "{{count}} models",
+    "commandFailed": "I couldn't move right now; try again in a moment.",
+    "sendFailed": "Failed to send message"
+  },
+  "commands": {
+    "coffee": "go get coffee",
+    "relax": "relax",
+    "desk": "back to desk",
+    "ackCoffee": "Heading to the café. I'll keep replying from the bar.",
+    "ackRelax": "Moving to the living area for a bit. Chat stays open.",
+    "ackDesk": "Heading back to my workspace."
+  },
+  "nav": {
+    "ariaLabel": "Office sections",
+    "focusZone": "Focus {{label}}",
+    "all": "All",
+    "fullOffice": "Full Office",
+    "living": "Living",
+    "centerDesk": "Center",
+    "cafeteria": "Café",
+    "wallDesks": "Desks"
+  },
+  "zoom": {
+    "ariaLabel": "Map zoom",
+    "in": "Zoom in",
+    "out": "Zoom out",
+    "reset": "Reset zoom",
+    "recenter": "Recenter view"
+  },
+  "agentPicker": {
+    "title": "All agents",
+    "subtitle": "Select an agent to focus the map and open chat",
+    "close": "Close agent picker"
+  },
+  "agentCard": {
+    "title": "{{name}} · {{role}} · {{model}}",
+    "ariaLabel": "Chat with {{name}}, {{role}}, model {{model}}"
+  },
+  "avatar": {
+    "thinking": "Thinking…",
+    "replying": "Replying…",
+    "talking": "Talking",
+    "inChat": "In chat",
+    "coffeeBreak": "Coffee break",
+    "inLine": "In line",
+    "moving": "Moving",
+    "available": "Available"
+  },
+  "zones": {
+    "living": {
+      "label": "Living",
+      "subtitle": "Puffs · meeting table"
+    },
+    "centerDesk": {
+      "label": "Center Desk",
+      "subtitle": "Four-desk team hub"
+    },
+    "cafeteria": {
+      "label": "Cafeteria",
+      "subtitle": "Coffee bar · lounge"
+    },
+    "wallDesks": {
+      "label": "Wall Desks",
+      "subtitle": "Private workstations"
+    },
+    "hotspotFocus": "{{label}} · click to focus"
+  },
+  "connection": {
+    "idle": "idle",
+    "connecting": "connecting",
+    "connected": "connected",
+    "error": "error"
+  },
+  "follow": {
+    "start": "Follow agent",
+    "stop": "Stop following",
+    "startAria": "Follow {{name}} while moving",
+    "stopAria": "Stop following {{name}}"
+  }
+}

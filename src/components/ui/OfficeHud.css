@@ -14,8 +14,8 @@
   flex-direction: column;
   gap: 6px;
   width: fit-content;
-  max-width: min(440px, calc(100vw - 40px));
-  padding: 15px 18px;
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 13px 15px;
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   border-radius: var(--radius);
@@ -31,11 +31,31 @@
   text-transform: uppercase;
 }
 
+.office-hud__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.office-hud__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
 .office-hud__title {
   font-weight: 600;
-  font-size: clamp(1rem, 2vw, 1.18rem);
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
   letter-spacing: 0.02em;
   color: var(--text-primary);
+  line-height: 1.2;
+  min-width: 0;
+  flex: 1;
 }
 
 .office-hud__hint {
@@ -60,6 +80,16 @@
 }
 
 @media (max-width: 520px) {
+  .office-hud__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .office-hud__controls {
+    justify-content: flex-start;
+  }
+
   .office-hud__agents {
     flex-wrap: wrap;
     max-height: calc(92px * 2 + 8px);
@@ -235,7 +265,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
+  width: fit-content;
+  max-width: min(380px, calc(100vw - 40px));
+  padding: 8px 12px;
   font-size: 0.74rem;
   color: var(--text-secondary);
   background: var(--bg-glass);

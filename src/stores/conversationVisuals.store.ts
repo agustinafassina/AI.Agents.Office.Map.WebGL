@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { UserChatVisualMode } from '@/utils/chatVisualMode';
 
 export interface PeerConversation {
   id: string;
@@ -10,8 +11,8 @@ export interface PeerConversation {
 interface ConversationVisualsStore {
   peerConversations: PeerConversation[];
   userChatAgentId: string | null;
-  userChatStreaming: boolean;
-  setUserChatContext: (agentId: string | null, streaming: boolean) => void;
+  userChatMode: UserChatVisualMode;
+  setUserChatContext: (agentId: string | null, mode: UserChatVisualMode) => void;
   startPeerConversation: (agentA: string, agentB: string, durationSec: number) => void;
   pruneExpired: (nowSec: number) => void;
   getPeerPartner: (agentId: string) => string | null;
@@ -24,10 +25,10 @@ let conversationSeq = 0;
 export const useConversationVisualsStore = create<ConversationVisualsStore>((set, get) => ({
   peerConversations: [],
   userChatAgentId: null,
-  userChatStreaming: false,
+  userChatMode: 'off',
 
-  setUserChatContext: (agentId, streaming) => {
-    set({ userChatAgentId: agentId, userChatStreaming: streaming });
+  setUserChatContext: (agentId, mode) => {
+    set({ userChatAgentId: agentId, userChatMode: mode });
   },
 
   startPeerConversation: (agentA, agentB, durationSec) => {

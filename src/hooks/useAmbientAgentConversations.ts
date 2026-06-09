@@ -4,6 +4,7 @@ import { distance2D } from '@/utils/movement';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useConversationVisualsStore } from '@/stores/conversationVisuals.store';
 import { useChatStore } from '@/stores/chat.store';
+import { resolveUserChatVisualMode } from '@/utils/chatVisualMode';
 
 const SPAWN_INTERVAL = 14;
 const MAX_PEER_CHATS = 2;
@@ -55,7 +56,8 @@ export function useAmbientAgentConversations() {
 
     const activeId = useChatStore.getState().activeAgentId;
     const conv = activeId ? useChatStore.getState().conversations[activeId] : undefined;
-    visuals.setUserChatContext(activeId, Boolean(conv?.isLoading));
+    const { agentId, mode } = resolveUserChatVisualMode(activeId, conv);
+    visuals.setUserChatContext(agentId, mode);
 
     spawnTimer.current += delta;
     if (spawnTimer.current < SPAWN_INTERVAL) return;

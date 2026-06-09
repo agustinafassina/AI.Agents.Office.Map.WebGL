@@ -7,7 +7,9 @@ export type IconName =
   | 'zoom-in'
   | 'zoom-out'
   | 'reset'
-  | 'recenter';
+  | 'recenter'
+  | 'follow'
+  | 'follow-active';
 
 const FILLED_PATHS: Partial<Record<IconName, string>> = {
   home: 'M12 3L4 10v9h5v-6h6v6h5v-9L12 3zm0 2.3l5 4.5v6.2h-2v-5H9v5H7v-6.2l5-4.5z',
@@ -76,6 +78,25 @@ export function UiIcon({ name, size = 18, className }: UiIconProps) {
       <svg {...svgProps}>
         <circle {...STROKE} cx="12" cy="12" r="3.5" />
         <path {...STROKE} d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+      </svg>
+    );
+  }
+
+  if (name === 'follow') {
+    return (
+      <svg {...svgProps}>
+        <circle {...STROKE} cx="12" cy="12" r="3" />
+        <path {...STROKE} d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+        <path {...STROKE} d="M16 8l2-2M6 18l-2 2M8 6L6 4M18 16l2 2" />
+      </svg>
+    );
+  }
+
+  if (name === 'follow-active') {
+    return (
+      <svg {...svgProps}>
+        <circle {...STROKE} cx="12" cy="12" r="3" fill="currentColor" />
+        <path {...STROKE} d="M12 2v3M12 19v3M2 12h3M19 12h3" />
       </svg>
     );
   }

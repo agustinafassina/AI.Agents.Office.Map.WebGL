@@ -1,4 +1,5 @@
 import type { AgentDefinition } from '@/types/agent';
+import { useTranslation } from '@/i18n';
 import { useChatStore } from '@/stores/chat.store';
 import { AgentHudAvatar } from './AgentHudAvatar';
 
@@ -10,6 +11,7 @@ interface AgentHudCardProps {
 }
 
 export function AgentHudCard({ agent, selected = false, onClick, compact = false }: AgentHudCardProps) {
+  const { t } = useTranslation();
   const modelLabel = useChatStore((state) => state.resolveModelLabel(agent.modelId));
   const modelAvailable = useChatStore((state) => state.isModelAvailableOnApi(agent.modelId));
   const serviceMode = useChatStore((state) => state.serviceMode);
@@ -19,8 +21,8 @@ export function AgentHudCard({ agent, selected = false, onClick, compact = false
       type="button"
       className={`office-hud__avatar-btn${selected ? ' office-hud__avatar-btn--selected' : ''}${compact ? ' office-hud__avatar-btn--compact' : ''}`}
       onClick={onClick}
-      title={`${agent.name} · ${agent.role} · ${modelLabel}`}
-      aria-label={`Chat with ${agent.name}, ${agent.role}, model ${modelLabel}`}
+      title={t('agentCard.title', { name: agent.name, role: agent.role, model: modelLabel })}
+      aria-label={t('agentCard.ariaLabel', { name: agent.name, role: agent.role, model: modelLabel })}
     >
       <AgentHudAvatar agent={agent} selected={selected} size={compact ? 32 : 26} />
       <span className="office-hud__agent-name">{agent.name}</span>

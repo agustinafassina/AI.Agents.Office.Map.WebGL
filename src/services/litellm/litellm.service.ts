@@ -2,6 +2,7 @@ import { env, hasLiteLLMCredentials } from '@/config/env';
 import { getMockAssistantReply, MOCK_MODELS } from '@/config/mock.models';
 import type { ChatMessage } from '@/types/chat';
 import type { ChatCompletionMessage, LiteLLMModel } from '@/types/litellm';
+import { readLocale } from '@/utils/localeStorage';
 import { litellmClient, LiteLLMClientError } from './litellm.client';
 
 export type LiteLLMServiceStatus = 'mock' | 'live' | 'error';
@@ -98,7 +99,7 @@ class LiteLLMService {
 
     if (env.useMockLitellm || !hasLiteLLMCredentials()) {
       await delay(200 + Math.random() * 200);
-      const content = getMockAssistantReply(agentName, userContent);
+      const content = getMockAssistantReply(agentName, userContent, readLocale());
       await streamMockReply(content, onDelta);
       return { content, model, mock: true };
     }

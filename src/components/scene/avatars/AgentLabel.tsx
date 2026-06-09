@@ -1,5 +1,8 @@
 import { Billboard, Text } from '@react-three/drei';
+import { useTranslation } from '@/i18n';
 import type { AgentStatus } from '@/types/agent';
+import type { UserChatVisualMode } from '@/utils/chatVisualMode';
+import type { TranslationKey } from '@/i18n/types';
 
 interface AgentLabelProps {
   name: string;
@@ -7,11 +10,18 @@ interface AgentLabelProps {
   modelId?: string;
   status: AgentStatus;
   socialChat?: boolean;
+  userChatMode?: UserChatVisualMode;
   accentColor: string;
   selected: boolean;
 }
 
-function statusColor(status: AgentStatus, socialChat: boolean): string {
+function statusColor(
+  status: AgentStatus,
+  socialChat: boolean,
+  userChatMode: UserChatVisualMode,
+): string {
+  if (userChatMode === 'thinking') return '#d4a574';
+  if (userChatMode === 'streaming') return '#e2725b';
   if (socialChat) return '#a8c4a0';
   if (status === 'chatting') return '#d4a574';
   if (status === 'coffee') return '#c8a882';
@@ -20,16 +30,31 @@ function statusColor(status: AgentStatus, socialChat: boolean): string {
   return '#9aab9e';
 }
 
-function statusLabel(status: AgentStatus, socialChat: boolean): string {
-  if (socialChat) return 'Talking';
-  if (status === 'chatting') return 'In chat';
-  if (status === 'coffee') return 'Coffee break';
-  if (status === 'coffee-queue') return 'In line';
-  if (status === 'walking') return 'Moving';
-  return 'Available';
+function statusLabelKey(
+  status: AgentStatus,
+  socialChat: boolean,
+  userChatMode: UserChatVisualMode,
+): TranslationKey {
+  if (userChatMode === 'thinking') return 'avatar.thinking';
+  if (userChatMode === 'streaming') return 'avatar.replying';
+  if (socialChat) return 'avatar.talking';
+  if (status === 'chatting') return 'avatar.inChat';
+  if (status === 'coffee') return 'avatar.coffeeBreak';
+  if (status === 'coffee-queue') return 'avatar.inLine';
+  if (status === 'walking') return 'avatar.moving';
+  return 'avatar.available';
 }
 
-export function AgentLabel({ name, status, socialChat = false, accentColor, selected }: AgentLabelProps) {
+export function AgentLabel({
+  name,
+  status,
+  socialChat = false,
+  userChatMode = 'off',
+  accentColor,
+  selected,
+}: AgentLabelProps) {
+  const { t } = useTranslation();
+
   return (
     <Billboard position={[0, 1.16, 0]} follow lockX lockZ>
       <group>
@@ -53,12 +78,12 @@ export function AgentLabel({ name, status, socialChat = false, accentColor, sele
         <Text
           position={[0, -0.055, 0]}
           fontSize={0.034}
-          color={statusColor(status, socialChat)}
+          color={statusColor(status, socialChat, userChatMode)}
           anchorX="center"
           anchorY="top"
           letterSpacing={0.03}
         >
-          {statusLabel(status, socialChat)}
+          {t(statusLabelKey(status, socialChat, userChatMode))}
         </Text>
       </group>
     </Billboard>

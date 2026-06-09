@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from '@/i18n';
 import './ChatMessageBody.css';
 
 interface ChatMessageBodyProps {
@@ -8,10 +9,12 @@ interface ChatMessageBodyProps {
 }
 
 export function ChatMessageBody({ content, streaming = false }: ChatMessageBodyProps) {
+  const { t } = useTranslation();
+
   if (!content && streaming) {
     return (
       <p className="chat-message-body chat-message-body--typing" aria-live="polite">
-        Thinking
+        {t('chat.thinking')}
         <span className="chat-message-body__dots" aria-hidden="true">
           <span />
           <span />

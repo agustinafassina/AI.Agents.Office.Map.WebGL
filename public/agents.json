@@ -3,71 +3,107 @@
     {
       "id": "cursor-agent",
       "name": "Cursor",
-      "role": "Code",
+      "role": {
+        "en": "Code",
+        "es": "Código"
+      },
       "modelId": "gpt-4o-mini",
       "logoUrl": "/logos/cursor.svg",
       "avatarColor": "#9aab9e",
       "accentColor": "#5a7358",
       "homeZone": "center-desk",
-      "systemPrompt": "You are Cursor, a helpful coding assistant in a creative office. Reply in clear markdown when useful."
+      "systemPrompt": {
+        "en": "You are Cursor, a helpful coding assistant in a creative office. Reply in clear markdown when useful.",
+        "es": "Sos Cursor, un asistente de código en una oficina creativa. Respondé en markdown claro cuando sea útil."
+      }
     },
     {
       "id": "research-agent",
       "name": "Research",
-      "role": "Research",
+      "role": {
+        "en": "Research",
+        "es": "Investigación"
+      },
       "modelId": "gpt-4o",
       "logoUrl": "/logos/research.svg",
       "avatarColor": "#c4a882",
       "accentColor": "#8f7354",
       "homeZone": "living",
-      "systemPrompt": "You are a research specialist who summarizes and explores ideas clearly."
+      "systemPrompt": {
+        "en": "You are a research specialist who summarizes and explores ideas clearly.",
+        "es": "Sos un especialista en investigación que resume y explora ideas con claridad."
+      }
     },
     {
       "id": "design-agent",
       "name": "Design",
-      "role": "Design",
+      "role": {
+        "en": "Design",
+        "es": "Diseño"
+      },
       "modelId": "claude-3-5-sonnet",
       "logoUrl": "/logos/design.svg",
       "avatarColor": "#e2725b",
       "accentColor": "#c86a48",
       "homeZone": "cafeteria",
-      "systemPrompt": "You are a design-minded assistant focused on UX and visual coherence."
+      "systemPrompt": {
+        "en": "You are a design-minded assistant focused on UX and visual coherence.",
+        "es": "Sos un asistente orientado al diseño, enfocado en UX y coherencia visual."
+      }
     },
     {
       "id": "ops-agent",
       "name": "Ops",
-      "role": "Ops",
+      "role": {
+        "en": "Ops",
+        "es": "Operaciones"
+      },
       "modelId": "gpt-4o-mini",
       "logoUrl": "/logos/ops.svg",
       "avatarColor": "#87a685",
       "accentColor": "#4a6b52",
       "homeZone": "wall-desks",
       "wallDeskSlot": 0,
-      "systemPrompt": "You are an operations assistant who helps with workflows and reliability."
+      "systemPrompt": {
+        "en": "You are an operations assistant who helps with workflows and reliability.",
+        "es": "Sos un asistente de operaciones que ayuda con flujos de trabajo y confiabilidad."
+      }
     },
     {
       "id": "review-agent",
       "name": "Review",
-      "role": "QA",
+      "role": {
+        "en": "QA",
+        "es": "QA"
+      },
       "modelId": "gpt-4o",
       "logoUrl": "/logos/review.svg",
       "avatarColor": "#d4a574",
       "accentColor": "#a67b5b",
       "homeZone": "wall-desks",
       "wallDeskSlot": 1,
-      "systemPrompt": "You are a QA reviewer who checks quality, edge cases, and test coverage."
+      "systemPrompt": {
+        "en": "You are a QA reviewer who checks quality, edge cases, and test coverage.",
+        "es": "Sos un revisor de QA que verifica calidad, casos límite y cobertura de tests."
+      }
     },
     {
       "id": "data-agent",
       "name": "Data",
-      "role": "Analytics",
+      "role": {
+        "en": "Analytics",
+        "es": "Analítica"
+      },
       "modelId": "claude-3-5-sonnet",
       "logoUrl": "/logos/data.svg",
       "avatarColor": "#bea078",
       "accentColor": "#6b5340",
       "homeZone": "wall-desks",
       "wallDeskSlot": 2,
-      "systemPrompt": "You are a data analyst who interprets metrics and surfaces insights clearly."
+      "systemPrompt": {
+        "en": "You are a data analyst who interprets metrics and surfaces insights clearly.",
+        "es": "Sos un analista de datos que interpreta métricas y expone insights con claridad."
+      }
     }
   ]
 }

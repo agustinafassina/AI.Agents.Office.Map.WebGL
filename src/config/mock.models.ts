@@ -1,3 +1,4 @@
+import type { AppLocale } from '@/i18n/types';
 import type { LiteLLMModel } from '@/types/litellm';
 
 export const MOCK_MODELS: LiteLLMModel[] = [
@@ -7,7 +8,7 @@ export const MOCK_MODELS: LiteLLMModel[] = [
   { id: 'gemini-2.0-flash', object: 'model', owned_by: 'google' },
 ];
 
-const MOCK_REPLIES: Record<string, string[]> = {
+const MOCK_REPLIES_EN: Record<string, string[]> = {
   default: [
     "I'm here in the office map — ask me anything and I'll help.",
     'Good question. Let me think through that with you.',
@@ -15,10 +16,33 @@ const MOCK_REPLIES: Record<string, string[]> = {
   ],
 };
 
-export function getMockAssistantReply(agentName: string, userMessage: string): string {
-  const pool = MOCK_REPLIES[agentName.toLowerCase()] ?? MOCK_REPLIES.default;
+const MOCK_REPLIES_ES: Record<string, string[]> = {
+  default: [
+    'Estoy acá en el mapa de la oficina — preguntame lo que quieras.',
+    'Buena pregunta. Pensemos esto juntos.',
+    'Desde mi escritorio en el diorama, te sugiero dividirlo en pasos más chicos.',
+  ],
+};
+
+const MOCK_FOOTER_EN =
+  '\n\n*(Mock mode — enable live LiteLLM in `.env`)*';
+const MOCK_FOOTER_ES =
+  '\n\n*(Modo mock — activá LiteLLM live en `.env`)*';
+
+export function getMockAssistantReply(
+  agentName: string,
+  userMessage: string,
+  locale: AppLocale = 'en',
+): string {
+  const pools = locale === 'es' ? MOCK_REPLIES_ES : MOCK_REPLIES_EN;
+  const pool = pools[agentName.toLowerCase()] ?? pools.default;
   const snippet =
     userMessage.length > 60 ? `${userMessage.slice(0, 60)}…` : userMessage;
   const base = pool[Math.floor(Math.random() * pool.length)];
-  return `${base}\n\nYou asked about **"${snippet}"**. Here's a quick take:\n\n- Break it into smaller steps\n- Test one change at a time\n- Check the \`CHECKLIST.md\` for next ideas\n\n*(Mock mode — enable live LiteLLM in \`.env\`)*`;
+
+  if (locale === 'es') {
+    return `${base}\n\nPreguntaste sobre **"${snippet}"**. Una idea rápida:\n\n- Dividilo en pasos más chicos\n- Probá un cambio a la vez\n- Mirá el \`CHECKLIST.md\` para próximas ideas${MOCK_FOOTER_ES}`;
+  }
+
+  return `${base}\n\nYou asked about **"${snippet}"**. Here's a quick take:\n\n- Break it into smaller steps\n- Test one change at a time\n- Check the \`CHECKLIST.md\` for next ideas${MOCK_FOOTER_EN}`;
 }

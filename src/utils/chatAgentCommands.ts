@@ -17,24 +17,26 @@ export function parseAgentChatCommand(content: string): AgentChatCommand | null 
   if (!text) return null;
 
   if (
-    /^(ve a |ir a )?(tomar )?(un )?cafe\b/.test(text) ||
+    /^(ve a |ir a |go )?(tomar )?(get )?(go get )?(un )?cafe\b/.test(text) ||
     /^coffee break$/.test(text) ||
     /^take coffee$/.test(text) ||
-    text === 'cafe'
+    text === 'cafe' ||
+    text === 'coffee'
   ) {
     return 'coffee';
   }
 
   if (
     /^(relajate|relaja|relax|descansa|descanso)\b/.test(text) ||
-    /^(ve a |ir a )?(el )?living\b/.test(text) ||
-    /^chill\b/.test(text)
+    /^(ve a |ir a |go to )?(the )?living\b/.test(text) ||
+    /^chill\b/.test(text) ||
+    /^take a break$/.test(text)
   ) {
     return 'relax';
   }
 
   if (
-    /^(vuelve|volvi|regresa|ir) (a |al )?(tu )?(desk|escritorio|puesto)\b/.test(text) ||
+    /^(vuelve|volvi|regresa|ir|go) (a |al |to )?(tu |your )?(desk|escritorio|puesto)\b/.test(text) ||
     /^(back to|go to) (your )?desk\b/.test(text) ||
     text === 'desk' ||
     text === 'escritorio'
@@ -44,15 +46,3 @@ export function parseAgentChatCommand(content: string): AgentChatCommand | null 
 
   return null;
 }
-
-export const AGENT_COMMAND_HINTS = [
-  've a tomar cafe',
-  'relajate',
-  'vuelve al escritorio',
-] as const;
-
-export const AGENT_COMMAND_ACK: Record<AgentChatCommand, string> = {
-  coffee: 'Voy a la cafeteria. Te sigo respondiendo desde la barra.',
-  relax: 'Me muevo al living un rato. Seguimos en chat.',
-  desk: 'Vuelvo a mi zona de trabajo.',
-};

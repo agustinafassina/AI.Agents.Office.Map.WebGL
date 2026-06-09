@@ -65,8 +65,12 @@ export function IsometricCamera() {
     const [px, , pz] = panOffset;
     const desiredLook = new THREE.Vector3(px, 0, pz);
 
-    const panRate = viewIntent === 'agent-focus' ? 3.4 : 5;
-    const zoomRate = viewIntent === 'agent-focus' ? 4.8 : 8;
+    const smoothTransition =
+      viewIntent === 'agent-focus' ||
+      viewIntent === 'agent-follow' ||
+      viewIntent === 'zone-focus';
+    const panRate = smoothTransition ? 3.4 : 5;
+    const zoomRate = smoothTransition ? 4.8 : 8;
     const alpha = 1 - Math.exp(-panRate * delta);
     lookTarget.current.lerp(desiredLook, alpha);
 

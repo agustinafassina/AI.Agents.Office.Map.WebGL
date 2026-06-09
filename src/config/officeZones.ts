@@ -7,7 +7,9 @@ export type OfficeZoneId = 'all' | 'living' | 'center-desk' | 'cafeteria' | 'wal
 
 export interface OfficeZoneLink {
   id: OfficeZoneId;
+  /** @deprecated Use i18n keys via `ZONE_PLAQUE_LABEL_KEYS` / `NAV_ZONE_LABEL_KEYS` */
   label: string;
+  /** @deprecated Use i18n keys via `NAV_ZONE_LABEL_KEYS` */
   shortLabel: string;
   sceneKey: 'overview' | 'MeetingZone' | 'CentralWorkHub' | 'CoffeeLounge' | 'PrivateDesk';
   icon: IconName;
@@ -15,6 +17,7 @@ export interface OfficeZoneLink {
   zoom: number;
   accent: string;
   identity?: {
+    /** @deprecated Use i18n keys via `ZONE_SUBTITLE_KEYS` */
     subtitle: string;
     plaquePosition: [number, number, number];
   };

@@ -4,19 +4,23 @@ export type AgentStatus = 'idle' | 'walking' | 'chatting' | 'coffee' | 'coffee-q
 
 export type AgentHomeZone = Exclude<OfficeZoneId, 'all'>;
 
+export interface AgentLocalizedFields {
+  role?: { en: string; es: string };
+  systemPrompt?: { en: string; es: string };
+}
+
 export interface AgentDefinition {
   id: string;
   name: string;
-  
   role: string;
   modelId: string;
   logoUrl: string;
   avatarColor: string;
   accentColor: string;
   homeZone: AgentHomeZone;
-  
   wallDeskSlot?: 0 | 1 | 2;
   systemPrompt?: string;
+  localized?: AgentLocalizedFields;
 }
 
 export interface AgentRuntimeState {

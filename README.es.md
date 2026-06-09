@@ -14,6 +14,7 @@ Diorama isométrico de oficina renderizado con **WebGL** (Three.js + React Three
 - **Comandos de escena** — `ve a tomar cafe`, `relajate`, `vuelve al escritorio`
 - **Simulación de oficina** — pausas de café, cola en la barra, waypoints por zona, movimiento con colisiones
 - **Texturas procedurales** — look ilustrado sin assets externos (PNGs opcionales en `public/textures/`)
+- **UI bilingüe** — EN (default) + ES con el selector de idioma en el HUD; roles y prompts de agentes en `public/agents.json` soportan ambos idiomas
 
 ## 🛠️ Stack
 - **React 19 + TypeScript + Vite**

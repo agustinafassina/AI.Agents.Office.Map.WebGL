@@ -1,13 +1,17 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { getCommandHints } from '@/i18n/commandMessages';
+import { useConnectionLabel } from '@/i18n/connectionLabel';
+import { useTranslation } from '@/i18n';
 import { useChatStore } from '@/stores/chat.store';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
-import { AGENT_COMMAND_HINTS } from '@/utils/chatAgentCommands';
 import { formatModelDisplayName } from '@/utils/agentModel';
 import { ChatMessageBody } from './ChatMessageBody';
 import './ChatPanel.css';
 
 export function ChatPanel() {
+  const { t, locale } = useTranslation();
+  const connectionLabel = useConnectionLabel(useChatStore((s) => s.connectionStatus));
   const isOpen = useChatStore((s) => s.isPanelOpen);
   const activeAgentId = useChatStore((s) => s.activeAgentId);
   const closeChat = useChatStore((s) => s.closeChat);
@@ -28,6 +32,8 @@ export function ChatPanel() {
   const [sendPulse, setSendPulse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageContent = conversation?.messages.at(-1)?.content ?? '';
+
+  const commandHints = getCommandHints(locale);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,15 +59,22 @@ export function ChatPanel() {
     await sendMessage(text);
   };
 
+  const serviceBadge =
+    serviceMode === 'mock'
+      ? t('chat.serviceMock')
+      : serviceMode === 'live'
+        ? t('chat.serviceLive')
+        : t('chat.serviceDegraded');
+
   return (
-    <aside className="chat-panel" aria-label={`Chat with ${agent.name}`}>
+    <aside className="chat-panel" aria-label={t('chat.panelAriaLabel', { name: agent.name })}>
       <header className="chat-panel__header">
         <div className="chat-panel__agent">
           <img src={agent.logoUrl} alt="" className="chat-panel__logo" />
           <div>
             <h2 className="chat-panel__title">{agent.name}</h2>
             <label className="chat-panel__model">
-              <span className="chat-panel__model-label">Model</span>
+              <span className="chat-panel__model-label">{t('chat.model')}</span>
               {models.length > 0 ? (
                 <select
                   className={`chat-panel__model-picker${
@@ -69,11 +82,13 @@ export function ChatPanel() {
                   }`}
                   value={agent.modelId}
                   disabled={conversation?.isLoading}
-                  aria-label={`LiteLLM model for ${agent.name}`}
+                  aria-label={t('chat.modelPickerAria', { name: agent.name })}
                   onChange={(e) => setActiveAgentModel(e.target.value)}
                 >
                   {!models.some((model) => model.id === agent.modelId) && (
-                    <option value={agent.modelId}>{agent.modelId} (unavailable)</option>
+                    <option value={agent.modelId}>
+                      {t('chat.modelUnavailable', { modelId: agent.modelId })}
+                    </option>
                   )}
                   {models.map((model) => (
                     <option key={model.id} value={model.id}>
@@ -85,7 +100,7 @@ export function ChatPanel() {
                 <code className="chat-panel__model-code">{modelLabel}</code>
               )}
               {serviceMode === 'live' && modelAvailable && models.length > 0 && (
-                <span className="chat-panel__model-source"> · LiteLLM</span>
+                <span className="chat-panel__model-source">{t('chat.liveSource')}</span>
               )}
             </label>
           </div>
@@ -94,7 +109,7 @@ export function ChatPanel() {
           type="button"
           className="chat-panel__close"
           onClick={handleClose}
-          aria-label="Close chat"
+          aria-label={t('chat.close')}
         >
           ×
         </button>
@@ -102,14 +117,12 @@ export function ChatPanel() {
 
       <div className="chat-panel__meta">
         <span className={`chat-panel__badge chat-panel__badge--${connectionStatus}`}>
-          {connectionStatus}
+          {connectionLabel}
         </span>
-        <span className="chat-panel__badge chat-panel__badge--mode">
-          {serviceMode === 'mock' ? 'Mock LiteLLM' : serviceMode === 'live' ? 'Live' : 'Degraded'}
-        </span>
+        <span className="chat-panel__badge chat-panel__badge--mode">{serviceBadge}</span>
         {serviceMode === 'live' && models.length > 0 && (
           <span className="chat-panel__badge chat-panel__badge--models">
-            {models.length} models
+            {t('chat.modelsBadge', { count: models.length })}
           </span>
         )}
       </div>
@@ -117,9 +130,10 @@ export function ChatPanel() {
       <div className="chat-panel__messages">
         {conversation?.messages.length === 0 && (
           <div className="chat-panel__empty">
-            <p>Say hello to {agent.name}. Conversation stays here while you explore the map.</p>
+            <p>{t('chat.emptyState', { name: agent.name })}</p>
             <p className="chat-panel__hints">
-              Try: {AGENT_COMMAND_HINTS.map((hint) => `"${hint}"`).join(' · ')}
+              {t('chat.hintsPrefix')}{' '}
+              {commandHints.map((hint) => `"${hint}"`).join(' · ')}
             </p>
           </div>
         )}
@@ -129,7 +143,7 @@ export function ChatPanel() {
             className={`chat-panel__message chat-panel__message--${msg.role}`}
           >
             <span className="chat-panel__message-role">
-              {msg.role === 'user' ? 'You' : agent.name}
+              {msg.role === 'user' ? t('chat.you') : agent.name}
             </span>
             {msg.role === 'assistant' ? (
               <ChatMessageBody content={msg.content} streaming={msg.streaming} />
@@ -151,7 +165,7 @@ export function ChatPanel() {
           className="chat-panel__input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Message ${agent.name}…`}
+          placeholder={t('chat.placeholder', { name: agent.name })}
           rows={2}
           disabled={conversation?.isLoading}
           onKeyDown={(e) => {
@@ -166,7 +180,7 @@ export function ChatPanel() {
           className={`chat-panel__send${sendPulse ? ' chat-panel__send--pulse' : ''}`}
           disabled={!input.trim() || conversation?.isLoading}
         >
-          Send
+          {t('chat.send')}
         </button>
       </form>
     </aside>

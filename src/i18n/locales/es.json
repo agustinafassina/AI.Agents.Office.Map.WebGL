@@ -1,0 +1,123 @@
+{
+  "hud": {
+    "eyebrow": "Espacio de trabajo isométrico",
+    "title": "AI Agents Office",
+    "hint": "Nav inferior para zonas · arrastrá para mover · elegí agentes para chatear",
+    "loadingAgents": "Cargando agentes…",
+    "noAgents": "No hay agentes disponibles",
+    "agentsAriaLabel": "Agentes de la oficina",
+    "viewMore": "Ver más",
+    "mockMode": "Modo mock",
+    "litellm": "LiteLLM",
+    "apiConfigured": "API configurada",
+    "modelsCount": "{{count}} modelos"
+  },
+  "locale": {
+    "label": "Idioma",
+    "ariaLabel": "Idioma",
+    "en": "EN",
+    "es": "ES"
+  },
+  "graphics": {
+    "label": "Calidad",
+    "ariaLabel": "Calidad gráfica",
+    "high": "Alta",
+    "balanced": "Media",
+    "low": "Baja"
+  },
+  "chat": {
+    "panelAriaLabel": "Chat con {{name}}",
+    "model": "Modelo",
+    "liveSource": " · LiteLLM",
+    "close": "Cerrar chat",
+    "emptyState": "Saludá a {{name}}. La conversación queda acá mientras explorás el mapa.",
+    "hintsPrefix": "Probá:",
+    "you": "Vos",
+    "placeholder": "Mensaje para {{name}}…",
+    "send": "Enviar",
+    "thinking": "Pensando",
+    "modelPickerAria": "Modelo LiteLLM para {{name}}",
+    "modelUnavailable": "{{modelId}} (no disponible)",
+    "serviceMock": "Mock LiteLLM",
+    "serviceLive": "Live",
+    "serviceDegraded": "Degradado",
+    "modelsBadge": "{{count}} modelos",
+    "commandFailed": "No pude moverme ahora; probá de nuevo en un momento.",
+    "sendFailed": "No se pudo enviar el mensaje"
+  },
+  "commands": {
+    "coffee": "ve a tomar cafe",
+    "relax": "relajate",
+    "desk": "vuelve al escritorio",
+    "ackCoffee": "Voy a la cafetería. Te sigo respondiendo desde la barra.",
+    "ackRelax": "Me muevo al living un rato. Seguimos en chat.",
+    "ackDesk": "Vuelvo a mi zona de trabajo."
+  },
+  "nav": {
+    "ariaLabel": "Secciones de la oficina",
+    "focusZone": "Enfocar {{label}}",
+    "all": "Todo",
+    "fullOffice": "Oficina completa",
+    "living": "Living",
+    "centerDesk": "Centro",
+    "cafeteria": "Café",
+    "wallDesks": "Desks"
+  },
+  "zoom": {
+    "ariaLabel": "Zoom del mapa",
+    "in": "Acercar",
+    "out": "Alejar",
+    "reset": "Restablecer zoom",
+    "recenter": "Recentrar vista"
+  },
+  "agentPicker": {
+    "title": "Todos los agentes",
+    "subtitle": "Elegí un agente para enfocar el mapa y abrir el chat",
+    "close": "Cerrar selector de agentes"
+  },
+  "agentCard": {
+    "title": "{{name}} · {{role}} · {{model}}",
+    "ariaLabel": "Chatear con {{name}}, {{role}}, modelo {{model}}"
+  },
+  "avatar": {
+    "thinking": "Pensando…",
+    "replying": "Respondiendo…",
+    "talking": "Conversando",
+    "inChat": "En chat",
+    "coffeeBreak": "Coffee break",
+    "inLine": "En la fila",
+    "moving": "En movimiento",
+    "available": "Disponible"
+  },
+  "zones": {
+    "living": {
+      "label": "Living",
+      "subtitle": "Puffs · mesa de reunión"
+    },
+    "centerDesk": {
+      "label": "Center Desk",
+      "subtitle": "Hub de equipo · 4 escritorios"
+    },
+    "cafeteria": {
+      "label": "Cafetería",
+      "subtitle": "Barra de café · lounge"
+    },
+    "wallDesks": {
+      "label": "Wall Desks",
+      "subtitle": "Estaciones privadas"
+    },
+    "hotspotFocus": "{{label}} · clic para enfocar"
+  },
+  "connection": {
+    "idle": "inactivo",
+    "connecting": "conectando",
+    "connected": "conectado",
+    "error": "error"
+  },
+  "follow": {
+    "start": "Seguir agente",
+    "stop": "Dejar de seguir",
+    "startAria": "Seguir a {{name}} mientras se mueve",
+    "stopAria": "Dejar de seguir a {{name}}"
+  }
+}

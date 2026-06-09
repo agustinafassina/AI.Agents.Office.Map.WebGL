@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 import { OFFICE_WORK_ZONES } from '@/config/officeZones';
 import { useActiveOfficeZone } from '@/hooks/useActiveOfficeZone';
+import {
+  ZONE_PLAQUE_LABEL_KEYS,
+  ZONE_SUBTITLE_KEYS,
+  type WorkZoneId,
+} from '@/i18n/navZones';
+import { useTranslation } from '@/i18n';
 import { Billboard, Text } from '@react-three/drei';
 import { materials } from './materials';
 
@@ -103,6 +109,7 @@ function ZonePlaque({
 }
 
 export function OfficeZoneIdentity() {
+  const { t } = useTranslation();
   const activeZoneId = useActiveOfficeZone();
 
   return (
@@ -110,6 +117,8 @@ export function OfficeZoneIdentity() {
       {OFFICE_WORK_ZONES.map((zone) => {
         if (!zone.hotspot || !zone.identity) return null;
         const isActive = activeZoneId === zone.id;
+        const zoneId = zone.id as WorkZoneId;
+
         return (
           <group key={zone.id}>
             <ZoneFloorAccent
@@ -119,8 +128,8 @@ export function OfficeZoneIdentity() {
               active={isActive}
             />
             <ZonePlaque
-              label={zone.label}
-              subtitle={zone.identity.subtitle}
+              label={t(ZONE_PLAQUE_LABEL_KEYS[zoneId])}
+              subtitle={t(ZONE_SUBTITLE_KEYS[zoneId])}
               accent={zone.accent}
               position={zone.identity.plaquePosition}
               active={isActive}

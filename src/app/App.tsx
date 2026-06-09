@@ -3,6 +3,7 @@ import { LazyChatPanel } from '@/components/ui/LazyChatPanel';
 import { OfficeHud } from '@/components/ui/OfficeHud';
 import { OfficeNavigation } from '@/components/ui/OfficeNavigation';
 import { ZoomControls } from '@/components/ui/ZoomControls';
+import { FollowAgentButton } from '@/components/ui/FollowAgentButton';
 import { useBootstrap } from '@/hooks/useBootstrap';
 import { useChatStore } from '@/stores/chat.store';
 import './App.css';
@@ -18,6 +19,7 @@ export function App() {
         <div className="app__vignette" aria-hidden />
         <OfficeHud />
         <OfficeNavigation />
+        <FollowAgentButton />
         <ZoomControls />
       </main>
       <LazyChatPanel />

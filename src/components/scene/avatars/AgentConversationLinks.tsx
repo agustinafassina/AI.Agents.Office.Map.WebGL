@@ -37,19 +37,29 @@ function ConversationArc({
   );
 }
 
-function UserChatHalo({ position }: { position: [number, number, number] }) {
+function UserChatHalo({
+  position,
+  mode,
+}: {
+  position: [number, number, number];
+  mode: 'active' | 'thinking' | 'streaming';
+}) {
   const ringRef = useRef<THREE.Mesh>(null);
+  const isThinking = mode === 'thinking';
 
   useFrame((state) => {
     if (!ringRef.current) return;
-    const pulse = 0.92 + Math.sin(state.clock.elapsedTime * 3.2) * 0.08;
+    const pulse = 0.92 + Math.sin(state.clock.elapsedTime * (isThinking ? 4.8 : 3.2)) * (isThinking ? 0.12 : 0.08);
     ringRef.current.scale.setScalar(pulse);
   });
+
+  const color = mode === 'thinking' ? '#d4a574' : mode === 'streaming' ? '#e2725b' : '#d4a574';
+  const opacity = mode === 'thinking' ? 0.38 : mode === 'streaming' ? 0.32 : 0.28;
 
   return (
     <mesh ref={ringRef} position={[position[0], 0.02, position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.42, 0.52, 32]} />
-      <meshBasicMaterial color="#d4a574" transparent opacity={0.28} />
+      <meshBasicMaterial color={color} transparent opacity={opacity} />
     </mesh>
   );
 }
@@ -57,9 +67,14 @@ function UserChatHalo({ position }: { position: [number, number, number] }) {
 export function AgentConversationLinks() {
   const peerConversations = useConversationVisualsStore((s) => s.peerConversations);
   const userChatAgentId = useConversationVisualsStore((s) => s.userChatAgentId);
+  const userChatMode = useConversationVisualsStore((s) => s.userChatMode);
   const runtime = useAgentsStore((s) => s.runtime);
 
   const userChatPos = userChatAgentId ? runtime[userChatAgentId]?.position : null;
+  const haloMode =
+    userChatMode === 'thinking' || userChatMode === 'streaming' || userChatMode === 'active'
+      ? userChatMode
+      : null;
 
   return (
     <group>
@@ -77,7 +92,7 @@ export function AgentConversationLinks() {
           />
         );
       })}
-      {userChatPos && <UserChatHalo position={userChatPos} />}
+      {userChatPos && haloMode && <UserChatHalo position={userChatPos} mode={haloMode} />}
     </group>
   );
 }

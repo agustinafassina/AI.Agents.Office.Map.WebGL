@@ -36,6 +36,7 @@ import {
 import { getWalkPoseFrame } from './agentWalkPose';
 import { CoffeeHandCup } from './CoffeeHandCup';
 import { ConversationSpeechBubble } from './ConversationSpeechBubble';
+import { AgentThinkingAura } from './AgentThinkingAura';
 import { OUTLINE_COLOR, softColor } from '../materials';
 import { clampToWalkable } from '@/utils/collision';
 import { lerpAngle } from '@/utils/movement';
@@ -100,7 +101,8 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const openChat = useChatStore((s) => s.openChat);
   const peerPartnerId = useConversationVisualsStore((s) => s.getPeerPartner(definition.id));
   const userChatAgentId = useConversationVisualsStore((s) => s.userChatAgentId);
-  const userChatStreaming = useConversationVisualsStore((s) => s.userChatStreaming);
+  const userChatMode = useConversationVisualsStore((s) => s.userChatMode);
+  const isUserChatAgent = userChatAgentId === definition.id;
   const peerPosition = useAgentsStore((s) =>
     peerPartnerId ? s.runtime[peerPartnerId]?.position : undefined,
   );
@@ -410,13 +412,18 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
 
   const socialChat = Boolean(peerPartnerId) && runtime.status !== 'chatting';
   const speechVariant =
-    runtime.status === 'chatting' && userChatAgentId === definition.id
-      ? userChatStreaming
-        ? 'user-streaming'
-        : 'user-chat'
+    runtime.status === 'chatting' && isUserChatAgent
+      ? userChatMode === 'thinking'
+        ? 'user-thinking'
+        : userChatMode === 'streaming'
+          ? 'user-streaming'
+          : 'user-chat'
       : socialChat
         ? 'peer'
         : null;
+
+  const showThinkingAura =
+    runtime.status === 'chatting' && isUserChatAgent && userChatMode === 'thinking';
 
   return (
     <group ref={groupRef} position={runtime.position} userData={{ blockPan: true }}>
@@ -500,6 +507,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         </group>
 
         {speechVariant && <ConversationSpeechBubble variant={speechVariant} />}
+        {showThinkingAura && <AgentThinkingAura />}
       </group>
 
       <AgentRoleLogo logoUrl={definition.logoUrl} accentColor={definition.accentColor} />
@@ -510,6 +518,7 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
         modelId={definition.modelId}
         status={status}
         socialChat={socialChat}
+        userChatMode={isUserChatAgent && runtime.status === 'chatting' ? userChatMode : 'off'}
         accentColor={definition.accentColor}
         selected={isSelected}
       />

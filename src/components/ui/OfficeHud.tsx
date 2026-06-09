@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
 import { env } from '@/config/env';
+import { useConnectionLabel } from '@/i18n/connectionLabel';
+import { useTranslation } from '@/i18n';
 import { useChatStore } from '@/stores/chat.store';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
 import type { AgentDefinition } from '@/types/agent';
 import { AgentHudCard } from './AgentHudCard';
 import { AgentPickerModal } from './AgentPickerModal';
+import { GraphicsQualityToggle } from './GraphicsQualityToggle';
+import { LocaleToggle } from './LocaleToggle';
 import './OfficeHud.css';
 
 const HUD_AGENT_PREVIEW_LIMIT = 3;
@@ -29,6 +33,8 @@ function getPreviewAgents(agents: AgentDefinition[], selectedAgentId: string | n
 }
 
 export function OfficeHud() {
+  const { t } = useTranslation();
+  const connectionLabel = useConnectionLabel(useChatStore((state) => state.connectionStatus));
   const serviceMode = useChatStore((state) => state.serviceMode);
   const connectionStatus = useChatStore((state) => state.connectionStatus);
   const models = useChatStore((state) => state.models);
@@ -54,17 +60,21 @@ export function OfficeHud() {
     <>
       <div className="office-hud">
         <div className="office-hud__brand">
-          <span className="office-hud__eyebrow">Isometric Workspace</span>
-          <span className="office-hud__title">AI Agents Office</span>
-          <span className="office-hud__hint">
-            Bottom nav for zones · drag to pan · select agents to chat
-          </span>
-          <div className="office-hud__agents" role="group" aria-label="Office agents">
+          <span className="office-hud__eyebrow">{t('hud.eyebrow')}</span>
+          <div className="office-hud__header">
+            <span className="office-hud__title">{t('hud.title')}</span>
+            <div className="office-hud__controls">
+              <LocaleToggle />
+              <GraphicsQualityToggle />
+            </div>
+          </div>
+          <span className="office-hud__hint">{t('hud.hint')}</span>
+          <div className="office-hud__agents" role="group" aria-label={t('hud.agentsAriaLabel')}>
             {connectionStatus === 'connecting' && (
-              <span className="office-hud__loading">Loading agents…</span>
+              <span className="office-hud__loading">{t('hud.loadingAgents')}</span>
             )}
             {connectionStatus !== 'connecting' && agents.length === 0 && (
-              <span className="office-hud__loading">No agents available</span>
+              <span className="office-hud__loading">{t('hud.noAgents')}</span>
             )}
             {previewAgents.map((agent) => (
               <AgentHudCard
@@ -85,7 +95,7 @@ export function OfficeHud() {
                 <span className="office-hud__view-more-icon" aria-hidden>
                   +
                 </span>
-                <span className="office-hud__view-more-label">View more</span>
+                <span className="office-hud__view-more-label">{t('hud.viewMore')}</span>
                 <span className="office-hud__view-more-count">+{overflowCount}</span>
               </button>
             )}
@@ -94,11 +104,13 @@ export function OfficeHud() {
         <div className="office-hud__status">
           <span className={`office-hud__dot office-hud__dot--${connectionStatus}`} />
           <span>
-            {serviceMode === 'mock' ? 'Mock mode' : 'LiteLLM'} · {connectionStatus}
-            {serviceMode === 'live' && models.length > 0 && ` · ${models.length} models`}
+            {serviceMode === 'mock' ? t('hud.mockMode') : t('hud.litellm')} · {connectionLabel}
+            {serviceMode === 'live' &&
+              models.length > 0 &&
+              ` · ${t('hud.modelsCount', { count: models.length })}`}
           </span>
           {!env.useMockLitellm && env.litellmApiKey && (
-            <span className="office-hud__live">API configured</span>
+            <span className="office-hud__live">{t('hud.apiConfigured')}</span>
           )}
         </div>
       </div>

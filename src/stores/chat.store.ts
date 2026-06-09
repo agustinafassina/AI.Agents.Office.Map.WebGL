@@ -14,11 +14,43 @@ import {
   writeAgentModelOverride,
 } from '@/utils/agentModelOverrides';
 import {
-  AGENT_COMMAND_ACK,
+  getCommandAck,
+  getCommandFailed,
+  getSendFailed,
+} from '@/i18n/commandMessages';
+import { useLocaleStore } from '@/stores/locale.store';
+import {
   parseAgentChatCommand,
 } from '@/utils/chatAgentCommands';
+import {
+  readChatConversations,
+  writeChatConversations,
+} from '@/utils/chatConversationsStorage';
 import { createId } from '@/utils/id';
 import { useAgentsStore } from './agents.store';
+
+const PERSIST_DEBOUNCE_MS = 800;
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
+function persistConversations(
+  getState: () => ChatStore,
+  immediate = false,
+): void {
+  if (immediate) {
+    if (persistTimer) {
+      clearTimeout(persistTimer);
+      persistTimer = null;
+    }
+    writeChatConversations(getState().conversations);
+    return;
+  }
+
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    writeChatConversations(getState().conversations);
+    persistTimer = null;
+  }, PERSIST_DEBOUNCE_MS);
+}
 
 interface ChatStore {
   isPanelOpen: boolean;
@@ -50,7 +82,7 @@ function syncSceneAgents(agents: AgentDefinition[]) {
 export const useChatStore = create<ChatStore>((set, get) => ({
   isPanelOpen: false,
   activeAgentId: null,
-  conversations: {},
+  conversations: readChatConversations(),
   models: [],
   connectionStatus: 'idle',
   serviceMode: 'mock',
@@ -158,13 +190,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const conv = conversations[agentId] ?? emptyConversation(agentId);
 
     if (command) {
+      const locale = useLocaleStore.getState().locale;
       const dispatched = useAgentsStore.getState().dispatchAgentCommand(agentId, command);
       const assistantMessage: ChatMessage = {
         id: createId('msg'),
         role: 'assistant',
-        content: dispatched
-          ? AGENT_COMMAND_ACK[command]
-          : 'No pude moverme ahora; probá de nuevo en un momento.',
+        content: dispatched ? getCommandAck(locale, command) : getCommandFailed(locale),
         timestamp: Date.now(),
       };
       conversations[agentId] = {
@@ -174,6 +205,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         error: null,
       };
       set({ conversations });
+      persistConversations(get, true);
       return;
     }
 
@@ -204,12 +236,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         msg.id === assistantId ? { ...msg, content: msg.content + chunk } : msg,
       );
 
-      set({
-        conversations: {
-          ...get().conversations,
-          [agentId]: { ...current, messages },
-        },
-      });
+      const nextConversations = {
+        ...get().conversations,
+        [agentId]: { ...current, messages },
+      };
+
+      set({ conversations: nextConversations });
+      persistConversations(get);
     };
 
     try {
@@ -242,8 +275,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         error: null,
       };
       set({ conversations, serviceMode: liteLLMService.mode });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to send message';
+      persistConversations(get, true);
+    } catch {
+      const locale = useLocaleStore.getState().locale;
+      const message = getSendFailed(locale);
       const current = get().conversations[agentId];
       if (!current) return;
 
@@ -258,6 +293,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         error: message,
       };
       set({ conversations, connectionStatus: 'error' });
+      persistConversations(get, true);
     }
   },
 }));

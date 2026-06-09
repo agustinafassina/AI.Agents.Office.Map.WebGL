@@ -1,18 +1,27 @@
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { OFFICE_PALETTE } from '@/config/agents.config';
 import { useAgentMovement } from '@/hooks/useAgentMovement';
+import { useGraphicsStore } from '@/stores/graphics.store';
+import {
+  isPostProcessingEnabled,
+  presetToFlags,
+  type GraphicsQualityFlags,
+} from '@/types/graphics';
 import { OfficeFloor } from './OfficeFloor';
 import { OfficeLayout } from './OfficeLayout';
 import { OfficeLighting } from './OfficeLighting';
 import { IsometricCamera } from './IsometricCamera';
+import { AgentFollowCamera } from './AgentFollowCamera';
 import { AgentsLayer } from './avatars/AgentsLayer';
 import { CameraPanHandler } from './CameraPanHandler';
 import { CameraZoomHandler } from './CameraZoomHandler';
 import { TextureWarmup } from './TextureWarmup';
 import { OptionalTextureLoader } from './OptionalTextureLoader';
 import { OfficeZoneHotspots } from './OfficeZoneHotspots';
+import { SceneErrorBoundary } from './SceneErrorBoundary';
+
 const OfficePostProcessing = lazy(() =>
   import('./OfficePostProcessing').then((module) => ({
     default: module.OfficePostProcessing,
@@ -21,7 +30,12 @@ const OfficePostProcessing = lazy(() =>
 
 const BG = OFFICE_PALETTE.sceneBackground;
 
-function SceneContents() {
+interface SceneContentsProps {
+  qualityFlags: GraphicsQualityFlags;
+  showPostProcessing: boolean;
+}
+
+function SceneContents({ qualityFlags, showPostProcessing }: SceneContentsProps) {
   useAgentMovement();
 
   return (
@@ -29,6 +43,7 @@ function SceneContents() {
       <TextureWarmup />
       <OptionalTextureLoader />
       <IsometricCamera />
+      <AgentFollowCamera />
       <CameraPanHandler />
       <CameraZoomHandler />
       <OfficeLighting />
@@ -45,14 +60,22 @@ function SceneContents() {
         color="#1e2f27"
       />
       <AgentsLayer />
-      <Suspense fallback={null}>
-        <OfficePostProcessing />
-      </Suspense>
+      {showPostProcessing && (
+        <SceneErrorBoundary>
+          <Suspense fallback={null}>
+            <OfficePostProcessing flags={qualityFlags} />
+          </Suspense>
+        </SceneErrorBoundary>
+      )}
     </>
   );
 }
 
 export function OfficeScene() {
+  const preset = useGraphicsStore((state) => state.preset);
+  const qualityFlags = useMemo(() => presetToFlags(preset), [preset]);
+  const showPostProcessing = isPostProcessingEnabled(preset);
+
   return (
     <Canvas
       orthographic
@@ -72,9 +95,10 @@ export function OfficeScene() {
     >
       <color attach="background" args={[BG]} />
       <fog attach="fog" args={[OFFICE_PALETTE.fog, 26, 50]} />
-      <Suspense fallback={null}>
-        <SceneContents />
-      </Suspense>
+      <SceneContents
+        qualityFlags={qualityFlags}
+        showPostProcessing={showPostProcessing}
+      />
     </Canvas>
   );
 }

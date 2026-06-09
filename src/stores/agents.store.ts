@@ -13,7 +13,10 @@ import {
   isAtCoffeeBarQueueSlot,
 } from '@/config/coffeeBarQueue';
 import { SCENE_CONFIG } from '@/config/agents.config';
+import type { AppLocale } from '@/i18n/types';
 import type { AgentDefinition, AgentRuntimeState, AgentStatus } from '@/types/agent';
+import { applyLocaleToAgents } from '@/utils/applyAgentLocale';
+import { readLocale } from '@/utils/localeStorage';
 import type { ChatAnchor } from '@/types/scene';
 import {
   distance2D,
@@ -37,10 +40,12 @@ import {
 } from '@/utils/collision';
 
 interface AgentsStore {
+  baseDefinitions: AgentDefinition[];
   definitions: AgentDefinition[];
   runtime: Record<string, AgentRuntimeState>;
   idleTimers: Record<string, number>;
   setDefinitions: (definitions: AgentDefinition[]) => void;
+  applyLocale: (locale: AppLocale) => void;
   initialize: () => void;
   tick: (delta: number) => void;
   beginChatSession: (id: string) => void;
@@ -256,21 +261,35 @@ function applyCoffeeQueueSync(
 }
 
 export const useAgentsStore = create<AgentsStore>((set, get) => ({
+  baseDefinitions: [],
   definitions: [],
   runtime: {},
   idleTimers: {},
 
   setDefinitions: (definitions) => {
-    set({ definitions, runtime: {}, idleTimers: {} });
+    const locale = readLocale();
+    set({
+      baseDefinitions: definitions,
+      definitions: applyLocaleToAgents(definitions, locale),
+      runtime: {},
+      idleTimers: {},
+    });
+  },
+
+  applyLocale: (locale) => {
+    const base = get().baseDefinitions;
+    if (base.length === 0) return;
+    set({ definitions: applyLocaleToAgents(base, locale) });
   },
 
   setAgentModelId: (id, modelId) => {
     const current = get().definitions.find((def) => def.id === id);
     if (!current || current.modelId === modelId) return;
+    const patch = (defs: AgentDefinition[]) =>
+      defs.map((def) => (def.id === id ? { ...def, modelId } : def));
     set({
-      definitions: get().definitions.map((def) =>
-        def.id === id ? { ...def, modelId } : def,
-      ),
+      baseDefinitions: patch(get().baseDefinitions),
+      definitions: patch(get().definitions),
     });
   },
 

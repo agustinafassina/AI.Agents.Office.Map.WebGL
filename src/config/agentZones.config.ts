@@ -46,14 +46,14 @@ export const ZONE_WAYPOINTS: Waypoint[] = [
     position: hubPerimeterPosition(HUB_WAYPOINT_ANGLE),
   },
   {
-    id: 'wp-center-nw',
-    zone: 'center-desk',
-    position: hubPerimeterPosition(-Math.PI + HUB_WAYPOINT_ANGLE),
-  },
-  {
     id: 'wp-center-sw',
     zone: 'center-desk',
     position: hubPerimeterPosition(Math.PI - HUB_WAYPOINT_ANGLE),
+  },
+  {
+    id: 'wp-center-nw',
+    zone: 'center-desk',
+    position: hubPerimeterPosition(-Math.PI + HUB_WAYPOINT_ANGLE),
   },
   {
     id: 'wp-living-puff',

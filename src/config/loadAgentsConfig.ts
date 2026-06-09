@@ -1,4 +1,5 @@
 import type { AgentDefinition, AgentHomeZone } from '@/types/agent';
+import { parseLocalizedField } from '@/i18n/localizedText';
 
 const HOME_ZONES: AgentHomeZone[] = ['center-desk', 'living', 'cafeteria', 'wall-desks'];
 
@@ -26,32 +27,52 @@ function parseAgentEntry(raw: unknown, index: number): AgentDefinition | null {
 
   const id = readString(raw, 'id');
   const name = readString(raw, 'name');
-  const role = readString(raw, 'role');
+  const roleField = parseLocalizedField(raw.role);
   const modelId = readString(raw, 'modelId');
   const logoUrl = readString(raw, 'logoUrl');
   const avatarColor = readString(raw, 'avatarColor');
   const accentColor = readString(raw, 'accentColor');
   const homeZone = readHomeZone(raw.homeZone);
 
-  if (!id || !name || !role || !modelId || !logoUrl || !avatarColor || !accentColor || !homeZone) {
+  if (
+    !id ||
+    !name ||
+    !roleField ||
+    !modelId ||
+    !logoUrl ||
+    !avatarColor ||
+    !accentColor ||
+    !homeZone
+  ) {
     console.warn(`[agents.json] Skipping agent at index ${index}: missing required fields`);
     return null;
   }
 
-  const systemPrompt = readString(raw, 'systemPrompt') ?? undefined;
+  const systemPromptField = parseLocalizedField(raw.systemPrompt);
   const wallDeskSlot = readWallDeskSlot(raw.wallDeskSlot);
 
   return {
     id,
     name,
-    role,
+    role: roleField.text,
     modelId,
     logoUrl,
     avatarColor,
     accentColor,
     homeZone,
     wallDeskSlot: homeZone === 'wall-desks' ? wallDeskSlot : undefined,
-    systemPrompt,
+    systemPrompt: systemPromptField?.text,
+    localized: {
+      role: { en: roleField.map.en, es: roleField.map.es ?? roleField.map.en },
+      ...(systemPromptField
+        ? {
+            systemPrompt: {
+              en: systemPromptField.map.en,
+              es: systemPromptField.map.es ?? systemPromptField.map.en,
+            },
+          }
+        : {}),
+    },
   };
 }
 

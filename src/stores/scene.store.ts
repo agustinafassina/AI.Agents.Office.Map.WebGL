@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { getAgentFocusView } from '@/config/agentFocusView';
+import { getOfficeZone, type OfficeZoneId } from '@/config/officeZones';
 import { resolveActiveOfficeZone } from '@/config/resolveActiveOfficeZone';
-import type { OfficeZoneId } from '@/config/officeZones';
 import { useAgentsStore } from '@/stores/agents.store';
 
 const MIN_ZOOM = 0.55;
@@ -11,7 +11,7 @@ const ZOOM_STEP = 0.12;
 const PAN_LIMIT_X = 5.8;
 const PAN_LIMIT_Z = 5.2;
 
-export type ViewIntent = 'agent-focus' | null;
+export type ViewIntent = 'agent-focus' | 'agent-follow' | 'zone-focus' | null;
 
 function clampZoom(value: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
@@ -21,15 +21,34 @@ function clampPan(value: number, limit: number): number {
   return Math.min(limit, Math.max(-limit, value));
 }
 
+function clearViewIntentOnManualCamera(viewIntent: ViewIntent) {
+  if (
+    viewIntent === 'agent-follow' ||
+    viewIntent === 'zone-focus' ||
+    viewIntent === 'agent-focus'
+  ) {
+    return {
+      followAgentId: null as string | null,
+      viewIntent: null as ViewIntent,
+    };
+  }
+  return { followAgentId: null, viewIntent };
+}
+
 interface SceneStore {
   selectedAgentId: string | null;
+  followAgentId: string | null;
   panOffset: [number, number, number];
   zoomLevel: number;
-  focusedZoneId: OfficeZoneId | null;
+  focusedZoneId: OfficeZoneId;
   viewIntent: ViewIntent;
   selectAgent: (id: string) => void;
   focusOnAgent: (id: string) => void;
   clearSelection: () => void;
+  setFollowAgent: (id: string | null) => void;
+  toggleFollowAgent: (id: string) => void;
+  setFollowPan: (x: number, z: number) => void;
+  focusZone: (id: OfficeZoneId) => void;
   addPan: (dx: number, dz: number) => void;
   setView: (pan: [number, number, number], zoom?: number, zoneId?: OfficeZoneId) => void;
   setZoomLevel: (level: number) => void;
@@ -42,9 +61,10 @@ interface SceneStore {
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
   selectedAgentId: null,
+  followAgentId: null,
   panOffset: [0, 0, 0],
   zoomLevel: DEFAULT_ZOOM,
-  focusedZoneId: null,
+  focusedZoneId: 'all',
   viewIntent: null,
 
   selectAgent: (id) =>
@@ -67,6 +87,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
 
     set({
       selectedAgentId: id,
+      followAgentId: null,
       panOffset,
       zoomLevel,
       focusedZoneId: def.homeZone,
@@ -77,8 +98,76 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   clearSelection: () =>
     set({
       selectedAgentId: null,
+      followAgentId: null,
       viewIntent: null,
     }),
+
+  setFollowAgent: (id) => {
+    if (id === null) {
+      set(clearViewIntentOnManualCamera(get().viewIntent));
+      return;
+    }
+
+    const def = useAgentsStore.getState().definitions.find((agent) => agent.id === id);
+    if (!def) return;
+
+    const runtime = useAgentsStore.getState().getRuntime(id);
+    const { pan, zoom } = getAgentFocusView(def, runtime?.position);
+    const panOffset: [number, number, number] = [
+      clampPan(pan[0], PAN_LIMIT_X),
+      0,
+      clampPan(pan[2], PAN_LIMIT_Z),
+    ];
+
+    set({
+      selectedAgentId: id,
+      followAgentId: id,
+      panOffset,
+      zoomLevel: clampZoom(zoom),
+      focusedZoneId: def.homeZone,
+      viewIntent: 'agent-follow',
+    });
+  },
+
+  toggleFollowAgent: (id) => {
+    if (get().followAgentId === id) {
+      get().setFollowAgent(null);
+      return;
+    }
+    get().setFollowAgent(id);
+  },
+
+  setFollowPan: (x, z) => {
+    const panOffset: [number, number, number] = [
+      clampPan(x, PAN_LIMIT_X),
+      0,
+      clampPan(z, PAN_LIMIT_Z),
+    ];
+    set({
+      panOffset,
+      focusedZoneId: resolveActiveOfficeZone(panOffset, get().zoomLevel),
+    });
+  },
+
+  focusZone: (id) => {
+    const zone = getOfficeZone(id);
+    if (!zone) return;
+
+    const panOffset: [number, number, number] = [
+      clampPan(zone.pan[0], PAN_LIMIT_X),
+      0,
+      clampPan(zone.pan[2], PAN_LIMIT_Z),
+    ];
+    const zoomLevel = clampZoom(zone.zoom);
+
+    set({
+      followAgentId: null,
+      panOffset,
+      zoomLevel,
+      focusedZoneId: id,
+      viewIntent: 'zone-focus',
+    });
+  },
 
   addPan: (dx, dz) => {
     const [x, y, z] = get().panOffset;
@@ -90,7 +179,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     set({
       panOffset,
       focusedZoneId: resolveActiveOfficeZone(panOffset, get().zoomLevel),
-      viewIntent: null,
+      ...clearViewIntentOnManualCamera(get().viewIntent),
     });
   },
 
@@ -105,7 +194,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       panOffset,
       zoomLevel,
       focusedZoneId: zoneId ?? resolveActiveOfficeZone(panOffset, zoomLevel),
-      viewIntent: null,
+      ...clearViewIntentOnManualCamera(get().viewIntent),
     });
   },
 
@@ -114,12 +203,12 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     set({
       zoomLevel,
       focusedZoneId: resolveActiveOfficeZone(get().panOffset, zoomLevel),
-      viewIntent: null,
+      ...clearViewIntentOnManualCamera(get().viewIntent),
     });
   },
 
   zoomAtWorldPoint: (delta, worldX, worldZ) => {
-    const { panOffset, zoomLevel: oldZoom } = get();
+    const { panOffset, zoomLevel: oldZoom, viewIntent } = get();
     const zoomLevel = clampZoom(oldZoom + delta);
     if (zoomLevel === oldZoom) return;
 
@@ -135,36 +224,38 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       zoomLevel,
       panOffset: nextPan,
       focusedZoneId: resolveActiveOfficeZone(nextPan, zoomLevel),
-      viewIntent: null,
+      ...clearViewIntentOnManualCamera(viewIntent),
     });
   },
 
-  zoomIn: () =>
+  zoomIn: () => {
+    const zoomLevel = clampZoom(get().zoomLevel - ZOOM_STEP);
     set({
-      zoomLevel: clampZoom(get().zoomLevel - ZOOM_STEP),
-      focusedZoneId: resolveActiveOfficeZone(get().panOffset, clampZoom(get().zoomLevel - ZOOM_STEP)),
-      viewIntent: null,
-    }),
+      zoomLevel,
+      focusedZoneId: resolveActiveOfficeZone(get().panOffset, zoomLevel),
+      ...clearViewIntentOnManualCamera(get().viewIntent),
+    });
+  },
 
-  zoomOut: () =>
+  zoomOut: () => {
+    const zoomLevel = clampZoom(get().zoomLevel + ZOOM_STEP);
     set({
-      zoomLevel: clampZoom(get().zoomLevel + ZOOM_STEP),
-      focusedZoneId: resolveActiveOfficeZone(get().panOffset, clampZoom(get().zoomLevel + ZOOM_STEP)),
-      viewIntent: null,
-    }),
+      zoomLevel,
+      focusedZoneId: resolveActiveOfficeZone(get().panOffset, zoomLevel),
+      ...clearViewIntentOnManualCamera(get().viewIntent),
+    });
+  },
 
-  resetZoom: () =>
+  resetZoom: () => {
+    const zoomLevel = DEFAULT_ZOOM;
     set({
-      zoomLevel: DEFAULT_ZOOM,
-      focusedZoneId: resolveActiveOfficeZone(get().panOffset, DEFAULT_ZOOM),
-      viewIntent: null,
-    }),
+      zoomLevel,
+      focusedZoneId: resolveActiveOfficeZone(get().panOffset, zoomLevel),
+      ...clearViewIntentOnManualCamera(get().viewIntent),
+    });
+  },
 
-  resetView: () =>
-    set({
-      zoomLevel: DEFAULT_ZOOM,
-      panOffset: [0, 0, 0],
-      focusedZoneId: 'all',
-      viewIntent: null,
-    }),
+  resetView: () => {
+    get().focusZone('all');
+  },
 }));
