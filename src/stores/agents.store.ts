@@ -373,7 +373,8 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       return true;
     }
 
-    const zone = command === 'relax' ? 'living' : def.homeZone;
+    const zone =
+      command === 'relax' ? 'living' : command === 'focus' ? 'center-desk' : def.homeZone;
     const zoneWaypoints = getZoneWaypoints(zone);
     if (zoneWaypoints.length === 0) return false;
 
@@ -383,7 +384,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             const puffIdx = zoneWaypoints.findIndex((wp) => wp.id === 'wp-living-puff');
             return puffIdx >= 0 ? puffIdx : nearestZoneWaypointIndex(zone, state.position);
           })()
-        : nearestZoneWaypointIndex(def.homeZone, state.position);
+        : nearestZoneWaypointIndex(zone, state.position);
 
     const target = resolveWalkTarget(state.position, [
       ...zoneWaypoints[wpIndex].position,

@@ -28,6 +28,7 @@ import {
 } from '@/utils/chatConversationsStorage';
 import { createId } from '@/utils/id';
 import { useAgentsStore } from './agents.store';
+import { useSceneStore } from './scene.store';
 
 const PERSIST_DEBOUNCE_MS = 800;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -192,6 +193,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (command) {
       const locale = useLocaleStore.getState().locale;
       const dispatched = useAgentsStore.getState().dispatchAgentCommand(agentId, command);
+      if (dispatched && command === 'focus') {
+        useSceneStore.getState().focusZone('center-desk');
+      }
       const assistantMessage: ChatMessage = {
         id: createId('msg'),
         role: 'assistant',

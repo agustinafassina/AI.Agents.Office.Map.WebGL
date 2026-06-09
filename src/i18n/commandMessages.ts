@@ -8,6 +8,7 @@ const COMMAND_ACK_KEYS: Record<AgentChatCommand, TranslationKey> = {
   coffee: 'commands.ackCoffee',
   relax: 'commands.ackRelax',
   desk: 'commands.ackDesk',
+  focus: 'commands.ackFocus',
 };
 
 export function getCommandAck(locale: AppLocale, command: AgentChatCommand): string {

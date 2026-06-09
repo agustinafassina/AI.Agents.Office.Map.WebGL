@@ -29,4 +29,5 @@ export const COMMAND_HINT_KEYS = [
   'commands.coffee',
   'commands.relax',
   'commands.desk',
+  'commands.focus',
 ] as const satisfies readonly TranslationKey[];

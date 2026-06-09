@@ -51,7 +51,9 @@
     "desk": "back to desk",
     "ackCoffee": "Heading to the café. I'll keep replying from the bar.",
     "ackRelax": "Moving to the living area for a bit. Chat stays open.",
-    "ackDesk": "Heading back to my workspace."
+    "ackDesk": "Heading back to my workspace.",
+    "focus": "go to hub",
+    "ackFocus": "Heading to the center hub. I'll keep replying from the team desk."
   },
   "nav": {
     "ariaLabel": "Office sections",

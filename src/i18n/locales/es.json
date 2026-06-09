@@ -51,7 +51,9 @@
     "desk": "vuelve al escritorio",
     "ackCoffee": "Voy a la cafetería. Te sigo respondiendo desde la barra.",
     "ackRelax": "Me muevo al living un rato. Seguimos en chat.",
-    "ackDesk": "Vuelvo a mi zona de trabajo."
+    "ackDesk": "Vuelvo a mi zona de trabajo.",
+    "focus": "ve al hub",
+    "ackFocus": "Voy al hub central. Sigo respondiendo desde el escritorio del equipo."
   },
   "nav": {
     "ariaLabel": "Secciones de la oficina",

@@ -1,4 +1,4 @@
-export type AgentChatCommand = 'coffee' | 'relax' | 'desk';
+export type AgentChatCommand = 'coffee' | 'relax' | 'desk' | 'focus';
 
 const ACCENT_STRIP = /[^\p{L}\p{N}\s]/gu;
 
@@ -33,6 +33,17 @@ export function parseAgentChatCommand(content: string): AgentChatCommand | null 
     /^take a break$/.test(text)
   ) {
     return 'relax';
+  }
+
+  if (
+    /^(focus|enfoca|enfocar|enfocate)\b/.test(text) ||
+    /^(ve a |ir a |go to )?(the )?(center|centro|hub|team hub)\b/.test(text) ||
+    /^(vuelve|volvi|regresa|back) (a |al |to )?(the )?(hub|centro)\b/.test(text) ||
+    /^center desk$/.test(text) ||
+    text === 'hub' ||
+    text === 'centro'
+  ) {
+    return 'focus';
   }
 
   if (
