@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useChatStore } from '@/stores/chat.store';
 import { useAgentsStore } from '@/stores/agents.store';
+import { preloadChatAssets } from '@/utils/preloadChatPanel';
 
 export function useBootstrap() {
   const bootstrap = useChatStore((state) => state.bootstrap);
@@ -20,4 +21,10 @@ export function useAgentBootstrap() {
     if (definitions.length === 0) return;
     initialize();
   }, [connectionStatus, definitions, initialize]);
+}
+
+export function useChatPanelPreload() {
+  useEffect(() => {
+    preloadChatAssets();
+  }, []);
 }

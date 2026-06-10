@@ -1,3 +1,4 @@
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD, FURNITURE_EDGE_THRESHOLD_SOFT } from './FurnitureEdges';
 import { materials } from '../materials';
 import { Plant } from './Plants';
 import {
@@ -22,12 +23,15 @@ function CoffeeBarStation() {
     <group position={[0, 0, BAR_STATION_LOCAL_Z]}>
       <mesh position={[0, 0.51, -0.04]} castShadow material={materials.wallMarble}>
         <boxGeometry args={[2.55, 0.72, 0.04]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.51, 0]} castShadow material={materials.woodDark}>
         <boxGeometry args={[2.45, 1.02, 0.6]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 1.01, 0.08]} castShadow material={materials.woodLight}>
         <boxGeometry args={[2.35, 0.07, 0.54]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.74, 0.24]} material={materials.underGlow}>
         <boxGeometry args={[2.2, 0.03, 0.1]} />
@@ -43,9 +47,11 @@ function CoffeeBarStation() {
 
       <mesh position={[-0.08, 0.88, -0.06]} castShadow material={materials.woodLight}>
         <boxGeometry args={[0.72, 0.38, 0.02]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[-0.08, 0.88, -0.045]} material={materials.sage}>
         <boxGeometry args={[0.62, 0.28, 0.006]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[-0.08, 0.92, -0.038]} material={materials.espresso}>
         <boxGeometry args={[0.08, 0.08, 0.004]} />
@@ -56,6 +62,7 @@ function CoffeeBarStation() {
 
       <mesh position={[0.58, 1.1, -0.1]} castShadow material={materials.woodLight}>
         <boxGeometry args={[1.15, 0.04, 0.26]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0.58, 1.07, -0.08]} castShadow material={materials.woodDark}>
         <boxGeometry args={[1.05, 0.025, 0.04]} />
@@ -88,6 +95,7 @@ export function CoffeeLounge() {
         <group position={[0, 0, LIVING_WALL_LOCAL_Z]}>
           <mesh position={[0, 0.98, 0]} material={materials.sageDark}>
             <boxGeometry args={[6, 2.1, 0.13]} />
+            <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
           </mesh>
           <mesh position={[0, 0.48, 0.07]} material={materials.sage}>
             <boxGeometry args={[5.8, 0.04, 0.02]} />

@@ -10,14 +10,13 @@
   position: absolute;
   left: 50%;
   bottom: 1px;
-  width: calc(var(--avatar-size) * 0.54);
-  height: calc(var(--avatar-size) * 0.4);
+  width: calc(var(--avatar-size) * 0.52);
+  height: calc(var(--avatar-size) * 0.38);
   transform: translateX(-50%);
-  border-radius: 2px;
+  border-radius: 3px 3px 2px 2px;
   background: var(--shirt);
-  box-shadow:
-    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  z-index: 1;
 }
 
 .agent-hud-avatar__body::after {
@@ -29,7 +28,7 @@
   height: 28%;
   transform: translateX(-50%);
   border-radius: 1px;
-  background: var(--hair);
+  background: var(--accent);
   opacity: 0.85;
 }
 
@@ -38,44 +37,53 @@
   left: 50%;
   top: calc(var(--avatar-size) * 0.16);
   width: calc(var(--avatar-size) * 0.44);
-  height: calc(var(--avatar-size) * 0.38);
+  height: calc(var(--avatar-size) * 0.42);
   transform: translateX(-50%);
-  border-radius: 3px;
-  background: #9aa3ac;
+  border-radius: 50%;
+  background: var(--skin);
   box-shadow:
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  z-index: 1;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  z-index: 2;
 }
 
 .agent-hud-avatar__head::before,
 .agent-hud-avatar__head::after {
   content: '';
   position: absolute;
-  top: 38%;
-  width: 22%;
-  height: 18%;
-  border-radius: 1px;
-  background: var(--hair);
-  box-shadow: 0 0 4px color-mix(in srgb, var(--hair) 70%, transparent);
+  top: 40%;
+  width: 18%;
+  height: 14%;
+  border-radius: 50%;
+  background: #2a3228;
 }
 
 .agent-hud-avatar__head::before {
-  left: 16%;
+  left: 22%;
 }
 
 .agent-hud-avatar__head::after {
-  right: 16%;
+  right: 22%;
+}
+
+.agent-hud-avatar--freddie-mercury .agent-hud-avatar__head::before,
+.agent-hud-avatar--freddie-mercury .agent-hud-avatar__head::after {
+  top: auto;
+  bottom: 28%;
+  width: 20%;
+  height: 8%;
+  border-radius: 1px;
+  background: var(--hair);
 }
 
 .agent-hud-avatar__dreads {
   position: absolute;
   left: 50%;
-  top: calc(var(--avatar-size) * 0.02);
-  width: calc(var(--avatar-size) * 0.52);
-  height: calc(var(--avatar-size) * 0.34);
+  top: calc(var(--avatar-size) * -0.02);
+  width: calc(var(--avatar-size) * 0.6);
+  height: calc(var(--avatar-size) * 0.48);
   transform: translateX(-50%);
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
 
@@ -94,6 +102,108 @@
   transform-origin: top center;
 }
 
+.agent-hud-avatar--bob-marley .agent-hud-avatar__dread {
+  width: calc(var(--avatar-size) * 0.065);
+}
+
+.agent-hud-avatar--shakira .agent-hud-avatar__dread {
+  width: calc(var(--avatar-size) * 0.055);
+  border-radius: 40% 40% 999px 999px;
+}
+
+.agent-hud-avatar--michael-jackson .agent-hud-avatar__dread {
+  width: calc(var(--avatar-size) * 0.05);
+  border-radius: 35% 35% 999px 999px;
+}
+
+.agent-hud-avatar--michael-jackson .agent-hud-avatar__body::after {
+  background: linear-gradient(
+    180deg,
+    #a82020 0%,
+    #a82020 45%,
+    transparent 46%
+  );
+  width: 50%;
+  height: 55%;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  opacity: 1;
+}
+
+.agent-hud-avatar__fedora {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--avatar-size) * 0.05);
+  width: calc(var(--avatar-size) * 0.54);
+  height: calc(var(--avatar-size) * 0.14);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #1c1c24;
+  z-index: 5;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.agent-hud-avatar__fedora::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 72%;
+  height: 22%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #a82020;
+}
+
+.agent-hud-avatar__fedora::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  width: 140%;
+  height: 38%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #121218;
+}
+
+.agent-hud-avatar__glove {
+  position: absolute;
+  right: calc(var(--avatar-size) * 0.04);
+  bottom: calc(var(--avatar-size) * 0.1);
+  width: calc(var(--avatar-size) * 0.12);
+  height: calc(var(--avatar-size) * 0.12);
+  border-radius: 50%;
+  background: #f4f2ee;
+  z-index: 4;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.45);
+}
+
+.agent-hud-avatar__tam {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--avatar-size) * 0.08);
+  width: calc(var(--avatar-size) * 0.5);
+  height: calc(var(--avatar-size) * 0.09);
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: #b83232;
+  z-index: 5;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.agent-hud-avatar__tam::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 80%;
+  height: calc(var(--avatar-size) * 0.04);
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: #c9a227;
+  opacity: 0.85;
+}
+
 .agent-hud-avatar--selected .agent-hud-avatar__body {
   box-shadow:
     0 0 0 1px rgba(255, 233, 168, 0.85),
@@ -103,7 +213,7 @@
 
 .agent-hud-avatar--selected .agent-hud-avatar__head::before,
 .agent-hud-avatar--selected .agent-hud-avatar__head::after {
-  box-shadow: 0 0 5px color-mix(in srgb, var(--hair) 90%, transparent);
+  box-shadow: none;
 }
 
 .agent-hud-avatar--selected .agent-hud-avatar__dread {

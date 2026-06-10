@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD, FURNITURE_EDGE_THRESHOLD_SOFT } from './FurnitureEdges';
 import { materials } from '../materials';
 import { DeskSucculent, DeskMug, DeskNotebook, PenCup } from './decor/SceneDecor';
 
@@ -49,6 +50,7 @@ function MonitorScreen({ x, w, h, d }: { x: number; w: number; h: number; d: num
     <group position={[x, 0, 0]}>
       <mesh castShadow material={materials.monitorBezel}>
         <boxGeometry args={[w, h + 0.06, d + 0.02]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.015, d / 2 + 0.004]} material={materials.monitor}>
         <boxGeometry args={[w * 0.9, h, 0.008]} />
@@ -70,6 +72,7 @@ export function KeyboardMouse({
     <group position={[x, y, z]}>
       <mesh material={materials.monitor}>
         <boxGeometry args={[0.24, 0.01, 0.09]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0.16, 0.008, 0.05]} material={materials.metal}>
         <boxGeometry args={[0.038, 0.012, 0.055]} />
@@ -185,6 +188,7 @@ export function ErgonomicChairMesh({
       <group position={[0, 0.19, 0.04]} rotation={[-0.07, 0, 0]}>
         <mesh position={[0, 0.085, 0.04]} castShadow material={color}>
           <boxGeometry args={[0.42, 0.1, 0.36]} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
         </mesh>
         <mesh position={[0, 0.1, 0.22]} castShadow material={color}>
           <boxGeometry args={[0.36, 0.07, 0.08]} />
@@ -211,6 +215,7 @@ export function ErgonomicChairMesh({
         <group position={[0, 0.24, -0.18]} rotation={[-0.26, 0, 0]}>
           <mesh castShadow material={color}>
             <boxGeometry args={[0.4, 0.46, 0.07]} />
+            <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
           </mesh>
           <mesh position={[-0.19, 0.06, -0.015]} castShadow material={accent} rotation={[0, 0.22, 0]}>
             <boxGeometry args={[0.08, 0.38, 0.06]} />
@@ -298,6 +303,7 @@ export function VintageGlobe() {
     <group position={[0, 0.54, 0]}>
       <mesh castShadow material={materials.sageDark}>
         <sphereGeometry args={[0.12, 18, 16]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.4, 0]} material={materials.woodDark}>
         <cylinderGeometry args={[0.025, 0.03, 0.08, 8]} />

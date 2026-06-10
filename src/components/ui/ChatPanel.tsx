@@ -7,26 +7,51 @@ import { useChatStore } from '@/stores/chat.store';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
 import { formatModelDisplayName } from '@/utils/agentModel';
-import { ChatMessageBody } from './ChatMessageBody';
+import { LazyChatMessageBody } from './LazyChatMessageBody';
 import './ChatPanel.css';
 
 export function ChatPanel() {
+  const isOpen = useChatStore((state) => state.isPanelOpen);
+  const activeAgentId = useChatStore((state) => state.activeAgentId);
+  const mountedRef = useRef(isOpen);
+
+  if (isOpen) {
+    mountedRef.current = true;
+  }
+
+  if (!mountedRef.current || !activeAgentId) {
+    return null;
+  }
+
+  return <ChatPanelContent visible={isOpen} />;
+}
+
+function ChatPanelContent({ visible }: { visible: boolean }) {
   const { t, locale } = useTranslation();
   const connectionLabel = useConnectionLabel(useChatStore((s) => s.connectionStatus));
-  const isOpen = useChatStore((s) => s.isPanelOpen);
   const activeAgentId = useChatStore((s) => s.activeAgentId);
   const closeChat = useChatStore((s) => s.closeChat);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const agent = useAgentsStore((s) =>
     activeAgentId ? s.definitions.find((d) => d.id === activeAgentId) ?? null : null,
   );
-  const conversation = useChatStore((s) => s.getActiveConversation());
+  const agentModelId = useAgentsStore((s) =>
+    activeAgentId
+      ? s.definitions.find((d) => d.id === activeAgentId)?.modelId ?? null
+      : null,
+  );
+  const conversation = useChatStore((s) => {
+    const id = s.activeAgentId;
+    if (!id) return null;
+    return s.conversations[id] ?? null;
+  });
   const connectionStatus = useChatStore((s) => s.connectionStatus);
   const serviceMode = useChatStore((s) => s.serviceMode);
   const models = useChatStore((s) => s.models);
   const resolveModelLabel = useChatStore((s) => s.resolveModelLabel);
   const isModelAvailableOnApi = useChatStore((s) => s.isModelAvailableOnApi);
   const setActiveAgentModel = useChatStore((s) => s.setActiveAgentModel);
+  const modelSwitchNotice = useChatStore((s) => s.modelSwitchNotice);
   const clearActiveConversation = useChatStore((s) => s.clearActiveConversation);
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
@@ -36,15 +61,16 @@ export function ChatPanel() {
   const lastMessageContent = conversation?.messages.at(-1)?.content ?? '';
 
   useEffect(() => {
+    if (!visible) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages.length, conversation?.isLoading, lastMessageContent]);
+  }, [visible, conversation?.messages.length, conversation?.isLoading, lastMessageContent]);
 
-  if (!isOpen || !agent) return null;
+  if (!agent) return null;
 
   const commandHints = getCommandHints(locale);
   const roleHints = getRoleHints(locale, agent.id);
-  const modelLabel = resolveModelLabel(agent.modelId);
-  const modelAvailable = isModelAvailableOnApi(agent.modelId);
+  const modelLabel = resolveModelLabel(agentModelId ?? agent.modelId);
+  const modelAvailable = isModelAvailableOnApi(agentModelId ?? agent.modelId);
 
   const handleClose = () => {
     closeChat();
@@ -69,7 +95,11 @@ export function ChatPanel() {
         : t('chat.serviceDegraded');
 
   return (
-    <aside className="chat-panel" aria-label={t('chat.panelAriaLabel', { name: agent.name })}>
+    <aside
+      className="chat-panel"
+      aria-hidden={!visible}
+      aria-label={t('chat.panelAriaLabel', { name: agent.name })}
+    >
       <header className="chat-panel__header">
         <div className="chat-panel__agent">
           <img src={agent.logoUrl} alt="" className="chat-panel__logo" />
@@ -83,14 +113,14 @@ export function ChatPanel() {
                   className={`chat-panel__model-picker${
                     serviceMode === 'live' && !modelAvailable ? ' chat-panel__model-picker--missing' : ''
                   }`}
-                  value={agent.modelId}
+                  value={agentModelId ?? agent.modelId}
                   disabled={conversation?.isLoading}
                   aria-label={t('chat.modelPickerAria', { name: agent.name })}
                   onChange={(e) => setActiveAgentModel(e.target.value)}
                 >
-                  {!models.some((model) => model.id === agent.modelId) && (
-                    <option value={agent.modelId}>
-                      {t('chat.modelUnavailable', { modelId: agent.modelId })}
+                  {!models.some((model) => model.id === (agentModelId ?? agent.modelId)) && (
+                    <option value={agentModelId ?? agent.modelId}>
+                      {t('chat.modelUnavailable', { modelId: agentModelId ?? agent.modelId })}
                     </option>
                   )}
                   {models.map((model) => (
@@ -124,6 +154,11 @@ export function ChatPanel() {
           {connectionLabel}
         </span>
         <span className="chat-panel__badge chat-panel__badge--mode">{serviceBadge}</span>
+        {models.length > 0 && (
+          <span className="chat-panel__badge chat-panel__badge--model">
+            {formatModelDisplayName(agentModelId ?? agent.modelId)}
+          </span>
+        )}
         {serviceMode === 'live' && models.length > 0 && (
           <span className="chat-panel__badge chat-panel__badge--models">
             {t('chat.modelsBadge', { count: models.length })}
@@ -141,7 +176,12 @@ export function ChatPanel() {
       </div>
 
       <div className="chat-panel__messages">
-        {conversation?.messages.length === 0 && (
+        {modelSwitchNotice && (
+          <p className="chat-panel__system-note" role="status">
+            {modelSwitchNotice}
+          </p>
+        )}
+        {conversation?.messages.length === 0 && !modelSwitchNotice && (
           <div className="chat-panel__empty">
             <p>{t('chat.emptyState', { name: agent.name })}</p>
             {roleHints.length > 0 && (
@@ -165,7 +205,7 @@ export function ChatPanel() {
               {msg.role === 'user' ? t('chat.you') : agent.name}
             </span>
             {msg.role === 'assistant' ? (
-              <ChatMessageBody content={msg.content} streaming={msg.streaming} />
+              <LazyChatMessageBody content={msg.content} streaming={msg.streaming} />
             ) : (
               <p className="chat-panel__message-text">{msg.content}</p>
             )}

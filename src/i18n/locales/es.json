@@ -32,6 +32,7 @@
     "close": "Cerrar chat",
     "clearHistory": "Borrar chat",
     "clearHistoryAria": "Borrar conversación guardada con {{name}}",
+    "modelSwitched": "Cambiaste al modelo {{model}}",
     "emptyState": "Saludá a {{name}}. La conversación queda acá mientras explorás el mapa.",
     "hintsPrefix": "Probá:",
     "roleHintsPrefix": "Preguntá:",
@@ -145,6 +146,12 @@
       "hint1": "Escribí criterios de aceptación",
       "hint2": "Priorizá estas tres ideas"
     }
+  },
+  "avatarDesigns": {
+    "bobMarley": "Bob Marley",
+    "michaelJackson": "Michael Jackson",
+    "freddieMercury": "Freddie Mercury",
+    "shakira": "Shakira"
   },
   "sceneContext": {
     "header": "Contexto de oficina en vivo (se actualiza en cada mensaje):",

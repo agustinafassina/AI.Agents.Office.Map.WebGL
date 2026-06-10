@@ -14,6 +14,16 @@ export default defineConfig({
           ) {
             return 'postprocessing';
           }
+          if (
+            id.includes('node_modules/react-markdown') ||
+            id.includes('node_modules/remark-gfm') ||
+            id.includes('node_modules/remark-') ||
+            id.includes('node_modules/micromark') ||
+            id.includes('node_modules/mdast-') ||
+            id.includes('node_modules/unist-')
+          ) {
+            return 'markdown';
+          }
         },
       },
     },

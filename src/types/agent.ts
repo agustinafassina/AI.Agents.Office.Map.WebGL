@@ -1,4 +1,5 @@
 import type { OfficeZoneId } from '@/config/officeZones';
+import type { AvatarDesignId } from '@/types/avatarDesign';
 
 export type AgentStatus = 'idle' | 'walking' | 'chatting' | 'coffee' | 'coffee-queue';
 
@@ -17,6 +18,7 @@ export interface AgentDefinition {
   logoUrl: string;
   avatarColor: string;
   accentColor: string;
+  avatarDesignId?: AvatarDesignId;
   homeZone: AgentHomeZone;
   wallDeskSlot?: 0 | 1 | 2;
   systemPrompt?: string;

@@ -32,6 +32,7 @@
     "close": "Close chat",
     "clearHistory": "Clear chat",
     "clearHistoryAria": "Clear saved conversation with {{name}}",
+    "modelSwitched": "Switched to {{model}}",
     "emptyState": "Say hello to {{name}}. Conversation stays here while you explore the map.",
     "hintsPrefix": "Try:",
     "roleHintsPrefix": "Ask:",
@@ -145,6 +146,12 @@
       "hint1": "Write acceptance criteria",
       "hint2": "Prioritize these three ideas"
     }
+  },
+  "avatarDesigns": {
+    "bobMarley": "Bob Marley",
+    "michaelJackson": "Michael Jackson",
+    "freddieMercury": "Freddie Mercury",
+    "shakira": "Shakira"
   },
   "sceneContext": {
     "header": "Live office context (refreshed each message):",

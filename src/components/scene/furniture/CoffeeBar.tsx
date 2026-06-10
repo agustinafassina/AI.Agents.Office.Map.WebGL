@@ -1,15 +1,20 @@
-import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CoffeeSteam } from './decor/CoffeeSteam';
-import { materials, OUTLINE_COLOR } from '../materials';
+import {
+  FurnitureEdges,
+  FURNITURE_EDGE_THRESHOLD,
+  FURNITURE_EDGE_THRESHOLD_SOFT,
+} from './FurnitureEdges';
+import { materials } from '../materials';
 
 export function CoffeeGrinder({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh castShadow material={materials.espresso}>
         <boxGeometry args={[0.15, 0.3, 0.15]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.19, 0]} castShadow material={materials.metal}>
         <cylinderGeometry args={[0.075, 0.085, 0.11, 12]} />
@@ -45,7 +50,7 @@ export function EspressoMachine({
     <group position={position} scale={scale}>
       <mesh position={[0, 0.03, 0.06]} castShadow material={materials.metal}>
         <boxGeometry args={[0.58, 0.06, 0.38]} />
-        <Edges color={OUTLINE_COLOR} threshold={14} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       {[-0.18, -0.06, 0.06, 0.18].map((x, i) => (
         <mesh key={i} position={[x, 0.065, 0.14]} material={materials.espresso}>
@@ -55,7 +60,7 @@ export function EspressoMachine({
 
       <mesh position={[0, 0.29, -0.04]} castShadow material={materials.espresso}>
         <boxGeometry args={[0.5, 0.42, 0.3]} />
-        <Edges color={OUTLINE_COLOR} threshold={12} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
 
       <mesh position={[0, 0.37, 0.08]} material={materials.metal}>
@@ -141,6 +146,7 @@ export function MilkPitcher({ position }: { position: [number, number, number] }
     <group position={position}>
       <mesh material={materials.metal}>
         <cylinderGeometry args={[0.035, 0.045, 0.08, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0.03, 0.02, 0]} rotation={[0, 0, 0.4]} material={materials.metal}>
         <torusGeometry args={[0.022, 0.006, 6, 10, Math.PI]} />
@@ -154,6 +160,7 @@ export function CoffeeCanister({ position }: { position: [number, number, number
     <group position={position}>
       <mesh castShadow material={materials.espresso}>
         <cylinderGeometry args={[0.045, 0.05, 0.11, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.06, 0]} material={materials.metal}>
         <cylinderGeometry args={[0.048, 0.048, 0.015, 10]} />

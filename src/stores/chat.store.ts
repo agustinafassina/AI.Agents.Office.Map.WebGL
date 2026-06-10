@@ -6,6 +6,7 @@ import type { AgentDefinition } from '@/types/agent';
 import type { ChatMessage, ConnectionStatus, ConversationState } from '@/types/chat';
 import type { LiteLLMModel } from '@/types/litellm';
 import {
+  formatModelDisplayName,
   isAgentModelAvailableOnApi,
   resolveAgentModelLabel,
 } from '@/utils/agentModel';
@@ -18,6 +19,7 @@ import {
   getCommandFailed,
   getSendFailed,
 } from '@/i18n/commandMessages';
+import { translate } from '@/i18n/translate';
 import { useLocaleStore } from '@/stores/locale.store';
 import {
   parseAgentChatCommand,
@@ -28,11 +30,14 @@ import {
 } from '@/utils/chatConversationsStorage';
 import { createId } from '@/utils/id';
 import { buildSystemPromptWithSceneContext } from '@/utils/buildAgentSceneContext';
+import { preloadChatAssets } from '@/utils/preloadChatPanel';
 import { useAgentsStore } from './agents.store';
 import { useSceneStore } from './scene.store';
 
 const PERSIST_DEBOUNCE_MS = 800;
+const MODEL_SWITCH_NOTICE_MS = 3200;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
+let modelSwitchNoticeTimer: ReturnType<typeof setTimeout> | null = null;
 
 function persistConversations(
   getState: () => ChatStore,
@@ -58,6 +63,7 @@ interface ChatStore {
   isPanelOpen: boolean;
   activeAgentId: string | null;
   conversations: Record<string, ConversationState>;
+  modelSwitchNotice: string | null;
   models: LiteLLMModel[];
   connectionStatus: ConnectionStatus;
   serviceMode: 'mock' | 'live' | 'error';
@@ -86,6 +92,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isPanelOpen: false,
   activeAgentId: null,
   conversations: readChatConversations(),
+  modelSwitchNotice: null,
   models: [],
   connectionStatus: 'idle',
   serviceMode: 'mock',
@@ -121,11 +128,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!conversations[agentId]) {
       conversations[agentId] = emptyConversation(agentId);
     }
-    useAgentsStore.getState().beginChatSession(agentId);
     set({
       isPanelOpen: true,
       activeAgentId: agentId,
       conversations,
+    });
+    preloadChatAssets({ markdown: true });
+    queueMicrotask(() => {
+      useAgentsStore.getState().beginChatSession(agentId);
     });
   },
 
@@ -134,7 +144,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (activeId) {
       useAgentsStore.getState().endChatSession(activeId);
     }
-    set({ isPanelOpen: false, activeAgentId: null });
+    if (modelSwitchNoticeTimer) {
+      clearTimeout(modelSwitchNoticeTimer);
+      modelSwitchNoticeTimer = null;
+    }
+    set({ isPanelOpen: false, modelSwitchNotice: null });
   },
 
   getAvailableAgents: () => useAgentsStore.getState().definitions,
@@ -165,11 +179,41 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const agentId = get().activeAgentId;
     if (!agentId || !modelId) return;
 
-    const { models } = get();
+    const { models, conversations } = get();
     if (!models.some((model) => model.id === modelId)) return;
+
+    const currentAgent = useAgentsStore.getState().definitions.find((def) => def.id === agentId);
+    if (!currentAgent || currentAgent.modelId === modelId) return;
 
     writeAgentModelOverride(agentId, modelId);
     useAgentsStore.getState().setAgentModelId(agentId, modelId);
+
+    const locale = useLocaleStore.getState().locale;
+    const conv = conversations[agentId] ?? emptyConversation(agentId);
+    const cleanedMessages = conv.messages.filter((msg) => msg.role !== 'system');
+    const notice = translate(locale, 'chat.modelSwitched', {
+      model: formatModelDisplayName(modelId),
+    });
+
+    const nextConversations = {
+      ...conversations,
+      [agentId]: {
+        ...conv,
+        messages: cleanedMessages,
+        error: null,
+      },
+    };
+
+    set({ conversations: nextConversations, modelSwitchNotice: notice });
+    persistConversations(get, true);
+
+    if (modelSwitchNoticeTimer) clearTimeout(modelSwitchNoticeTimer);
+    modelSwitchNoticeTimer = setTimeout(() => {
+      if (get().modelSwitchNotice === notice) {
+        set({ modelSwitchNotice: null });
+      }
+      modelSwitchNoticeTimer = null;
+    }, MODEL_SWITCH_NOTICE_MS);
   },
 
   clearActiveConversation: () => {

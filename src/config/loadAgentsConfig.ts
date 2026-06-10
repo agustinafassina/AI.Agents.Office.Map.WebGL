@@ -1,4 +1,6 @@
 import type { AgentDefinition, AgentHomeZone } from '@/types/agent';
+import type { AvatarDesignId } from '@/types/avatarDesign';
+import { AVATAR_DESIGN_IDS } from '@/types/avatarDesign';
 import { parseLocalizedField } from '@/i18n/localizedText';
 
 const HOME_ZONES: AgentHomeZone[] = ['center-desk', 'living', 'cafeteria', 'wall-desks'];
@@ -20,6 +22,13 @@ function readHomeZone(value: unknown): AgentHomeZone | null {
 function readWallDeskSlot(value: unknown): 0 | 1 | 2 | undefined {
   if (value === 0 || value === 1 || value === 2) return value;
   return undefined;
+}
+
+function readAvatarDesignId(value: unknown): AvatarDesignId | undefined {
+  if (typeof value !== 'string') return undefined;
+  return AVATAR_DESIGN_IDS.includes(value as AvatarDesignId)
+    ? (value as AvatarDesignId)
+    : undefined;
 }
 
 function parseAgentEntry(raw: unknown, index: number): AgentDefinition | null {
@@ -50,6 +59,7 @@ function parseAgentEntry(raw: unknown, index: number): AgentDefinition | null {
 
   const systemPromptField = parseLocalizedField(raw.systemPrompt);
   const wallDeskSlot = readWallDeskSlot(raw.wallDeskSlot);
+  const avatarDesignId = readAvatarDesignId(raw.avatarDesignId);
 
   return {
     id,
@@ -59,6 +69,7 @@ function parseAgentEntry(raw: unknown, index: number): AgentDefinition | null {
     logoUrl,
     avatarColor,
     accentColor,
+    avatarDesignId,
     homeZone,
     wallDeskSlot: homeZone === 'wall-desks' ? wallDeskSlot : undefined,
     systemPrompt: systemPromptField?.text,

@@ -3,6 +3,7 @@
     {
       "id": "backend-agent",
       "name": "Max",
+      "avatarDesignId": "bob-marley",
       "role": {
         "en": "Backend",
         "es": "Backend"
@@ -20,6 +21,7 @@
     {
       "id": "ux-agent",
       "name": "Lena",
+      "avatarDesignId": "shakira",
       "role": {
         "en": "UI/UX",
         "es": "UI/UX"
@@ -37,6 +39,7 @@
     {
       "id": "po-agent",
       "name": "Paula",
+      "avatarDesignId": "freddie-mercury",
       "role": {
         "en": "Product Owner",
         "es": "Product Owner"
@@ -55,6 +58,7 @@
     {
       "id": "qa-agent",
       "name": "Quinn",
+      "avatarDesignId": "michael-jackson",
       "role": {
         "en": "QA",
         "es": "QA"

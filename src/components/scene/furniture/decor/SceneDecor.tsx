@@ -1,8 +1,13 @@
-import { Edges, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type * as THREE from 'three';
-import { materials, OUTLINE_COLOR } from '../../materials';
+import {
+  FurnitureEdges,
+  FURNITURE_EDGE_THRESHOLD,
+  FURNITURE_EDGE_THRESHOLD_SOFT,
+} from '../FurnitureEdges';
+import { materials } from '../../materials';
 
 export const BEAN_BAG_SEAT_Y = 0.36;
 
@@ -80,11 +85,11 @@ export function BeanBag({
         receiveShadow
         material={mat}
       >
-        <Edges color={OUTLINE_COLOR} threshold={12} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </RoundedBox>
       <mesh position={[0, BEAN_BAG_SEAT_Y, 0]} castShadow receiveShadow material={mat}>
         <boxGeometry args={[0.72, 0.1, 0.72]} />
-        <Edges color={OUTLINE_COLOR} threshold={12} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
     </group>
   );
@@ -153,6 +158,7 @@ export function DeskCactus({ position }: { position: [number, number, number] })
     <group position={position}>
       <mesh material={materials.plantPot}>
         <cylinderGeometry args={[0.05, 0.055, 0.06, 8]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.1, 0]} castShadow material={materials.plant}>
         <cylinderGeometry args={[0.025, 0.028, 0.12, 6]} />
@@ -169,6 +175,7 @@ export function DeskSucculent({ position }: { position: [number, number, number]
     <group position={position}>
       <mesh position={[0, 0.04, 0]} material={materials.plantPot}>
         <cylinderGeometry args={[0.04, 0.045, 0.045, 8]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.085, 0]} castShadow material={materials.plant}>
         <sphereGeometry args={[0.045, 6, 5]} />
@@ -182,6 +189,7 @@ export function DeskMug({ position }: { position: [number, number, number] }) {
     <group position={position}>
       <mesh material={materials.mug}>
         <cylinderGeometry args={[0.035, 0.038, 0.07, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.035, 0.03]} material={materials.terracotta}>
         <boxGeometry args={[0.05, 0.01, 0.02]} />
@@ -195,6 +203,7 @@ export function DeskNotebook({ position }: { position: [number, number, number] 
     <group position={position} rotation={[0, 0.4, 0]}>
       <mesh material={materials.notebook}>
         <boxGeometry args={[0.14, 0.008, 0.1]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.005, 0]} material={materials.sage}>
         <boxGeometry args={[0.1, 0.004, 0.08]} />
@@ -208,6 +217,7 @@ export function PenCup({ position }: { position: [number, number, number] }) {
     <group position={position}>
       <mesh material={materials.potCeramic}>
         <cylinderGeometry args={[0.03, 0.035, 0.05, 8]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0.01, 0.06, 0]} rotation={[0.1, 0, 0.2]} material={materials.metal}>
         <boxGeometry args={[0.004, 0.05, 0.004]} />
@@ -224,6 +234,7 @@ export function Terrarium({ position }: { position: [number, number, number] }) 
     <group position={position}>
       <mesh material={materials.woodLight}>
         <cylinderGeometry args={[0.1, 0.11, 0.05, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, 0.11, 0]} material={materials.glass}>
         <sphereGeometry args={[0.095, 10, 8]} />
@@ -247,6 +258,7 @@ export function CeramicFloorPlant({
     <group position={position} scale={scale}>
       <mesh position={[0, 0.24, 0]} castShadow material={materials.potCeramic}>
         <cylinderGeometry args={[0.26, 0.28, 0.48, 14]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.65, 0]} castShadow material={materials.plantDark}>
         <boxGeometry args={[0.1, 0.45, 0.08]} />

@@ -1,7 +1,7 @@
-import { Edges } from '@react-three/drei';
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD } from './FurnitureEdges';
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { materials, OUTLINE_COLOR } from '../materials';
+import { materials } from '../materials';
 import { DESK_SCALE, workstationChairOffsetZ } from './deskConstants';
 import {
   CurvedMonitorGroup,
@@ -50,7 +50,7 @@ export function Workstation({
       <group scale={[DESK_SCALE, DESK_SCALE, DESK_SCALE]}>
         <mesh position={[0, 0.41, 0]} castShadow receiveShadow material={materials.deskTop}>
           <boxGeometry args={[1.05, 0.05, 0.6]} />
-          <Edges color={OUTLINE_COLOR} threshold={12} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
         </mesh>
 
         <TFrameLegs

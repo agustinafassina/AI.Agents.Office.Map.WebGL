@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, startTransition } from 'react';
 import { env } from '@/config/env';
 import { useConnectionLabel } from '@/i18n/connectionLabel';
 import { useTranslation } from '@/i18n';
@@ -6,6 +6,7 @@ import { useChatStore } from '@/stores/chat.store';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
 import type { AgentDefinition } from '@/types/agent';
+import { preloadChatAssets } from '@/utils/preloadChatPanel';
 import { AgentHudCard } from './AgentHudCard';
 import { AgentPickerModal } from './AgentPickerModal';
 import { GraphicsQualityToggle } from './GraphicsQualityToggle';
@@ -53,7 +54,13 @@ export function OfficeHud() {
 
   const handleAgentSelect = (agentId: string) => {
     focusOnAgent(agentId);
-    openChat(agentId);
+    startTransition(() => {
+      openChat(agentId);
+    });
+  };
+
+  const handleAgentHover = () => {
+    preloadChatAssets({ markdown: true });
   };
 
   return (
@@ -82,6 +89,7 @@ export function OfficeHud() {
                 agent={agent}
                 selected={selectedAgentId === agent.id}
                 onClick={() => handleAgentSelect(agent.id)}
+                onHover={handleAgentHover}
               />
             ))}
             {hasOverflow && (

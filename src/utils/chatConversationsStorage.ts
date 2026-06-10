@@ -19,6 +19,7 @@ function sanitizeMessages(messages: unknown): ChatMessage[] {
 
   return messages
     .filter(isChatMessage)
+    .filter((msg) => msg.role !== 'system')
     .filter((msg) => msg.content.length > 0)
     .map(({ streaming: _streaming, ...msg }) => msg)
     .slice(-MAX_MESSAGES_PER_AGENT);

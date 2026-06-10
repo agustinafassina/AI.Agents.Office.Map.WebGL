@@ -1,336 +1,415 @@
 import { Edges, RoundedBox } from '@react-three/drei';
 import type { ReactNode } from 'react';
 import type * as THREE from 'three';
+import type { AvatarDesignId } from '@/types/avatarDesign';
+import { AVATAR_HAIR_CAP, AVATAR_HAIR_LAYOUTS } from './avatarHairLayouts';
 
-export type RobotHeadVariant = 0 | 1 | 2 | 3;
-
-/** @deprecated Use RobotHeadVariant */
-export type HairVariant = RobotHeadVariant;
-
-export const AVATAR_METAL = '#9aa3ac';
-export const AVATAR_JOINT = '#5c656e';
-export const AVATAR_FOOT = '#4a5258';
-export const AVATAR_SOLE = '#353b42';
-
-/** @deprecated Robot avatars no longer use skin tones */
-export const AVATAR_SKIN = AVATAR_METAL;
-/** @deprecated Robot avatars no longer use pants */
-export const AVATAR_PANTS = AVATAR_JOINT;
-/** @deprecated Robot avatars no longer use shoes */
-export const AVATAR_SHOE = AVATAR_FOOT;
+export const AVATAR_SKIN = '#e8ceb8';
+export const AVATAR_PANTS = '#5c4a3a';
+export const AVATAR_SHOE = '#3a3228';
+export const AVATAR_SOLE = '#2a241c';
 
 interface MaterialProps {
-  chassisMat: THREE.MeshStandardMaterial;
-  jointMat: THREE.MeshStandardMaterial;
-  panelMat: THREE.MeshStandardMaterial;
-  footMat: THREE.MeshStandardMaterial;
+  shirtMat: THREE.MeshStandardMaterial;
+  pantsMat: THREE.MeshStandardMaterial;
+  shoeMat: THREE.MeshStandardMaterial;
   soleMat: THREE.MeshStandardMaterial;
-  eyeGlowMat: THREE.MeshStandardMaterial;
-  eyeCoreMat: THREE.MeshStandardMaterial;
+  skinMat: THREE.MeshStandardMaterial;
+  accentMat: THREE.MeshStandardMaterial;
+  trimMat: THREE.MeshStandardMaterial;
+  hairMat: THREE.MeshStandardMaterial;
+  eyeWhiteMat: THREE.MeshStandardMaterial;
+  eyeMat: THREE.MeshStandardMaterial;
+  cheekMat: THREE.MeshStandardMaterial;
+  noseMat: THREE.MeshStandardMaterial;
   outlineColor: string;
 }
 
 export function AgentTorso({
-  chassisMat,
-  jointMat,
-  panelMat,
+  designId,
+  shirtMat,
+  pantsMat,
+  accentMat,
+  trimMat,
   outlineColor,
-}: Pick<MaterialProps, 'chassisMat' | 'jointMat' | 'panelMat' | 'outlineColor'>) {
+}: Pick<
+  MaterialProps,
+  'shirtMat' | 'pantsMat' | 'accentMat' | 'trimMat' | 'outlineColor'
+> & { designId: AvatarDesignId }) {
   return (
     <>
       <RoundedBox
-        args={[0.22, 0.24, 0.14]}
-        radius={0.022}
-        smoothness={2}
+        args={[0.21, 0.23, 0.13]}
+        radius={0.028}
+        smoothness={3}
         position={[0, 0.34, 0]}
         castShadow
         receiveShadow
-        material={chassisMat}
+        material={shirtMat}
       >
         <Edges color={outlineColor} threshold={14} />
       </RoundedBox>
 
-      <mesh position={[0, 0.34, 0.072]} material={panelMat}>
-        <boxGeometry args={[0.1, 0.08, 0.008]} />
+      {designId === 'bob-marley' && (
+        <>
+          <mesh position={[-0.05, 0.36, 0.068]} material={trimMat}>
+            <boxGeometry args={[0.04, 0.08, 0.008]} />
+          </mesh>
+          <mesh position={[0.05, 0.36, 0.068]} material={accentMat}>
+            <boxGeometry args={[0.04, 0.08, 0.008]} />
+          </mesh>
+        </>
+      )}
+
+      {designId === 'freddie-mercury' && (
+        <>
+          <mesh position={[-0.105, 0.415, 0.01]} castShadow material={accentMat}>
+            <boxGeometry args={[0.048, 0.042, 0.02]} />
+          </mesh>
+          <mesh position={[0.105, 0.415, 0.01]} castShadow material={accentMat}>
+            <boxGeometry args={[0.048, 0.042, 0.02]} />
+          </mesh>
+          <mesh position={[0, 0.3, 0.068]} material={trimMat}>
+            <boxGeometry args={[0.14, 0.014, 0.008]} />
+          </mesh>
+        </>
+      )}
+
+      {designId === 'michael-jackson' && (
+        <>
+          <mesh position={[0, 0.36, 0.069]} material={trimMat}>
+            <boxGeometry args={[0.04, 0.14, 0.007]} />
+          </mesh>
+          <mesh position={[-0.04, 0.33, 0.069]} rotation={[0, 0, 0.45]} material={trimMat}>
+            <boxGeometry args={[0.03, 0.1, 0.007]} />
+          </mesh>
+          <mesh position={[0.04, 0.33, 0.069]} rotation={[0, 0, -0.45]} material={trimMat}>
+            <boxGeometry args={[0.03, 0.1, 0.007]} />
+          </mesh>
+          <mesh position={[-0.105, 0.415, 0.012]} castShadow material={accentMat}>
+            <boxGeometry args={[0.042, 0.035, 0.018]} />
+          </mesh>
+          <mesh position={[0.105, 0.415, 0.012]} castShadow material={accentMat}>
+            <boxGeometry args={[0.042, 0.035, 0.018]} />
+          </mesh>
+          <mesh position={[0, 0.22, 0.069]} material={accentMat}>
+            <boxGeometry args={[0.14, 0.014, 0.008]} />
+          </mesh>
+        </>
+      )}
+
+      {designId === 'shakira' && (
+        <mesh position={[0, 0.32, 0.068]} material={trimMat}>
+          <boxGeometry args={[0.05, 0.05, 0.008]} />
+        </mesh>
+      )}
+
+      <mesh position={[0, 0.24, 0]} castShadow material={pantsMat}>
+        <boxGeometry args={[0.19, 0.055, 0.115]} />
       </mesh>
-      <mesh position={[0, 0.3, 0.073]} material={panelMat}>
-        <boxGeometry args={[0.06, 0.012, 0.006]} />
+      <mesh position={[0, 0.215, 0.01]} material={accentMat}>
+        <boxGeometry args={[0.17, 0.012, 0.09]} />
       </mesh>
 
-      <mesh position={[0, 0.24, 0]} castShadow material={jointMat}>
-        <boxGeometry args={[0.2, 0.05, 0.12]} />
+      <mesh position={[-0.105, 0.415, 0.01]} castShadow material={shirtMat}>
+        <sphereGeometry args={[0.048, 8, 8]} />
       </mesh>
-      <mesh position={[0, 0.215, 0.01]} material={panelMat}>
-        <boxGeometry args={[0.16, 0.01, 0.085]} />
-      </mesh>
-
-      <mesh position={[-0.112, 0.415, 0]} castShadow material={jointMat}>
-        <sphereGeometry args={[0.042, 8, 8]} />
-      </mesh>
-      <mesh position={[0.112, 0.415, 0]} castShadow material={jointMat}>
-        <sphereGeometry args={[0.042, 8, 8]} />
+      <mesh position={[0.105, 0.415, 0.01]} castShadow material={shirtMat}>
+        <sphereGeometry args={[0.048, 8, 8]} />
       </mesh>
 
-      <mesh position={[0, 0.455, 0]} castShadow material={jointMat}>
-        <cylinderGeometry args={[0.038, 0.042, 0.06, 8]} />
+      <mesh position={[0, 0.455, 0.05]} castShadow material={accentMat}>
+        <torusGeometry args={[0.055, 0.01, 8, 16]} />
       </mesh>
-      <mesh position={[0, 0.485, 0]} material={panelMat}>
-        <torusGeometry args={[0.04, 0.008, 6, 12]} />
+      <mesh position={[-0.018, 0.36, 0.066]} material={accentMat}>
+        <boxGeometry args={[0.012, 0.14, 0.008]} />
+      </mesh>
+      <RoundedBox
+        args={[0.042, 0.048, 0.01]}
+        radius={0.006}
+        smoothness={2}
+        position={[0, 0.295, 0.072]}
+        material={accentMat}
+      />
+    </>
+  );
+}
+
+export function SparkGlove({ gloveMat, accentMat }: { gloveMat: THREE.MeshStandardMaterial; accentMat?: THREE.MeshStandardMaterial }) {
+  return (
+    <>
+      <mesh position={[0, 0.01, 0]} castShadow material={accentMat ?? gloveMat}>
+        <boxGeometry args={[0.042, 0.018, 0.04]} />
+      </mesh>
+      <mesh castShadow material={gloveMat}>
+        <sphereGeometry args={[0.036, 8, 8]} />
       </mesh>
     </>
   );
 }
 
 export function AgentArmSegment({
-  chassisMat,
-  jointMat,
-  panelMat,
+  shirtMat,
+  skinMat,
+  accentMat,
+  gloveMat,
   side,
+  gloved,
   handAccessory,
-}: Pick<MaterialProps, 'chassisMat' | 'jointMat' | 'panelMat'> & {
+}: Pick<MaterialProps, 'shirtMat' | 'skinMat' | 'accentMat'> & {
+  gloveMat?: THREE.MeshStandardMaterial;
   side: -1 | 1;
+  gloved?: boolean;
   handAccessory?: ReactNode;
 }) {
   return (
     <>
-      <mesh position={[0, -0.055, 0]} castShadow material={chassisMat}>
-        <boxGeometry args={[0.05, 0.12, 0.05]} />
+      <mesh position={[0, -0.055, 0]} castShadow material={shirtMat}>
+        <capsuleGeometry args={[0.034, 0.11, 5, 8]} />
       </mesh>
-      <mesh position={[0, -0.105, 0]} castShadow material={jointMat}>
-        <sphereGeometry args={[0.028, 8, 8]} />
+      <mesh position={[0, -0.105, side * 0.008]} castShadow material={accentMat}>
+        <boxGeometry args={[0.038, 0.018, 0.024]} />
       </mesh>
-      <mesh position={[0, -0.125, side * 0.006]} castShadow material={chassisMat}>
-        <boxGeometry args={[0.044, 0.06, 0.044]} />
-      </mesh>
-      <mesh position={[0, -0.148, 0.014]} castShadow material={panelMat}>
-        <boxGeometry args={[0.038, 0.024, 0.032]} />
-      </mesh>
-      <group position={[0, -0.155, 0.018]}>
+      <group position={[0, -0.125, 0.012]}>
+        {!gloved && (
+          <mesh castShadow material={skinMat}>
+            <sphereGeometry args={[0.032, 8, 7]} />
+          </mesh>
+        )}
+        {gloved && gloveMat && !handAccessory && (
+          <SparkGlove gloveMat={gloveMat} accentMat={accentMat} />
+        )}
         {handAccessory}
       </group>
     </>
   );
 }
 
-export function AgentThigh({ jointMat }: Pick<MaterialProps, 'jointMat'>) {
+export function AgentThigh({ pantsMat }: Pick<MaterialProps, 'pantsMat'>) {
   return (
     <>
-      <mesh position={[0, -0.06, 0]} castShadow material={jointMat}>
-        <cylinderGeometry args={[0.034, 0.038, 0.1, 8]} />
+      <mesh position={[0, -0.06, 0]} castShadow material={pantsMat}>
+        <capsuleGeometry args={[0.036, 0.1, 5, 8]} />
       </mesh>
-      <mesh position={[0, -0.115, 0.01]} castShadow material={jointMat}>
-        <sphereGeometry args={[0.032, 8, 8]} />
+      <mesh position={[0, -0.115, 0.01]} castShadow material={pantsMat}>
+        <boxGeometry args={[0.034, 0.02, 0.034]} />
       </mesh>
     </>
   );
 }
 
 export function AgentShinFoot({
-  jointMat,
-  footMat,
+  pantsMat,
+  shoeMat,
   soleMat,
-}: Pick<MaterialProps, 'jointMat' | 'footMat' | 'soleMat'>) {
+}: Pick<MaterialProps, 'pantsMat' | 'shoeMat' | 'soleMat'>) {
   return (
     <>
-      <mesh position={[0, -0.02, 0.018]} castShadow material={jointMat}>
-        <cylinderGeometry args={[0.03, 0.034, 0.075, 8]} />
+      <mesh position={[0, -0.02, 0.018]} castShadow material={pantsMat}>
+        <capsuleGeometry args={[0.032, 0.075, 5, 8]} />
       </mesh>
       <RoundedBox
-        args={[0.07, 0.04, 0.11]}
-        radius={0.008}
+        args={[0.064, 0.042, 0.105]}
+        radius={0.012}
         smoothness={2}
         position={[0, -0.085, 0.028]}
         castShadow
-        material={footMat}
+        material={shoeMat}
       />
-      <mesh position={[0, -0.102, 0.04]} castShadow material={soleMat}>
-        <boxGeometry args={[0.074, 0.012, 0.112]} />
+      <mesh position={[0, -0.102, 0.038]} castShadow material={soleMat}>
+        <boxGeometry args={[0.068, 0.014, 0.11]} />
       </mesh>
     </>
   );
 }
 
-interface DreadLockSpec {
-  pos: [number, number, number];
-  rot: [number, number, number];
-  length: number;
-  radius: number;
-}
-
-const DREAD_LAYOUTS: Record<RobotHeadVariant, DreadLockSpec[]> = {
-  0: [
-    { pos: [-0.07, 0.1, 0.02], rot: [0.22, 0.1, 0.18], length: 0.1, radius: 0.013 },
-    { pos: [-0.03, 0.11, 0.04], rot: [0.28, 0, 0.06], length: 0.11, radius: 0.012 },
-    { pos: [0.03, 0.11, 0.04], rot: [0.28, 0, -0.06], length: 0.11, radius: 0.012 },
-    { pos: [0.07, 0.1, 0.02], rot: [0.22, -0.1, -0.18], length: 0.1, radius: 0.013 },
-    { pos: [-0.09, 0.04, -0.02], rot: [0.12, 0.35, 0.42], length: 0.12, radius: 0.011 },
-    { pos: [0.09, 0.04, -0.02], rot: [0.12, -0.35, -0.42], length: 0.12, radius: 0.011 },
-    { pos: [-0.04, 0.06, -0.08], rot: [0.55, 0.15, 0.08], length: 0.14, radius: 0.012 },
-    { pos: [0.04, 0.06, -0.08], rot: [0.55, -0.15, -0.08], length: 0.14, radius: 0.012 },
-    { pos: [0, 0.08, -0.1], rot: [0.62, 0, 0], length: 0.15, radius: 0.013 },
-  ],
-  1: [
-    { pos: [-0.08, 0.1, 0.03], rot: [0.18, 0.2, 0.24], length: 0.11, radius: 0.012 },
-    { pos: [-0.05, 0.11, 0.05], rot: [0.3, 0.08, 0.1], length: 0.12, radius: 0.011 },
-    { pos: [0, 0.115, 0.05], rot: [0.32, 0, 0], length: 0.13, radius: 0.012 },
-    { pos: [0.05, 0.11, 0.05], rot: [0.3, -0.08, -0.1], length: 0.12, radius: 0.011 },
-    { pos: [0.08, 0.1, 0.03], rot: [0.18, -0.2, -0.24], length: 0.11, radius: 0.012 },
-    { pos: [-0.1, 0.02, -0.01], rot: [0.08, 0.42, 0.5], length: 0.13, radius: 0.011 },
-    { pos: [0.1, 0.02, -0.01], rot: [0.08, -0.42, -0.5], length: 0.13, radius: 0.011 },
-    { pos: [-0.06, 0.04, -0.09], rot: [0.48, 0.22, 0.12], length: 0.16, radius: 0.012 },
-    { pos: [0.06, 0.04, -0.09], rot: [0.48, -0.22, -0.12], length: 0.16, radius: 0.012 },
-    { pos: [0, 0.05, -0.11], rot: [0.68, 0, 0], length: 0.17, radius: 0.013 },
-  ],
-  2: [
-    { pos: [-0.06, 0.1, 0.01], rot: [0.2, 0.12, 0.2], length: 0.1, radius: 0.012 },
-    { pos: [0.06, 0.1, 0.01], rot: [0.2, -0.12, -0.2], length: 0.1, radius: 0.012 },
-    { pos: [-0.03, 0.11, 0.03], rot: [0.26, 0.04, 0.08], length: 0.11, radius: 0.011 },
-    { pos: [0.03, 0.11, 0.03], rot: [0.26, -0.04, -0.08], length: 0.11, radius: 0.011 },
-    { pos: [-0.08, 0.03, -0.03], rot: [0.1, 0.38, 0.45], length: 0.14, radius: 0.011 },
-    { pos: [0.08, 0.03, -0.03], rot: [0.1, -0.38, -0.45], length: 0.14, radius: 0.011 },
-    { pos: [-0.05, 0.04, -0.1], rot: [0.72, 0.12, 0.06], length: 0.2, radius: 0.012 },
-    { pos: [0.05, 0.04, -0.1], rot: [0.72, -0.12, -0.06], length: 0.2, radius: 0.012 },
-    { pos: [0, 0.06, -0.12], rot: [0.82, 0, 0], length: 0.22, radius: 0.013 },
-    { pos: [-0.02, 0.07, -0.11], rot: [0.78, 0.08, 0.04], length: 0.19, radius: 0.011 },
-    { pos: [0.02, 0.07, -0.11], rot: [0.78, -0.08, -0.04], length: 0.19, radius: 0.011 },
-  ],
-  3: [
-    { pos: [-0.09, 0.09, 0.02], rot: [0.16, 0.28, 0.35], length: 0.12, radius: 0.012 },
-    { pos: [-0.06, 0.11, 0.04], rot: [0.24, 0.14, 0.18], length: 0.13, radius: 0.011 },
-    { pos: [-0.02, 0.115, 0.05], rot: [0.3, 0.06, 0.08], length: 0.14, radius: 0.012 },
-    { pos: [0.04, 0.1, 0.03], rot: [0.2, -0.1, -0.14], length: 0.1, radius: 0.011 },
-    { pos: [0.08, 0.08, 0.01], rot: [0.14, -0.24, -0.3], length: 0.11, radius: 0.012 },
-    { pos: [-0.11, 0.01, -0.02], rot: [0.06, 0.48, 0.55], length: 0.15, radius: 0.011 },
-    { pos: [0.1, 0.02, -0.04], rot: [0.12, -0.32, -0.38], length: 0.13, radius: 0.011 },
-    { pos: [-0.07, 0.03, -0.1], rot: [0.58, 0.28, 0.16], length: 0.18, radius: 0.012 },
-    { pos: [0.07, 0.04, -0.09], rot: [0.52, -0.18, -0.22], length: 0.15, radius: 0.011 },
-    { pos: [-0.03, 0.05, -0.11], rot: [0.75, 0.1, 0.05], length: 0.2, radius: 0.012 },
-  ],
-};
-
-export function AgentDreadlocks({
-  variant,
-  dreadMat,
+export function AgentMusicianHair({
+  designId,
+  hairMat,
 }: {
-  variant: RobotHeadVariant;
-  dreadMat: THREE.MeshStandardMaterial;
+  designId: AvatarDesignId;
+  hairMat: THREE.MeshStandardMaterial;
 }) {
-  const dreads = DREAD_LAYOUTS[variant];
+  const strands = AVATAR_HAIR_LAYOUTS[designId];
+  const capSize = AVATAR_HAIR_CAP[designId];
 
   return (
     <>
-      <mesh position={[0, 0.105, -0.01]} castShadow material={dreadMat}>
-        <boxGeometry args={[0.2, 0.03, 0.16]} />
-      </mesh>
-      {dreads.map((dread, index) => (
+      {capSize && (
+        <mesh position={[0, 0.05, -0.025]} castShadow material={hairMat}>
+          <boxGeometry args={capSize} />
+        </mesh>
+      )}
+      {strands.map((strand, index) => (
         <mesh
           key={index}
-          position={dread.pos}
-          rotation={dread.rot}
+          position={strand.pos}
+          rotation={strand.rot}
           castShadow
-          material={dreadMat}
+          material={hairMat}
         >
-          <capsuleGeometry args={[dread.radius, dread.length, 4, 6]} />
+          <capsuleGeometry args={[strand.radius, strand.length, 4, 6]} />
         </mesh>
       ))}
     </>
   );
 }
 
-export function AgentHeadModules({
-  variant,
-  panelMat,
+export function AgentMusicianHeadExtras({
+  designId,
+  accentMat,
+  trimMat,
+  hairMat,
 }: {
-  variant: RobotHeadVariant;
-  panelMat: THREE.MeshStandardMaterial;
-  jointMat?: THREE.MeshStandardMaterial;
+  designId: AvatarDesignId;
+  accentMat: THREE.MeshStandardMaterial;
+  trimMat: THREE.MeshStandardMaterial;
+  hairMat: THREE.MeshStandardMaterial;
 }) {
-  if (variant === 2) {
+  if (designId === 'bob-marley') {
     return (
-      <mesh position={[0, 0.04, 0.115]} material={panelMat}>
-        <boxGeometry args={[0.18, 0.028, 0.012]} />
-      </mesh>
+      <>
+        <mesh position={[0, 0.105, 0.025]} castShadow material={trimMat}>
+          <boxGeometry args={[0.24, 0.032, 0.17]} />
+        </mesh>
+        <mesh position={[0, 0.118, 0.03]} castShadow material={accentMat}>
+          <boxGeometry args={[0.18, 0.012, 0.14]} />
+        </mesh>
+      </>
     );
   }
 
-  if (variant === 3) {
+  if (designId === 'michael-jackson') {
     return (
-      <mesh position={[0, 0.1, -0.02]} castShadow material={panelMat}>
-        <cylinderGeometry args={[0.012, 0.012, 0.05, 6]} />
-      </mesh>
+      <>
+        <mesh position={[0, 0.155, -0.015]} castShadow material={hairMat}>
+          <cylinderGeometry args={[0.1, 0.108, 0.055, 10]} />
+        </mesh>
+        <mesh position={[0, 0.185, -0.01]} castShadow material={hairMat}>
+          <cylinderGeometry args={[0.068, 0.1, 0.038, 10]} />
+        </mesh>
+        <mesh position={[0, 0.168, -0.005]} material={trimMat}>
+          <cylinderGeometry args={[0.102, 0.102, 0.012, 10]} />
+        </mesh>
+        <mesh position={[0, 0.145, 0.02]} castShadow material={hairMat}>
+          <cylinderGeometry args={[0.125, 0.13, 0.012, 12]} />
+        </mesh>
+      </>
     );
   }
 
-  return null;
-}
+  if (designId === 'freddie-mercury') {
+    return (
+      <>
+        <mesh position={[-0.038, -0.048, 0.112]} material={hairMat}>
+          <boxGeometry args={[0.03, 0.008, 0.008]} />
+        </mesh>
+        <mesh position={[0.038, -0.048, 0.112]} material={hairMat}>
+          <boxGeometry args={[0.03, 0.008, 0.008]} />
+        </mesh>
+      </>
+    );
+  }
 
-export function AgentRobotHead({
-  chassisMat,
-  jointMat,
-  panelMat,
-  dreadMat,
-  eyeGlowMat,
-  eyeCoreMat,
-  outlineColor,
-  variant,
-}: Pick<
-  MaterialProps,
-  'chassisMat' | 'jointMat' | 'panelMat' | 'eyeGlowMat' | 'eyeCoreMat' | 'outlineColor'
-> & {
-  variant: RobotHeadVariant;
-  dreadMat: THREE.MeshStandardMaterial;
-}) {
   return (
     <>
-      <RoundedBox
-        args={[0.24, 0.22, 0.2]}
-        radius={0.024}
-        smoothness={2}
-        castShadow
-        material={chassisMat}
-      >
-        <Edges color={outlineColor} threshold={12} />
-      </RoundedBox>
-
-      <mesh position={[0, -0.02, 0.102]} material={jointMat}>
-        <boxGeometry args={[0.16, 0.04, 0.012]} />
+      <mesh position={[0, 0.042, 0.103]} material={accentMat}>
+        <boxGeometry args={[0.16, 0.022, 0.012]} />
       </mesh>
-
-      <mesh position={[-0.055, 0.02, 0.102]} material={eyeGlowMat}>
-        <boxGeometry args={[0.038, 0.028, 0.012]} />
+      <mesh position={[0, 0.055, 0.104]} material={trimMat}>
+        <boxGeometry args={[0.12, 0.012, 0.01]} />
       </mesh>
-      <mesh position={[0.055, 0.02, 0.102]} material={eyeGlowMat}>
-        <boxGeometry args={[0.038, 0.028, 0.012]} />
-      </mesh>
-      <mesh position={[-0.055, 0.02, 0.108]} material={eyeCoreMat}>
-        <boxGeometry args={[0.018, 0.018, 0.008]} />
-      </mesh>
-      <mesh position={[0.055, 0.02, 0.108]} material={eyeCoreMat}>
-        <boxGeometry args={[0.018, 0.018, 0.008]} />
-      </mesh>
-
-      <mesh position={[0, -0.06, 0.104]} material={jointMat}>
-        <boxGeometry args={[0.08, 0.016, 0.01]} />
-      </mesh>
-
-      <AgentDreadlocks variant={variant} dreadMat={dreadMat} />
-      <AgentHeadModules variant={variant} panelMat={panelMat} jointMat={jointMat} />
     </>
   );
 }
 
-/** @deprecated Use AgentRobotHead */
-export function AgentFace(props: Parameters<typeof AgentRobotHead>[0]) {
-  return <AgentRobotHead {...props} />;
+export function AgentHumanHead({
+  designId,
+  skinMat,
+  hairMat,
+  accentMat,
+  trimMat,
+  eyeWhiteMat,
+  eyeMat,
+  cheekMat,
+  noseMat,
+  outlineColor,
+}: Pick<
+  MaterialProps,
+  | 'skinMat'
+  | 'hairMat'
+  | 'accentMat'
+  | 'trimMat'
+  | 'eyeWhiteMat'
+  | 'eyeMat'
+  | 'cheekMat'
+  | 'noseMat'
+  | 'outlineColor'
+> & { designId: AvatarDesignId }) {
+  const showBrows = designId === 'freddie-mercury' || designId === 'bob-marley';
+
+  return (
+    <>
+      <mesh castShadow material={skinMat}>
+        <sphereGeometry args={[0.128, 14, 12]} />
+        <Edges color={outlineColor} threshold={12} />
+      </mesh>
+
+      <AgentMusicianHair designId={designId} hairMat={hairMat} />
+
+      <mesh position={[-0.045, 0.018, 0.108]} material={eyeWhiteMat}>
+        <sphereGeometry args={[0.018, 8, 8]} />
+      </mesh>
+      <mesh position={[0.045, 0.018, 0.108]} material={eyeWhiteMat}>
+        <sphereGeometry args={[0.018, 8, 8]} />
+      </mesh>
+      <mesh position={[-0.045, 0.016, 0.118]} material={eyeMat}>
+        <sphereGeometry args={[0.01, 6, 6]} />
+      </mesh>
+      <mesh position={[0.045, 0.016, 0.118]} material={eyeMat}>
+        <sphereGeometry args={[0.01, 6, 6]} />
+      </mesh>
+      <mesh position={[-0.041, 0.022, 0.121]} material={eyeWhiteMat}>
+        <sphereGeometry args={[0.004, 4, 4]} />
+      </mesh>
+      <mesh position={[0.049, 0.022, 0.121]} material={eyeWhiteMat}>
+        <sphereGeometry args={[0.004, 4, 4]} />
+      </mesh>
+
+      {showBrows && (
+        <>
+          <mesh position={[-0.05, 0.038, 0.102]} rotation={[0, 0, 0.12]} material={hairMat}>
+            <boxGeometry args={[0.034, 0.008, 0.012]} />
+          </mesh>
+          <mesh position={[0.05, 0.038, 0.102]} rotation={[0, 0, -0.12]} material={hairMat}>
+            <boxGeometry args={[0.034, 0.008, 0.012]} />
+          </mesh>
+        </>
+      )}
+
+      <mesh position={[0, -0.028, 0.112]} material={noseMat}>
+        <sphereGeometry args={[0.011, 6, 6]} />
+      </mesh>
+      <mesh position={[-0.072, -0.008, 0.095]} material={cheekMat}>
+        <sphereGeometry args={[0.015, 6, 6]} />
+      </mesh>
+      <mesh position={[0.072, -0.008, 0.095]} material={cheekMat}>
+        <sphereGeometry args={[0.015, 6, 6]} />
+      </mesh>
+
+      <mesh position={[0, -0.048, 0.114]} rotation={[0.15, 0, 0]} material={noseMat}>
+        <torusGeometry args={[0.022, 0.006, 6, 12, Math.PI]} />
+      </mesh>
+
+      <AgentMusicianHeadExtras
+        designId={designId}
+        accentMat={accentMat}
+        trimMat={trimMat}
+        hairMat={hairMat}
+      />
+    </>
+  );
 }
 
-/** @deprecated Use AgentHeadModules */
-export function AgentHair({
-  variant,
-  hairMat,
-}: {
-  variant: RobotHeadVariant;
-  hairMat: THREE.MeshStandardMaterial;
-}) {
-  return <AgentHeadModules variant={variant} panelMat={hairMat} jointMat={hairMat} />;
-}
+/** @deprecated Use AgentHumanHead */
+export const AgentRobotHead = AgentHumanHead;

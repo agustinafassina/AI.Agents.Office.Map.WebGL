@@ -1,18 +1,23 @@
-import { lazy, Suspense } from 'react';
+import { useEffect } from 'react';
 import { useChatStore } from '@/stores/chat.store';
-
-const ChatPanel = lazy(() =>
-  import('@/components/ui/ChatPanel').then((module) => ({ default: module.ChatPanel })),
-);
+import { preloadChatAssets } from '@/utils/preloadChatPanel';
+import { ChatPanel } from './ChatPanel';
 
 export function LazyChatPanel() {
   const isOpen = useChatStore((state) => state.isPanelOpen);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    preloadChatAssets();
+  }, []);
 
   return (
-    <Suspense fallback={null}>
+    <div
+      className={`chat-panel-host${isOpen ? ' chat-panel-host--open' : ''}`}
+      aria-hidden={!isOpen}
+    >
       <ChatPanel />
-    </Suspense>
+    </div>
   );
 }
+
+export { preloadChatMarkdown, preloadChatAssets } from '@/utils/preloadChatPanel';

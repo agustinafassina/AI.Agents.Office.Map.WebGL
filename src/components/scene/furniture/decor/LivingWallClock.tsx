@@ -1,12 +1,14 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD_SOFT } from '../FurnitureEdges';
 import { materials } from '../../materials';
 
 interface LivingWallClockProps {
   position: [number, number, number];
   rotation?: [number, number, number];
-}export function LivingWallClock({
+}
+export function LivingWallClock({
   position,
   rotation = [0, Math.PI / 2, 0],
 }: LivingWallClockProps) {
@@ -32,6 +34,7 @@ interface LivingWallClockProps {
     <group position={position} rotation={rotation}>
       <mesh position={[0, 1.42, 0]} material={materials.espresso}>
         <cylinderGeometry args={[0.155, 0.155, 0.034, 24]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 1.42, 0.019]} material={materials.wall}>
         <cylinderGeometry args={[0.125, 0.125, 0.012, 24]} />

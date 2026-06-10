@@ -7,10 +7,17 @@ interface AgentHudCardProps {
   agent: AgentDefinition;
   selected?: boolean;
   onClick: () => void;
+  onHover?: () => void;
   compact?: boolean;
 }
 
-export function AgentHudCard({ agent, selected = false, onClick, compact = false }: AgentHudCardProps) {
+export function AgentHudCard({
+  agent,
+  selected = false,
+  onClick,
+  onHover,
+  compact = false,
+}: AgentHudCardProps) {
   const { t } = useTranslation();
   const modelLabel = useChatStore((state) => state.resolveModelLabel(agent.modelId));
   const modelAvailable = useChatStore((state) => state.isModelAvailableOnApi(agent.modelId));
@@ -21,6 +28,7 @@ export function AgentHudCard({ agent, selected = false, onClick, compact = false
       type="button"
       className={`office-hud__avatar-btn${selected ? ' office-hud__avatar-btn--selected' : ''}${compact ? ' office-hud__avatar-btn--compact' : ''}`}
       onClick={onClick}
+      onPointerEnter={onHover}
       title={t('agentCard.title', { name: agent.name, role: agent.role, model: modelLabel })}
       aria-label={t('agentCard.ariaLabel', { name: agent.name, role: agent.role, model: modelLabel })}
     >

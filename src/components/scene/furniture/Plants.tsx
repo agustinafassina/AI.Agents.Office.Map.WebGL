@@ -1,3 +1,4 @@
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD_SOFT } from './FurnitureEdges';
 import { materials } from '../materials';
 import { SwayGroup } from './decor/AnimatedDecor';
 
@@ -12,6 +13,7 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
       <SwayGroup position={position} phase={0.4} amplitude={0.035}>
         <mesh position={[0, 0.2, 0]} castShadow material={materials.potCeramic}>
           <cylinderGeometry args={[0.2, 0.22, 0.4, 12]} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
         </mesh>
         {[
           [0, 0.55, 0],
@@ -32,6 +34,7 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
       <SwayGroup position={position} phase={1.2} amplitude={0.03}>
         <mesh position={[0, 0.22, 0]} castShadow material={materials.plantPot}>
           <cylinderGeometry args={[0.22, 0.24, 0.44, 12]} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
         </mesh>
         <mesh position={[0, 0.55, 0]} castShadow material={materials.plantDark}>
           <boxGeometry args={[0.08, 0.38, 0.06]} />
@@ -51,6 +54,7 @@ export function Plant({ position, variant = 'medium' }: PlantProps) {
     <group position={position} scale={scale}>
       <mesh position={[0, 0.11, 0]} castShadow material={materials.plantPot}>
         <cylinderGeometry args={[0.11, 0.13, 0.22, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
       <mesh position={[0, 0.3, 0]} castShadow material={materials.plant}>
         <sphereGeometry args={[0.15, 8, 7]} />

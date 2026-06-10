@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { FurnitureEdges, FURNITURE_EDGE_THRESHOLD, FURNITURE_EDGE_THRESHOLD_SOFT } from './FurnitureEdges';
 import { materials } from '../materials';
 import {
   MEETING_PUFF_LAYOUT,
@@ -32,9 +33,11 @@ export function MeetingZone() {
 
       <mesh position={[0, MEETING_TABLE_TOP_Y - 0.085, 0]} castShadow material={materials.woodTable}>
         <cylinderGeometry args={[MEETING_TABLE_RADIUS, MEETING_TABLE_RADIUS + 0.02, 0.09, 22]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
       </mesh>
       <mesh position={[0, MEETING_TABLE_TOP_Y / 2 - 0.04, 0]} material={materials.woodDark}>
         <cylinderGeometry args={[0.065, 0.075, MEETING_TABLE_TOP_Y - 0.08, 10]} />
+        <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
       </mesh>
 
       <DeskNotebook position={[0.12, MEETING_TABLE_TOP_Y + 0.02, 0.08]} />
@@ -51,9 +54,11 @@ export function MeetingZone() {
       <group position={[-1.62, 0, 0.05]} rotation={[0, Math.PI / 2, 0]}>
         <mesh position={[0, 1.12, 0]} material={materials.metal}>
           <boxGeometry args={[1.65, 0.05, 0.07]} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
         </mesh>
         <mesh position={[0, 1.12, 0.045]} material={materials.whiteboard}>
           <boxGeometry args={[1.5, 0.92, 0.02]} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
         </mesh>
         <mesh position={[-0.42, 1.22, 0.055]} material={materials.sage}>
           <boxGeometry args={[0.36, 0.05, 0.008]} />

@@ -1,4 +1,7 @@
-import { Edges } from '@react-three/drei';
+import {
+  FurnitureEdges,
+  FURNITURE_EDGE_THRESHOLD_SHELF,
+} from './FurnitureEdges';
 import {
   PRIVATE_DESK_CENTER,
   PRIVATE_DESK_MAX_Z,
@@ -16,7 +19,7 @@ import {
   ZoneMat,
 } from './decor/SceneDecor';
 import { Workstation, type ChairStyle, type DeskPropType } from './Workstation';
-import { materials, OUTLINE_COLOR } from '../materials';
+import { materials } from '../materials';
 
 const DESK_ROTATION = -Math.PI / 2;
 
@@ -36,8 +39,8 @@ function DeskShelf({ side = 1 }: { side?: 1 | -1 }) {
         <group key={i} position={[0, y, 0]}>
           <mesh castShadow material={materials.woodLight}>
             <boxGeometry args={[0.72, 0.04, 0.22]} />
+            <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SHELF} />
           </mesh>
-          <Edges color={OUTLINE_COLOR} threshold={15} />
         </group>
       ))}
       <Terrarium position={[0, 1.72, 0.08]} />

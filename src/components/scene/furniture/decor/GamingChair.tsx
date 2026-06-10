@@ -1,8 +1,12 @@
-import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { materials, OUTLINE_COLOR } from '../../materials';
+import {
+  FurnitureEdges,
+  FURNITURE_EDGE_THRESHOLD,
+  FURNITURE_EDGE_THRESHOLD_SOFT,
+} from '../FurnitureEdges';
+import { materials } from '../../materials';
 
 const CASTER_ANGLES = [0, 1, 2, 3, 4].map((i) => (i / 5) * Math.PI * 2);
 
@@ -65,7 +69,8 @@ function ChairArmrest({
       </mesh>
     </group>
   );
-}export function ErgonomicChairMesh({
+}
+export function ErgonomicChairMesh({
   position,
   rotation,
   color,
@@ -141,7 +146,7 @@ function ChairArmrest({
       <group position={[0, 0.19, 0.045]} rotation={[-0.08, 0, 0]}>
         <mesh position={[0, 0.085, 0.035]} castShadow material={color}>
           <boxGeometry args={[0.44, 0.105, 0.37]} />
-          <Edges color={OUTLINE_COLOR} threshold={14} />
+          <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD_SOFT} />
         </mesh>
         <mesh position={[0, 0.042, 0.19]} castShadow material={color}>
           <boxGeometry args={[0.4, 0.055, 0.09]} />
@@ -165,7 +170,7 @@ function ChairArmrest({
         <group position={[0, 0.26, -0.17]} rotation={[-0.3, 0, 0]}>
           <mesh castShadow material={color}>
             <boxGeometry args={[0.42, 0.52, 0.075]} />
-            <Edges color={OUTLINE_COLOR} threshold={12} />
+            <FurnitureEdges threshold={FURNITURE_EDGE_THRESHOLD} />
           </mesh>
           <mesh position={[-0.2, 0.08, 0.01]} castShadow material={accent} rotation={[0, 0, 0.28]}>
             <boxGeometry args={[0.07, 0.36, 0.065]} />

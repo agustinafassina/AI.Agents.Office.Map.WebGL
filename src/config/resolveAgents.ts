@@ -1,4 +1,5 @@
 import { AGENT_DEFINITIONS } from '@/config/agents.config';
+import { applyAvatarDesigns } from '@/config/avatarDesigns';
 import { bindExternalAgentsToModels } from '@/config/bindAgentsToModels';
 import { buildAgentsFromModels } from '@/config/agentsFromModels';
 import type { AgentDefinition } from '@/types/agent';
@@ -33,18 +34,18 @@ export function resolveAgentDefinitions(
   if (externalAgents && externalAgents.length > 0) {
     if (serviceMode === 'live' && models.length > 0) {
       const bound = bindExternalAgentsToModels(externalAgents, models);
-      if (bound.length > 0) return bound;
+      if (bound.length > 0) return applyAvatarDesigns(bound);
 
       const generated = buildAgentsFromModels(models);
-      return mergeExternalOntoGenerated(generated, externalAgents);
+      return applyAvatarDesigns(mergeExternalOntoGenerated(generated, externalAgents));
     }
 
-    return externalAgents;
+    return applyAvatarDesigns(externalAgents);
   }
 
   if (serviceMode === 'live') {
-    return buildAgentsFromModels(models);
+    return applyAvatarDesigns(buildAgentsFromModels(models));
   }
 
-  return AGENT_DEFINITIONS;
+  return applyAvatarDesigns(AGENT_DEFINITIONS);
 }
