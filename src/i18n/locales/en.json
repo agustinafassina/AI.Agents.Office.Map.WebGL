@@ -25,7 +25,7 @@
   "agentLog": {
     "title": "Agent interactions",
     "subtitle": "Live log of peer conversations in the office",
-    "empty": "No agent conversations yet. Leave the scene running — pairs will chat when agents meet.",
+    "empty": "No conversations yet. Leave the scene running for a few seconds — agents chat when they are nearby (even with the chat panel open).",
     "waiting": "Conversation started…",
     "sessionLive": "Live",
     "sessionEnded": "Ended",
@@ -63,6 +63,8 @@
     "you": "You",
     "placeholder": "Message {{name}}…",
     "send": "Send",
+    "stop": "Stop",
+    "stopAria": "Stop {{name}}'s response",
     "thinking": "Thinking",
     "modelPickerAria": "LiteLLM model for {{name}}",
     "modelUnavailable": "{{modelId}} (unavailable)",

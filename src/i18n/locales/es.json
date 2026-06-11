@@ -25,7 +25,7 @@
   "agentLog": {
     "title": "Interacciones entre agentes",
     "subtitle": "Log en vivo de charlas entre pares en la oficina",
-    "empty": "Todavía no hay charlas. Dejá la escena corriendo — los agentes charlan cuando se cruzan.",
+    "empty": "Todavía no hay charlas. Dejá la escena unos segundos — los agentes charlan cuando están cerca (también con el chat abierto).",
     "waiting": "Charla iniciada…",
     "sessionLive": "En vivo",
     "sessionEnded": "Finalizada",
@@ -63,6 +63,8 @@
     "you": "Vos",
     "placeholder": "Mensaje para {{name}}…",
     "send": "Enviar",
+    "stop": "Detener",
+    "stopAria": "Detener la respuesta de {{name}}",
     "thinking": "Pensando",
     "modelPickerAria": "Modelo LiteLLM para {{name}}",
     "modelUnavailable": "{{modelId}} (no disponible)",

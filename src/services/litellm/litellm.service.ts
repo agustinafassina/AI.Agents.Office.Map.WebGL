@@ -44,16 +44,39 @@ function toApiMessages(
   return messages;
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(createAbortError());
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(createAbortError());
+      },
+      { once: true },
+    );
+  });
 }
 
-async function streamMockReply(full: string, onDelta: (chunk: string) => void): Promise<void> {
+function createAbortError(): DOMException {
+  return new DOMException('Aborted', 'AbortError');
+}
+
+async function streamMockReply(
+  full: string,
+  onDelta: (chunk: string) => void,
+  signal?: AbortSignal,
+): Promise<void> {
   const tokens = full.match(/\S+\s*|\s+/g) ?? [full];
   for (const token of tokens) {
+    if (signal?.aborted) throw createAbortError();
     if (token.length === 0) continue;
     onDelta(token);
-    await delay(18 + Math.random() * 28);
+    await delay(18 + Math.random() * 28, signal);
   }
 }
 
@@ -98,9 +121,9 @@ class LiteLLMService {
     const { model, agentName, systemPrompt, history, userContent, onDelta, signal } = params;
 
     if (env.useMockLitellm || !hasLiteLLMCredentials()) {
-      await delay(200 + Math.random() * 200);
+      await delay(200 + Math.random() * 200, signal);
       const content = getMockAssistantReply(agentName, userContent, readLocale());
-      await streamMockReply(content, onDelta);
+      await streamMockReply(content, onDelta, signal);
       return { content, model, mock: true };
     }
 
@@ -117,6 +140,7 @@ class LiteLLMService {
       this.lastError = null;
       return { content, model: resolvedModel, mock: false };
     } catch (err) {
+      if (isAbortError(err)) throw err;
       const message =
         err instanceof LiteLLMClientError ? err.message : 'Chat completion failed';
       this.lastError = message;
@@ -137,4 +161,12 @@ class LiteLLMService {
   }
 }
 
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === 'AbortError') ||
+    (err instanceof Error && err.name === 'AbortError')
+  );
+}
+
 export const liteLLMService = new LiteLLMService();
+export { isAbortError };

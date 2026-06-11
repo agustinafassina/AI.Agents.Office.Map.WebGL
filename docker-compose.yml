@@ -1,0 +1,23 @@
+services:
+  office-map:
+    init: true
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_LITELLM_BASE_URL: ${VITE_LITELLM_BASE_URL:-/api/litellm}
+        VITE_LITELLM_API_KEY: ${VITE_LITELLM_API_KEY:-}
+        VITE_USE_MOCK_LITELLM: ${VITE_USE_MOCK_LITELLM:-true}
+        VITE_ENABLE_AGENT_PEER_CHAT: ${VITE_ENABLE_AGENT_PEER_CHAT:-true}
+        VITE_AGENTS_CONFIG_URL: ${VITE_AGENTS_CONFIG_URL:-/agents.json}
+    ports:
+      - "${OFFICE_MAP_PORT:-3000}:8080"
+    environment:
+      LITELLM_UPSTREAM: ${LITELLM_UPSTREAM:-http://host.docker.internal:4000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

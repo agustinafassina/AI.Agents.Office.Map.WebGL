@@ -14,9 +14,9 @@ const SOCIAL_COOLDOWN_SEC = 22;
 
 function getPeerSpawnConfig() {
   if (isDemoRecordingMode()) {
-    return { interval: 5, spawnChance: 1, maxDistance: 5.5 };
+    return { interval: 5, spawnChance: 1, maxDistance: 6 };
   }
-  return { interval: 14, spawnChance: 0.58, maxDistance: 3.4 };
+  return { interval: 8, spawnChance: 0.85, maxDistance: 5.5 };
 }
 
 const socialCooldownUntil = new Map<string, number>();
@@ -30,7 +30,7 @@ function pickSocialPair(maxDistance: number): [string, string] | null {
 
   const eligible = definitions.filter((def) => {
     const state = runtime[def.id];
-    if (!state || state.status !== 'idle') return false;
+    if (!state || (state.status !== 'idle' && state.status !== 'walking')) return false;
     if (visuals.isAgentBusyForSocial(def.id)) return false;
     const cooldown = socialCooldownUntil.get(def.id) ?? 0;
     return cooldown <= now;
@@ -38,20 +38,22 @@ function pickSocialPair(maxDistance: number): [string, string] | null {
 
   if (eligible.length < 2) return null;
 
-  for (let attempt = 0; attempt < 12; attempt++) {
-    const a = eligible[Math.floor(Math.random() * eligible.length)];
-    const sameZone = eligible.filter(
-      (other) =>
-        other.id !== a.id &&
-        other.homeZone === a.homeZone &&
-        distance2D(runtime[a.id].position, runtime[other.id].position) <= maxDistance,
-    );
-    if (sameZone.length === 0) continue;
-    const b = sameZone[Math.floor(Math.random() * sameZone.length)];
-    return [a.id, b.id];
+  let bestPair: [string, string] | null = null;
+  let bestDistance = maxDistance + 1;
+
+  for (let i = 0; i < eligible.length; i++) {
+    for (let j = i + 1; j < eligible.length; j++) {
+      const idA = eligible[i].id;
+      const idB = eligible[j].id;
+      const dist = distance2D(runtime[idA].position, runtime[idB].position);
+      if (dist <= maxDistance && dist < bestDistance) {
+        bestDistance = dist;
+        bestPair = [idA, idB];
+      }
+    }
   }
 
-  return null;
+  return bestPair;
 }
 
 const PRUNE_INTERVAL_SEC = 0.5;
@@ -91,7 +93,6 @@ export function useAmbientAgentConversations() {
     if (spawnTimer.current < spawnConfig.interval) return;
     spawnTimer.current = 0;
 
-    if (useChatStore.getState().isPanelOpen) return;
     if (Math.random() > spawnConfig.spawnChance) return;
 
     const pair = pickSocialPair(spawnConfig.maxDistance);

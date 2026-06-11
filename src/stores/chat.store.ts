@@ -38,6 +38,14 @@ const PERSIST_DEBOUNCE_MS = 800;
 const MODEL_SWITCH_NOTICE_MS = 3200;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 let modelSwitchNoticeTimer: ReturnType<typeof setTimeout> | null = null;
+let activeStreamController: AbortController | null = null;
+
+function isStreamAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === 'AbortError') ||
+    (err instanceof Error && err.name === 'AbortError')
+  );
+}
 
 function persistConversations(
   getState: () => ChatStore,
@@ -71,6 +79,7 @@ interface ChatStore {
   openChat: (agentId: string) => void;
   closeChat: () => void;
   sendMessage: (content: string) => Promise<void>;
+  stopResponse: () => void;
   setActiveAgentModel: (modelId: string) => void;
   clearActiveConversation: () => void;
   getActiveConversation: () => ConversationState | null;
@@ -140,6 +149,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   closeChat: () => {
+    activeStreamController?.abort();
+    activeStreamController = null;
     const activeId = get().activeAgentId;
     if (activeId) {
       useAgentsStore.getState().endChatSession(activeId);
@@ -221,12 +232,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!agentId) return;
 
     const conv = get().conversations[agentId];
-    if (conv?.isLoading) return;
+    if (conv?.isLoading) {
+      activeStreamController?.abort();
+      return;
+    }
 
     const conversations = { ...get().conversations };
     conversations[agentId] = emptyConversation(agentId);
     set({ conversations });
     persistConversations(get, true);
+  },
+
+  stopResponse: () => {
+    activeStreamController?.abort();
   },
 
   sendMessage: async (content) => {
@@ -291,6 +309,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     };
     set({ conversations });
 
+    const streamController = new AbortController();
+    activeStreamController = streamController;
+
     const appendDelta = (chunk: string) => {
       const current = get().conversations[agentId];
       if (!current) return;
@@ -329,6 +350,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         history: conv.messages,
         userContent: userMessage.content,
         onDelta: appendDelta,
+        signal: streamController.signal,
       });
 
       const current = get().conversations[agentId];
@@ -353,6 +375,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({ conversations, serviceMode: liteLLMService.mode });
       persistConversations(get, true);
     } catch (err) {
+      if (isStreamAbortError(err)) {
+        const current = get().conversations[agentId];
+        if (!current) return;
+
+        const messages = current.messages
+          .filter((msg) => msg.id !== assistantId || msg.content.length > 0)
+          .map((msg) => (msg.id === assistantId ? { ...msg, streaming: false } : msg));
+
+        conversations[agentId] = {
+          ...current,
+          messages,
+          isLoading: false,
+          error: null,
+        };
+        set({ conversations });
+        persistConversations(get, true);
+        return;
+      }
+
       const locale = useLocaleStore.getState().locale;
       const detail =
         err instanceof Error && err.message
@@ -377,6 +418,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       };
       set({ conversations, connectionStatus: 'error' });
       persistConversations(get, true);
+    } finally {
+      if (activeStreamController === streamController) {
+        activeStreamController = null;
+      }
     }
   },
 }));

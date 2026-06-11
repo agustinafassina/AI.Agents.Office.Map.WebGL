@@ -105,7 +105,7 @@ class AgentOrchestratorService {
     const definitions = useAgentsStore.getState().definitions;
     const agentA = definitions.find((agent) => agent.id === agentAId);
     const agentB = definitions.find((agent) => agent.id === agentBId);
-    if (!agentA || !agentB || !isPeerConversationActive(peerConvId)) return;
+    if (!agentA || !agentB) return;
 
     const locale = useLocaleStore.getState().locale ?? readLocale();
     const sessionId = `peer-${peerConvId}`;
@@ -121,8 +121,6 @@ class AgentOrchestratorService {
     const speakers = [agentA, agentB, agentA, agentB].slice(0, MAX_PEER_TURNS);
 
     for (let turnIndex = 0; turnIndex < speakers.length; turnIndex++) {
-      if (!isPeerConversationActive(peerConvId)) break;
-
       const speaker = speakers[turnIndex];
       const peer = speaker.id === agentA.id ? agentB : agentA;
       const isOpener = turnIndex === 0;
@@ -132,13 +130,17 @@ class AgentOrchestratorService {
         : buildContinueUserPrompt(locale);
       const systemPrompt = buildPeerSystemPrompt(speaker, peer, locale);
 
-      visuals.setPeerGenerating(peerConvId, speaker.id);
-      visuals.extendPeerConversation(peerConvId, PEER_EXTEND_SEC);
+      const visualActive = isPeerConversationActive(peerConvId);
+      if (visualActive) {
+        visuals.setPeerGenerating(peerConvId, speaker.id);
+        visuals.extendPeerConversation(peerConvId, PEER_EXTEND_SEC);
+      }
 
       let streamed = '';
       let lastBubbleUpdate = 0;
       const onDelta = (chunk: string) => {
         streamed += chunk;
+        if (!isPeerConversationActive(peerConvId)) return;
         const now = performance.now();
         if (now - lastBubbleUpdate < BUBBLE_UPDATE_MS) return;
         lastBubbleUpdate = now;
@@ -163,7 +165,10 @@ class AgentOrchestratorService {
           content = result.content || streamed;
         }
       } catch {
-        break;
+        content = getMockPeerReply(speaker.name, peer.name, isOpener, locale);
+        if (isPeerConversationActive(peerConvId)) {
+          await streamText(content, onDelta);
+        }
       }
 
       const finalContent = truncateForBubble(content || streamed, 240);
@@ -184,9 +189,11 @@ class AgentOrchestratorService {
         content: finalContent,
       });
 
-      visuals.setPeerSpeech(peerConvId, speaker.id, finalContent, false);
-      visuals.setPeerGenerating(peerConvId, null);
-      visuals.extendPeerConversation(peerConvId, PEER_EXTEND_SEC);
+      if (isPeerConversationActive(peerConvId)) {
+        visuals.setPeerSpeech(peerConvId, speaker.id, finalContent, false);
+        visuals.setPeerGenerating(peerConvId, null);
+        visuals.extendPeerConversation(peerConvId, PEER_EXTEND_SEC);
+      }
 
       if (turnIndex < speakers.length - 1) {
         await delay(TURN_PAUSE_MS);
@@ -194,7 +201,9 @@ class AgentOrchestratorService {
     }
 
     log.endSession(sessionId);
-    visuals.finalizePeerConversation(peerConvId, PEER_TAIL_SEC);
+    if (isPeerConversationActive(peerConvId)) {
+      visuals.finalizePeerConversation(peerConvId, PEER_TAIL_SEC);
+    }
   }
 }
 

@@ -32,6 +32,7 @@ function ChatPanelContent({ visible }: { visible: boolean }) {
   const activeAgentId = useChatStore((s) => s.activeAgentId);
   const closeChat = useChatStore((s) => s.closeChat);
   const sendMessage = useChatStore((s) => s.sendMessage);
+  const stopResponse = useChatStore((s) => s.stopResponse);
   const agent = useAgentsStore((s) =>
     activeAgentId ? s.definitions.find((d) => d.id === activeAgentId) ?? null : null,
   );
@@ -234,13 +235,24 @@ function ChatPanelContent({ visible }: { visible: boolean }) {
             }
           }}
         />
-        <button
-          type="submit"
-          className={`chat-panel__send${sendPulse ? ' chat-panel__send--pulse' : ''}`}
-          disabled={!input.trim() || conversation?.isLoading}
-        >
-          {t('chat.send')}
-        </button>
+        <div className="chat-panel__actions">
+          <button
+            type="button"
+            className="chat-panel__stop"
+            onClick={stopResponse}
+            disabled={!conversation?.isLoading}
+            aria-label={t('chat.stopAria', { name: agent.name })}
+          >
+            {t('chat.stop')}
+          </button>
+          <button
+            type="submit"
+            className={`chat-panel__send${sendPulse ? ' chat-panel__send--pulse' : ''}`}
+            disabled={!input.trim() || conversation?.isLoading}
+          >
+            {t('chat.send')}
+          </button>
+        </div>
       </form>
     </aside>
   );
