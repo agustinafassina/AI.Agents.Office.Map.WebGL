@@ -17,6 +17,7 @@
   --radius-sm: 10px;
   --shadow-panel: 0 12px 40px rgba(0, 0, 0, 0.32);
   --font: 'DM Sans', system-ui, sans-serif;
+  --chat-panel-width: min(540px, 94vw);
 }
 
 *,

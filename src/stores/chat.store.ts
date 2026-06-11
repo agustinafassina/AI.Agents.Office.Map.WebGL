@@ -109,7 +109,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       syncSceneAgents(agents);
       set({
         models,
-        connectionStatus: 'connected',
+        connectionStatus: serviceMode === 'error' ? 'error' : 'connected',
         serviceMode,
       });
     } catch {
@@ -352,9 +352,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       };
       set({ conversations, serviceMode: liteLLMService.mode });
       persistConversations(get, true);
-    } catch {
+    } catch (err) {
       const locale = useLocaleStore.getState().locale;
-      const message = getSendFailed(locale);
+      const detail =
+        err instanceof Error && err.message
+          ? err.message
+          : liteLLMService.lastError;
+      const message =
+        detail && detail.length > 0 && detail.length <= 400
+          ? `${getSendFailed(locale)}: ${detail}`
+          : getSendFailed(locale);
       const current = get().conversations[agentId];
       if (!current) return;
 

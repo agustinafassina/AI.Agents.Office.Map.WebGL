@@ -38,6 +38,16 @@ function walkWaypoint(x: number, z: number): [number, number, number] {
 
 const HUB_WAYPOINT_ANGLE = Math.PI / 4 + 0.12;
 
+function getLivingPuffStandPosition(): [number, number, number] {
+  return findStandPositionNearSeat(LIVING_PUFF_SEAT, [
+    [0, 0.95],
+    [0.82, 0.52],
+    [-0.82, 0.52],
+    [0.48, -0.58],
+    [-0.48, -0.58],
+  ]);
+}
+
 export const ZONE_WAYPOINTS: Waypoint[] = [
   { id: 'wp-center-ne', zone: 'center-desk', position: hubPerimeterPosition(-HUB_WAYPOINT_ANGLE) },
   {
@@ -58,25 +68,22 @@ export const ZONE_WAYPOINTS: Waypoint[] = [
   {
     id: 'wp-living-puff',
     zone: 'living',
-    position: walkWaypoint(
-      MEETING_ZONE_POSITION[0] + 0.35,
-      MEETING_ZONE_POSITION[2] + 1.05,
-    ),
+    position: getLivingPuffStandPosition(),
   },
   {
     id: 'wp-living-table',
     zone: 'living',
-    position: walkWaypoint(MEETING_ZONE_POSITION[0] + 1.05, MEETING_ZONE_POSITION[2] + 0.45),
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] + 0.95, MEETING_ZONE_POSITION[2] - 0.55),
   },
   {
     id: 'wp-living-rug',
     zone: 'living',
-    position: walkWaypoint(MEETING_ZONE_POSITION[0] + 0.55, MEETING_ZONE_POSITION[2] - 0.35),
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] - 0.25, MEETING_ZONE_POSITION[2] - 0.95),
   },
   {
     id: 'wp-living-board',
     zone: 'living',
-    position: walkWaypoint(MEETING_ZONE_POSITION[0] - 1.15, MEETING_ZONE_POSITION[2] + 0.35),
+    position: walkWaypoint(MEETING_ZONE_POSITION[0] - 1.35, MEETING_ZONE_POSITION[2] + 0.15),
   },
   {
     id: 'wp-cafeteria-table',
@@ -149,8 +156,35 @@ function wallDeskChatAnchor(slot: 0 | 1 | 2): ChatAnchor {
   };
 }
 
+export function getLivingRelaxWalkTarget(): [number, number, number] {
+  return getLivingPuffStandPosition();
+}
+
 export function getZoneWaypoints(zone: AgentHomeZone): Waypoint[] {
   return ZONE_WAYPOINTS.filter((wp) => wp.zone === zone);
+}
+
+export function nearestZoneForPosition(
+  position: [number, number, number],
+): AgentHomeZone {
+  const zones: AgentHomeZone[] = ['living', 'center-desk', 'cafeteria', 'wall-desks'];
+  let bestZone: AgentHomeZone = 'living';
+  let bestDist = Infinity;
+
+  for (const zone of zones) {
+    const index = nearestZoneWaypointIndex(zone, position);
+    const waypoint = getZoneWaypoints(zone)[index];
+    if (!waypoint) continue;
+    const dx = waypoint.position[0] - position[0];
+    const dz = waypoint.position[2] - position[2];
+    const dist = dx * dx + dz * dz;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestZone = zone;
+    }
+  }
+
+  return bestZone;
 }
 
 export function getAgentChatAnchor(def: AgentDefinition): ChatAnchor {

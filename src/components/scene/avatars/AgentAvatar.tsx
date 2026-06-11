@@ -38,6 +38,7 @@ import { AgentThinkingAura } from './AgentThinkingAura';
 import { OUTLINE_COLOR, softColor } from '../materials';
 import { clampToWalkable } from '@/utils/collision';
 import { lerpAngle } from '@/utils/movement';
+import { useShallow } from 'zustand/react/shallow';
 import { useConversationVisualsStore } from '@/stores/conversationVisuals.store';
 import { useAgentsStore } from '@/stores/agents.store';
 
@@ -92,7 +93,28 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
   const selectedId = useSceneStore((s) => s.selectedAgentId);
   const focusOnAgent = useSceneStore((s) => s.focusOnAgent);
   const openChat = useChatStore((s) => s.openChat);
-  const peerPartnerId = useConversationVisualsStore((s) => s.getPeerPartner(definition.id));
+  const peerPartnerId = useConversationVisualsStore((s) => {
+    for (const chat of s.peerConversations) {
+      if (chat.agentA === definition.id) return chat.agentB;
+      if (chat.agentB === definition.id) return chat.agentA;
+    }
+    return null;
+  });
+  const peerSpeech = useConversationVisualsStore(
+    useShallow((s) => {
+      for (const chat of s.peerConversations) {
+        if (chat.agentA !== definition.id && chat.agentB !== definition.id) continue;
+        const isSpeaker = chat.lastSpeakerId === definition.id;
+        const isGenerating = chat.generatingAgentId === definition.id;
+        return {
+          text: isSpeaker ? chat.lastMessage : undefined,
+          streaming: isSpeaker && chat.streaming,
+          isGenerating: isGenerating && !chat.lastMessage,
+        };
+      }
+      return { text: undefined as string | undefined, streaming: false, isGenerating: false };
+    }),
+  );
   const userChatAgentId = useConversationVisualsStore((s) => s.userChatAgentId);
   const userChatMode = useConversationVisualsStore((s) => s.userChatMode);
   const isUserChatAgent = userChatAgentId === definition.id;
@@ -440,6 +462,8 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
             : 'idle';
 
   const socialChat = Boolean(peerPartnerId) && runtime.status !== 'chatting';
+  const peerBubbleText = peerSpeech.text;
+  const isPeerGenerating = peerSpeech.isGenerating;
   const speechVariant =
     runtime.status === 'chatting' && isUserChatAgent
       ? userChatMode === 'thinking'
@@ -448,7 +472,9 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           ? 'user-streaming'
           : 'user-chat'
       : socialChat
-        ? 'peer'
+        ? isPeerGenerating && !peerBubbleText
+          ? 'user-thinking'
+          : 'peer'
         : null;
 
   const showThinkingAura =
@@ -541,7 +567,13 @@ export function AgentAvatar({ definition, runtime }: AgentAvatarProps) {
           />
         </group>
 
-        {speechVariant && <ConversationSpeechBubble variant={speechVariant} />}
+        {speechVariant && (
+          <ConversationSpeechBubble
+            variant={speechVariant}
+            text={speechVariant === 'peer' ? peerBubbleText : undefined}
+            streaming={peerSpeech.streaming}
+          />
+        )}
         {showThinkingAura && <AgentThinkingAura />}
       </group>
 

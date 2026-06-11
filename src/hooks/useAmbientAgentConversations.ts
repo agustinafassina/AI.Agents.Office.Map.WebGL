@@ -1,19 +1,27 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
+import { env } from '@/config/env';
+import { agentOrchestrator } from '@/services/agentOrchestrator.service';
 import { distance2D } from '@/utils/movement';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useConversationVisualsStore } from '@/stores/conversationVisuals.store';
 import { useChatStore } from '@/stores/chat.store';
 import { resolveUserChatVisualMode } from '@/utils/chatVisualMode';
+import { isDemoRecordingMode } from '@/utils/demoMode';
 
-const SPAWN_INTERVAL = 14;
 const MAX_PEER_CHATS = 2;
-const MAX_PAIR_DISTANCE = 3.4;
 const SOCIAL_COOLDOWN_SEC = 22;
+
+function getPeerSpawnConfig() {
+  if (isDemoRecordingMode()) {
+    return { interval: 5, spawnChance: 1, maxDistance: 5.5 };
+  }
+  return { interval: 14, spawnChance: 0.58, maxDistance: 3.4 };
+}
 
 const socialCooldownUntil = new Map<string, number>();
 
-function pickSocialPair(): [string, string] | null {
+function pickSocialPair(maxDistance: number): [string, string] | null {
   const { definitions, runtime } = useAgentsStore.getState();
   const visuals = useConversationVisualsStore.getState();
   const now = performance.now() / 1000;
@@ -36,7 +44,7 @@ function pickSocialPair(): [string, string] | null {
       (other) =>
         other.id !== a.id &&
         other.homeZone === a.homeZone &&
-        distance2D(runtime[a.id].position, runtime[other.id].position) <= MAX_PAIR_DISTANCE,
+        distance2D(runtime[a.id].position, runtime[other.id].position) <= maxDistance,
     );
     if (sameZone.length === 0) continue;
     const b = sameZone[Math.floor(Math.random() * sameZone.length)];
@@ -46,31 +54,57 @@ function pickSocialPair(): [string, string] | null {
   return null;
 }
 
+const PRUNE_INTERVAL_SEC = 0.5;
+
 export function useAmbientAgentConversations() {
   const spawnTimer = useRef(0);
+  const pruneTimer = useRef(0);
+  const lastChatContext = useRef<{
+    agentId: string | null;
+    mode: ReturnType<typeof resolveUserChatVisualMode>['mode'];
+  }>({ agentId: null, mode: 'off' });
 
   useFrame((_, delta) => {
     const now = performance.now() / 1000;
     const visuals = useConversationVisualsStore.getState();
-    visuals.pruneExpired(now);
+
+    pruneTimer.current += delta;
+    if (pruneTimer.current >= PRUNE_INTERVAL_SEC) {
+      pruneTimer.current = 0;
+      visuals.pruneExpired(now);
+    }
 
     const activeId = useChatStore.getState().activeAgentId;
     const conv = activeId ? useChatStore.getState().conversations[activeId] : undefined;
     const { agentId, mode } = resolveUserChatVisualMode(activeId, conv);
-    visuals.setUserChatContext(agentId, mode);
+    if (
+      lastChatContext.current.agentId !== agentId ||
+      lastChatContext.current.mode !== mode
+    ) {
+      lastChatContext.current = { agentId, mode };
+      visuals.setUserChatContext(agentId, mode);
+    }
+
+    const spawnConfig = getPeerSpawnConfig();
 
     spawnTimer.current += delta;
-    if (spawnTimer.current < SPAWN_INTERVAL) return;
+    if (spawnTimer.current < spawnConfig.interval) return;
     spawnTimer.current = 0;
 
-    if (Math.random() > 0.42) return;
+    if (useChatStore.getState().isPanelOpen) return;
+    if (Math.random() > spawnConfig.spawnChance) return;
 
-    const pair = pickSocialPair();
+    const pair = pickSocialPair(spawnConfig.maxDistance);
     if (!pair) return;
 
     const [agentA, agentB] = pair;
     const duration = 5.5 + Math.random() * 4;
-    visuals.startPeerConversation(agentA, agentB, duration);
+    const peerConvId = visuals.startPeerConversation(agentA, agentB, duration);
+    if (!peerConvId) return;
+
+    if (env.enableAgentPeerChat) {
+      agentOrchestrator.enqueuePeerChat(peerConvId, agentA, agentB);
+    }
 
     const endsAt = now + duration + SOCIAL_COOLDOWN_SEC;
     socialCooldownUntil.set(agentA, endsAt);

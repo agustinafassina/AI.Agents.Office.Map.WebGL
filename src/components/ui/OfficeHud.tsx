@@ -3,11 +3,13 @@ import { env } from '@/config/env';
 import { useConnectionLabel } from '@/i18n/connectionLabel';
 import { useTranslation } from '@/i18n';
 import { useChatStore } from '@/stores/chat.store';
+import { useAgentInteractionLogStore } from '@/stores/agentInteractionLog.store';
 import { useAgentsStore } from '@/stores/agents.store';
 import { useSceneStore } from '@/stores/scene.store';
 import type { AgentDefinition } from '@/types/agent';
 import { preloadChatAssets } from '@/utils/preloadChatPanel';
 import { AgentHudCard } from './AgentHudCard';
+import { AgentLogPanel } from './AgentLogPanel';
 import { AgentPickerModal } from './AgentPickerModal';
 import { GraphicsQualityToggle } from './GraphicsQualityToggle';
 import { LocaleToggle } from './LocaleToggle';
@@ -43,7 +45,10 @@ export function OfficeHud() {
   const focusOnAgent = useSceneStore((state) => state.focusOnAgent);
   const selectedAgentId = useSceneStore((state) => state.selectedAgentId);
   const openChat = useChatStore((state) => state.openChat);
+  const agentLogTurnCount = useAgentInteractionLogStore((state) => state.turnCount);
+  const downloadAgentLog = useAgentInteractionLogStore((state) => state.downloadTxt);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
 
   const hasOverflow = agents.length > HUD_AGENT_PREVIEW_LIMIT;
   const previewAgents = useMemo(
@@ -116,12 +121,38 @@ export function OfficeHud() {
             {serviceMode === 'live' &&
               models.length > 0 &&
               ` · ${t('hud.modelsCount', { count: models.length })}`}
+            {agentLogTurnCount > 0 &&
+              ` · ${t('hud.agentLogCount', { count: agentLogTurnCount })}`}
           </span>
           {!env.useMockLitellm && env.litellmApiKey && (
             <span className="office-hud__live">{t('hud.apiConfigured')}</span>
           )}
+          <div className="office-hud__log-actions">
+            <button
+              type="button"
+              className="office-hud__log-btn office-hud__log-btn--primary"
+              onClick={() => setLogOpen(true)}
+              aria-label={t('hud.viewAgentLogAria')}
+              aria-haspopup="dialog"
+              aria-expanded={logOpen}
+            >
+              {t('hud.viewAgentLog')}
+            </button>
+            <button
+              type="button"
+              className="office-hud__log-btn"
+              onClick={() => downloadAgentLog()}
+              disabled={agentLogTurnCount === 0}
+              title={agentLogTurnCount === 0 ? t('hud.agentLogEmpty') : undefined}
+              aria-label={t('hud.downloadAgentLogAria')}
+            >
+              {t('hud.downloadAgentLog')}
+            </button>
+          </div>
         </div>
       </div>
+
+      <AgentLogPanel open={logOpen} onClose={() => setLogOpen(false)} />
 
       <AgentPickerModal
         open={pickerOpen}

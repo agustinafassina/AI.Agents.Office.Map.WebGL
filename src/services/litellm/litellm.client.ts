@@ -16,6 +16,26 @@ export class LiteLLMClientError extends Error {
   }
 }
 
+function formatLiteLLMErrorBody(body: string, status: number): string {
+  const trimmed = body.trim();
+  if (!trimmed) return `LiteLLM request failed (${status})`;
+
+  try {
+    const json = JSON.parse(trimmed) as {
+      error?: { message?: string; type?: string };
+      message?: string;
+    };
+    const message = json.error?.message ?? json.message;
+    const type = json.error?.type;
+    if (message && type) return `${message} (${type})`;
+    if (message) return message;
+  } catch {
+    // plain text body
+  }
+
+  return trimmed.length > 400 ? `${trimmed.slice(0, 400)}…` : trimmed;
+}
+
 function buildHeaders(init?: RequestInit): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -42,7 +62,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const body = await response.text().catch(() => '');
     throw new LiteLLMClientError(
-      body || `LiteLLM request failed (${response.status})`,
+      formatLiteLLMErrorBody(body, response.status),
       response.status,
     );
   }
@@ -73,7 +93,7 @@ export async function streamChatCompletion(
   if (!response.ok) {
     const body = await response.text().catch(() => '');
     throw new LiteLLMClientError(
-      body || `LiteLLM stream failed (${response.status})`,
+      formatLiteLLMErrorBody(body, response.status),
       response.status,
     );
   }

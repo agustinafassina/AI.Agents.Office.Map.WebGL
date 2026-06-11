@@ -29,6 +29,49 @@ const MOCK_FOOTER_EN =
 const MOCK_FOOTER_ES =
   '\n\n*(Modo mock — activá LiteLLM live en `.env`)*';
 
+const MOCK_PEER_OPENERS_EN = [
+  'Hey, quick thought on the sprint board?',
+  'Got a minute? I was looking at the auth flow.',
+  'Coffee chat — how is your side of the release going?',
+];
+
+const MOCK_PEER_OPENERS_ES = [
+  '¿Tenés un minuto? Estaba mirando el flujo de auth.',
+  'Charla rápida — ¿cómo va tu parte del release?',
+  'Oye, ¿viste lo del tablero del sprint?',
+];
+
+const MOCK_PEER_REPLIES_EN = [
+  'Makes sense. I would start with the happy path and add error states after.',
+  'Agreed — let us sync with Paula before we change scope.',
+  'Good point. I can draft a quick checklist for QA.',
+];
+
+const MOCK_PEER_REPLIES_ES = [
+  'Tiene sentido. Empezaría por el camino feliz y después los errores.',
+  'De acuerdo — sincronicemos con Paula antes de cambiar el scope.',
+  'Buen punto. Puedo armar un checklist rápido para QA.',
+];
+
+export function getMockPeerReply(
+  agentName: string,
+  peerName: string,
+  isOpener: boolean,
+  locale: AppLocale = 'en',
+): string {
+  if (isOpener) {
+    const pool = locale === 'es' ? MOCK_PEER_OPENERS_ES : MOCK_PEER_OPENERS_EN;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  const pool = locale === 'es' ? MOCK_PEER_REPLIES_ES : MOCK_PEER_REPLIES_EN;
+  const line = pool[Math.floor(Math.random() * pool.length)];
+  if (locale === 'es') {
+    return `${line} (${agentName} a ${peerName})`;
+  }
+  return `${line} (${agentName} to ${peerName})`;
+}
+
 export function getMockAssistantReply(
   agentName: string,
   userMessage: string,

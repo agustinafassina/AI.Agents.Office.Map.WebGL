@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import {
   getAgentChatAnchor,
   getAgentSpawnAnchor,
+  getLivingRelaxWalkTarget,
   getZoneWaypoints,
   isNearChatAnchor,
+  nearestZoneForPosition,
   nearestZoneWaypointIndex,
 } from '@/config/agentZones.config';
 import {
@@ -58,6 +60,8 @@ interface AgentsStore {
 
 const stuckSecondsByAgent = new Map<string, number>();
 const STUCK_THRESHOLD = 0.24;
+const STUCK_GIVE_UP = 0.62;
+const WALK_ARRIVAL_RADIUS = 0.3;
 const MOVE_EPSILON = 0.0035;
 const MIN_WALK_SPEED = 0.1;
 let coffeeQueueTicketSeq = 1;
@@ -132,6 +136,12 @@ function createInitialRuntime(def: AgentDefinition): AgentRuntimeState {
 
 function zoneWaypointsFor(def: AgentDefinition) {
   return getZoneWaypoints(def.homeZone);
+}
+
+function waypointsForRecovery(def: AgentDefinition, state: AgentRuntimeState) {
+  if (!state.targetPosition) return zoneWaypointsFor(def);
+  const zone = nearestZoneForPosition(state.targetPosition);
+  return getZoneWaypoints(zone);
 }
 
 function otherAgents(
@@ -386,9 +396,11 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
           })()
         : nearestZoneWaypointIndex(zone, state.position);
 
-    const target = resolveWalkTarget(state.position, [
-      ...zoneWaypoints[wpIndex].position,
-    ] as [number, number, number]);
+    const rawTarget =
+      command === 'relax'
+        ? getLivingRelaxWalkTarget()
+        : ([...zoneWaypoints[wpIndex].position] as [number, number, number]);
+    const target = resolveWalkTarget(state.position, rawTarget);
 
     set({
       runtime: {
@@ -503,8 +515,9 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
       if (state.status === 'walking' && state.targetPosition) {
         const dist = distance2D(state.position, state.targetPosition);
         const step = SCENE_CONFIG.walkSpeed * delta;
+        const arrived = dist <= step || dist <= WALK_ARRIVAL_RADIUS;
 
-        if (dist <= step) {
+        if (arrived) {
           stuckSecondsByAgent.set(def.id, 0);
 
           if (state.pendingChat) {
@@ -603,7 +616,28 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
             const stuck = (stuckSecondsByAgent.get(def.id) ?? 0) + delta;
             stuckSecondsByAgent.set(def.id, stuck);
 
+            if (stuck >= STUCK_GIVE_UP) {
+              stuckSecondsByAgent.set(def.id, 0);
+              nextRuntime[def.id] = {
+                ...state,
+                status: 'idle',
+                targetPosition: null,
+                moveSpeed: 0,
+                position: sanitizeAgentPosition(
+                  state.position,
+                  def.id,
+                  otherAgents(nextRuntime, def.id),
+                ),
+              };
+              nextTimers[def.id] = randomIdleDuration(
+                SCENE_CONFIG.idlePauseMin,
+                SCENE_CONFIG.idlePauseMax,
+              );
+              continue;
+            }
+
             if (stuck >= STUCK_THRESHOLD) {
+              const recoveryWaypoints = waypointsForRecovery(def, state);
               if (state.pendingCoffee || state.coffeeQueueTicket > 0) {
                 const queue = getCoffeeQueueOrder(nextRuntime, definitions);
                 const queueIndex = queue.indexOf(def.id);
@@ -620,10 +654,10 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                   continue;
                 }
 
-                if (zoneWaypoints.length > 0) {
-                  const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+                if (recoveryWaypoints.length > 0) {
+                  const wpIndex = pickNextWaypointIndex(state.waypointIndex, recoveryWaypoints);
                   const escape = resolveWalkTarget(state.position, [
-                    ...zoneWaypoints[wpIndex].position,
+                    ...recoveryWaypoints[wpIndex].position,
                   ] as [number, number, number]);
                   stuckSecondsByAgent.set(def.id, 0);
                   nextRuntime[def.id] = {
@@ -634,10 +668,10 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
                   };
                   continue;
                 }
-              } else if (zoneWaypoints.length > 0) {
-                const wpIndex = pickNextWaypointIndex(state.waypointIndex, zoneWaypoints);
+              } else if (recoveryWaypoints.length > 0) {
+                const wpIndex = pickNextWaypointIndex(state.waypointIndex, recoveryWaypoints);
                 const escape = resolveWalkTarget(state.position, [
-                  ...zoneWaypoints[wpIndex].position,
+                  ...recoveryWaypoints[wpIndex].position,
                 ] as [number, number, number]);
                 stuckSecondsByAgent.set(def.id, 0);
                 nextRuntime[def.id] = {

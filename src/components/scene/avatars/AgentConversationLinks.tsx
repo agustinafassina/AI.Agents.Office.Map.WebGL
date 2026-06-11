@@ -69,7 +69,6 @@ export function AgentConversationLinks() {
   const userChatAgentId = useConversationVisualsStore((s) => s.userChatAgentId);
   const userChatMode = useConversationVisualsStore((s) => s.userChatMode);
   const runtime = useAgentsStore((s) => s.runtime);
-
   const userChatPos = userChatAgentId ? runtime[userChatAgentId]?.position : null;
   const haloMode =
     userChatMode === 'thinking' || userChatMode === 'streaming' || userChatMode === 'active'

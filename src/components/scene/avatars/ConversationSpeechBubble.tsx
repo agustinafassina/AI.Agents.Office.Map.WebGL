@@ -1,11 +1,14 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 type BubbleVariant = 'user-chat' | 'user-thinking' | 'user-streaming' | 'peer';
 
 interface ConversationSpeechBubbleProps {
   variant: BubbleVariant;
+  text?: string;
+  streaming?: boolean;
 }
 
 const CLOUD = '#faf8f4';
@@ -104,9 +107,47 @@ function StandardSpeechBubble({ variant }: { variant: Exclude<BubbleVariant, 'us
   );
 }
 
-export function ConversationSpeechBubble({ variant }: ConversationSpeechBubbleProps) {
+function PeerTextBubble({ text, streaming }: { text: string; streaming: boolean }) {
+  return (
+    <Billboard position={[0.34, 0.78, 0.06]} follow lockX lockZ>
+      <group rotation={[0, -0.2, 0.04]} scale={0.88}>
+        <mesh position={[0, 0, -0.01]}>
+          <planeGeometry args={[0.72, 0.22]} />
+          <meshBasicMaterial color={CLOUD} transparent opacity={0.95} />
+        </mesh>
+        <mesh position={[-0.12, -0.1, -0.01]} rotation={[0, 0, 0.45]}>
+          <planeGeometry args={[0.06, 0.06]} />
+          <meshBasicMaterial color={CLOUD} transparent opacity={0.95} />
+        </mesh>
+        <Text
+          fontSize={0.042}
+          color="#2a3228"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={0.64}
+          textAlign="center"
+          lineHeight={1.15}
+        >
+          {text}
+          {streaming ? '…' : ''}
+        </Text>
+      </group>
+    </Billboard>
+  );
+}
+
+export function ConversationSpeechBubble({
+  variant,
+  text,
+  streaming = false,
+}: ConversationSpeechBubbleProps) {
   if (variant === 'user-thinking') {
     return <ThinkingThoughtBubble />;
   }
+
+  if (variant === 'peer' && text) {
+    return <PeerTextBubble text={text} streaming={streaming} />;
+  }
+
   return <StandardSpeechBubble variant={variant} />;
 }

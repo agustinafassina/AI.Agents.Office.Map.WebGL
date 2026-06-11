@@ -16,7 +16,7 @@
 }
 
 .app--chat-open .app__viewport {
-  right: min(410px, 92vw);
+  right: var(--chat-panel-width);
 }
 
 .app__viewport canvas {

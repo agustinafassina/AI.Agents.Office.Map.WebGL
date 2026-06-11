@@ -1,6 +1,10 @@
-import { useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef, useState } from 'react';
 import { OFFICE_WORK_ZONES } from '@/config/officeZones';
 import { useActiveOfficeZone } from '@/hooks/useActiveOfficeZone';
+import { useAgentsStore } from '@/stores/agents.store';
+import type { AgentHomeZone } from '@/types/agent';
+import { getZoneOccupancyCounts } from '@/utils/zoneOccupancy';
 import {
   ZONE_PLAQUE_LABEL_KEYS,
   ZONE_SUBTITLE_KEYS,
@@ -108,15 +112,32 @@ function ZonePlaque({
   );
 }
 
+function useZoneOccupancySnapshot(): Map<AgentHomeZone, number> {
+  const [occupancy, setOccupancy] = useState(() => new Map<AgentHomeZone, number>());
+  const lastKey = useRef('');
+
+  useFrame(() => {
+    const next = getZoneOccupancyCounts(useAgentsStore.getState().runtime);
+    const key = [...next.entries()].map(([zone, count]) => `${zone}:${count}`).join('|');
+    if (key === lastKey.current) return;
+    lastKey.current = key;
+    setOccupancy(next);
+  });
+
+  return occupancy;
+}
+
 export function OfficeZoneIdentity() {
   const { t } = useTranslation();
   const activeZoneId = useActiveOfficeZone();
+  const occupancy = useZoneOccupancySnapshot();
 
   return (
     <group>
       {OFFICE_WORK_ZONES.map((zone) => {
         if (!zone.hotspot || !zone.identity) return null;
-        const isActive = activeZoneId === zone.id;
+        const agentsHere = occupancy.get(zone.id as WorkZoneId) ?? 0;
+        const isActive = activeZoneId === zone.id || agentsHere > 0;
         const zoneId = zone.id as WorkZoneId;
 
         return (
