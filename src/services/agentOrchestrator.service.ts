@@ -41,8 +41,8 @@ function buildPeerSystemPrompt(
   const base = speaker.systemPrompt?.trim() ?? '';
   const peerLine =
     locale === 'es'
-      ? `Estás en una charla informal en la oficina con ${peer.name} (${peer.role}). Respondé en 1 o 2 oraciones, en personaje, sin markdown ni listas.`
-      : `You are in a casual office chat with ${peer.name} (${peer.role}). Reply in 1–2 sentences, in character, with no markdown or bullet lists.`;
+      ? `Estás en una charla informal en la oficina con ${peer.name} (${peer.role}). Respondé en 1 o 2 oraciones, en personaje, sin markdown ni listas. No expliques cómo responderías.`
+      : `You are in a casual office chat with ${peer.name} (${peer.role}). Reply in 1–2 sentences, in character, with no markdown or bullet lists. Do not explain how you would respond.`;
 
   return base ? `${base}\n\n${peerLine}` : peerLine;
 }

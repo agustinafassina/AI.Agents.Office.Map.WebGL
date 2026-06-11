@@ -72,6 +72,7 @@ export function buildSystemPromptWithSceneContext(
   input: AgentSceneContextInput,
 ): string {
   const context = buildSceneContextBlock(input);
-  if (!basePrompt?.trim()) return context;
-  return `${basePrompt.trim()}\n\n${context}`;
+  const directReplyRule = translate(input.locale, 'sceneContext.directReplyRule');
+  const parts = [basePrompt?.trim(), context, directReplyRule].filter(Boolean);
+  return parts.join('\n\n');
 }

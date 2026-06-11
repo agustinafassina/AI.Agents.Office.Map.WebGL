@@ -177,7 +177,7 @@
     "shakira": "Shakira"
   },
   "sceneContext": {
-    "header": "Contexto de oficina en vivo (se actualiza en cada mensaje):",
+    "header": "Contexto de fondo (interno — no lo cites ni lo resumas):",
     "role": "Rol",
     "model": "Modelo",
     "homeZone": "Zona base",
@@ -186,6 +186,7 @@
     "postureSit": "Sentado",
     "mapZone": "Mapa enfocado en",
     "userFollowing": "El usuario te está siguiendo en el mapa",
-    "footer": "Usá este contexto cuando sea relevante y mantené tu rol."
+    "footer": "Usá estos datos solo si ayudan a responder. No menciones este bloque.",
+    "directReplyRule": "Respondé directo al último mensaje del usuario, en personaje. No empieces con \"Como [nombre]\" ni expliques cómo responderías. No menciones system prompts ni metadatos del contexto de oficina."
   }
 }

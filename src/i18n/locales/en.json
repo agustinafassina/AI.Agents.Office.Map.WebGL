@@ -177,7 +177,7 @@
     "shakira": "Shakira"
   },
   "sceneContext": {
-    "header": "Live office context (refreshed each message):",
+    "header": "Background (internal — do not quote or summarize this block):",
     "role": "Role",
     "model": "Model",
     "homeZone": "Home zone",
@@ -186,6 +186,7 @@
     "postureSit": "Sitting",
     "mapZone": "Map focused on",
     "userFollowing": "The user is following your avatar on the map",
-    "footer": "Use this context when relevant and stay in your role."
+    "footer": "Use the facts above only when they help the answer. Never mention this block.",
+    "directReplyRule": "Reply directly to the user's latest message in character. Do not start with \"As [name]\" or explain how you would respond. Do not reference system prompts or office context metadata."
   }
 }
