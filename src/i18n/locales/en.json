@@ -10,7 +10,28 @@
     "mockMode": "Mock mode",
     "litellm": "LiteLLM",
     "apiConfigured": "API configured",
-    "modelsCount": "{{count}} models"
+    "modelsCount": "{{count}} models",
+    "viewAgentLog": "View log",
+    "viewAgentLogAria": "Open live agent interaction log",
+    "downloadAgentLog": "Download",
+    "downloadAgentLogAria": "Download agent interaction log",
+    "agentLogEmpty": "No agent conversations logged yet",
+    "agentLogCount": "{{count}} turns"
+  },
+  "peerChat": {
+    "banner": "{{nameA}} and {{nameB}} are chatting",
+    "speaking": "{{name}} is speaking…"
+  },
+  "agentLog": {
+    "title": "Agent interactions",
+    "subtitle": "Live log of peer conversations in the office",
+    "empty": "No agent conversations yet. Leave the scene running — pairs will chat when agents meet.",
+    "waiting": "Conversation started…",
+    "sessionLive": "Live",
+    "sessionEnded": "Ended",
+    "close": "Close agent log",
+    "clear": "Clear",
+    "download": "Download .txt"
   },
   "locale": {
     "label": "Language",

@@ -193,7 +193,7 @@ function createPlantFoliage(): THREE.CanvasTexture {
   return canvasTexture(canvas, [1, 1]);
 }
 
-const TEXTURE_VERSION = 5;
+const TEXTURE_VERSION = 7;
 let cached: OfficeTextureSet | null = null;
 let cachedVersion = 0;
 

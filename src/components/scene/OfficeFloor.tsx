@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { OFFICE_PALETTE } from '@/config/agents.config';
 import { getOfficeTextures } from '@/utils/textures/proceduralTextures';
 import { materials } from './materials';
 import { WallTextureStripes } from './furniture/decor/SceneDecor';
@@ -13,10 +12,11 @@ const ORIGIN_Z = -6;
 function CheckerTiles() {
   const tileMaterials = useMemo(() => {
     getOfficeTextures();
-    return {
-      sage: materials.tileSage.clone(),
-      gray: materials.tileGray.clone(),
-    };
+    const sage = materials.tileSage.clone();
+    const gray = materials.tileGray.clone();
+    sage.roughness = 0.8;
+    gray.roughness = 0.78;
+    return { sage, gray };
   }, []);
 
   const tiles = [];
@@ -71,15 +71,14 @@ function TexturedWall({
 
 export function OfficeFloor() {
   const wallH = 0.55;
-  const bg = OFFICE_PALETTE.sceneBackground;
 
   return (
     <group>
-      <mesh position={[0.5, -0.35, 0]} material={materials.sageDark}>
+      <mesh position={[0.5, -0.35, 0]} material={materials.sage}>
         <boxGeometry args={[16.2, 0.1, 14.2]} />
       </mesh>
 
-      <mesh position={[0.5, -0.16, 0]} receiveShadow material={materials.woodDark}>
+      <mesh position={[0.5, -0.16, 0]} receiveShadow material={materials.floorPlatform}>
         <boxGeometry args={[14.8, 0.22, 12.8]} />
       </mesh>
 
@@ -95,10 +94,6 @@ export function OfficeFloor() {
         </mesh>
       ))}
 
-      <mesh position={[0.5, -0.08, 0]}>
-        <boxGeometry args={[14.6, 0.02, 12.6]} />
-        <meshBasicMaterial color={bg} transparent opacity={0.25} />
-      </mesh>
     </group>
   );
 }

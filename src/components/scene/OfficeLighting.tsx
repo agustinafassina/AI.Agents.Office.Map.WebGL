@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import * as THREE from 'three';
-import { OfficeAmbientZones } from './OfficeAmbientZones';
+import { OfficeZoneLights } from './OfficeZoneLights';
 
 const KEY_LIGHT_POS: [number, number, number] = [9, 17, -10];
 
@@ -45,12 +45,12 @@ export function OfficeLighting() {
 
   return (
     <>
-      <ambientLight intensity={0.58} color="#f6f0e6" />
+      <ambientLight intensity={0.64} color="#f0f4f2" />
       <directionalLight
         ref={keyRef}
         position={KEY_LIGHT_POS}
         intensity={0.46}
-        color="#fff6ea"
+        color="#f4f8f6"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.00008}
@@ -62,7 +62,14 @@ export function OfficeLighting() {
         shadow-camera-bottom={-12}
       />
       <directionalLight position={[-7, 10, 5]} intensity={0.14} color="#d8e8e0" />
-      <hemisphereLight args={['#f6f4ef', '#2d4a3a', 0.48]} />
+      <hemisphereLight args={['#eef2f0', '#4a6e5c', 0.42]} />
+      <pointLight
+        position={[0.5, 2.4, 0.2]}
+        intensity={0.22}
+        color="#e4ece8"
+        distance={16}
+        decay={2}
+      />
 
       <AccentSpot
         position={[2.8, 3.2, -3.55]}
@@ -93,12 +100,12 @@ export function OfficeLighting() {
       <AccentSpot
         position={[0.5, 2.8, 3.2]}
         target={[0.5, 0.5, 1.05]}
-        intensity={0.26}
-        color="#f0e0c8"
+        intensity={0.22}
+        color="#d8e4de"
         angle={0.55}
       />
 
-      <OfficeAmbientZones />
+      <OfficeZoneLights />
     </>
   );
 }

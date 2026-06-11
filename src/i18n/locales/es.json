@@ -10,7 +10,28 @@
     "mockMode": "Modo mock",
     "litellm": "LiteLLM",
     "apiConfigured": "API configurada",
-    "modelsCount": "{{count}} modelos"
+    "modelsCount": "{{count}} modelos",
+    "viewAgentLog": "Ver log",
+    "viewAgentLogAria": "Abrir log en vivo de interacciones entre agentes",
+    "downloadAgentLog": "Descargar",
+    "downloadAgentLogAria": "Descargar log de interacciones entre agentes",
+    "agentLogEmpty": "Todavía no hay charlas entre agentes registradas",
+    "agentLogCount": "{{count}} turnos"
+  },
+  "peerChat": {
+    "banner": "{{nameA}} y {{nameB}} están conversando",
+    "speaking": "{{name}} está hablando…"
+  },
+  "agentLog": {
+    "title": "Interacciones entre agentes",
+    "subtitle": "Log en vivo de charlas entre pares en la oficina",
+    "empty": "Todavía no hay charlas. Dejá la escena corriendo — los agentes charlan cuando se cruzan.",
+    "waiting": "Charla iniciada…",
+    "sessionLive": "En vivo",
+    "sessionEnded": "Finalizada",
+    "close": "Cerrar log de agentes",
+    "clear": "Limpiar",
+    "download": "Descargar .txt"
   },
   "locale": {
     "label": "Idioma",

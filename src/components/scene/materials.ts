@@ -28,9 +28,10 @@ function buildMaterials() {
   const tex = getOfficeTextures();
 
   return {
-    tileSage: softColor('#ffffff', { map: tex.tileSage, roughness: 0.88 }),
-    tileGray: softColor('#ffffff', { map: tex.tileGray, roughness: 0.86 }),
+    tileSage: softColor('#eef3f1', { map: tex.tileSage, roughness: 0.82 }),
+    tileGray: softColor('#f0f4f2', { map: tex.tileGray, roughness: 0.8 }),
     tileGrout: softColor(OFFICE_PALETTE.tileGrout, { roughness: 0.95 }),
+    floorPlatform: softColor(OFFICE_PALETTE.floorPlatform, { map: tex.tileGray, roughness: 0.88 }),
     wall: softColor('#ffffff', { map: tex.wallPlaster, roughness: 0.94 }),
     wallMarble: softColor('#ffffff', { map: tex.wallMarble, roughness: 0.78 }),
     wallStripe: softColor(OFFICE_PALETTE.wallStripe, { roughness: 0.9 }),

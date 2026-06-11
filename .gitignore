@@ -11,6 +11,7 @@ dist-ssr
 src copy/*
 ai-suggestions/*
 docs/demo.source.gif
+docs/.capture
 docs/*.tmp.gif
 try.py
 CHECKLIST.md

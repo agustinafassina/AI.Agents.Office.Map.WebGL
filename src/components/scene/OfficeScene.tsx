@@ -20,6 +20,7 @@ import { CameraZoomHandler } from './CameraZoomHandler';
 import { TextureWarmup } from './TextureWarmup';
 import { OptionalTextureLoader } from './OptionalTextureLoader';
 import { OfficeZoneHotspots } from './OfficeZoneHotspots';
+import { OfficeZoneIdentity } from './OfficeZoneIdentity';
 import { SceneErrorBoundary } from './SceneErrorBoundary';
 
 const OfficePostProcessing = lazy(() =>
@@ -49,15 +50,16 @@ function SceneContents({ qualityFlags, showPostProcessing }: SceneContentsProps)
       <OfficeLighting />
       <OfficeFloor />
       <OfficeLayout />
+      <OfficeZoneIdentity />
       <OfficeZoneHotspots />
       <ContactShadows
         position={[0.5, 0.01, 0.2]}
-        opacity={0.28}
+        opacity={0.2}
         width={14}
         height={11}
-        blur={2.4}
+        blur={2.6}
         far={2.5}
-        color="#1e2f27"
+        color="#3d5248"
       />
       <AgentsLayer />
       {showPostProcessing && (
