@@ -35,7 +35,7 @@ Use `http://localhost:5173/?demo=1` for faster peer chats while recording. See [
 - **Node.js 22+** recommended
 - **npm** (uses `package-lock.json`)
 - **Docker + Docker Compose** if you want the containerized runtime
-- Optional: a running **LiteLLM** proxy for live model calls
+- Optional: a running **LiteLLM** proxy for live model calls — see [LiteLLM.Local](https://github.com/agustinafassina/LiteLLM.Local) for a free local setup (Ollama models, no cloud API cost)
 
 ## 🚀 Quick Start
 Run locally in mock mode, no backend needed:
@@ -92,13 +92,19 @@ VITE_LITELLM_API_KEY=
 Use this for UI work, scene changes and demos without a model server.
 
 ### Live Mode
-Start LiteLLM separately, usually on `localhost:4000`, then configure:
+For live inference, run a local LiteLLM proxy on the host (default port `4000`). This project is designed to work with **[LiteLLM.Local](https://github.com/agustinafassina/LiteLLM.Local)** — a Docker stack that exposes an OpenAI-compatible API and routes to **free Ollama models** on your machine (no paid cloud keys required).
+
+1. Clone and start [LiteLLM.Local](https://github.com/agustinafassina/LiteLLM.Local) (`docker compose up -d` with Ollama running on `:11434`).
+2. Pull the Ollama backends listed in that repo (e.g. `phi3:mini`, `llama3.2:1b`, `qwen2.5:1.5b`, `gemma2:2b`).
+3. Configure this app:
 
 ```env
 VITE_USE_MOCK_LITELLM=false
 VITE_LITELLM_BASE_URL=/api/litellm
-VITE_LITELLM_API_KEY=sk-your-key
+VITE_LITELLM_API_KEY=sk-1234
 ```
+
+The default `modelId` values in `public/agents.json` match LiteLLM.Local API names (`llama3-local`, `gemma2-2b-local`, `qwen2.5-1.5b-local`, `llama3.2-1b-local`).
 
 In local dev, Vite proxies `/api/litellm` to `LITELLM_PROXY_TARGET` (default `http://localhost:4000`) via `vite.config.ts`. **Do not** point `VITE_LITELLM_BASE_URL` at `:4000` directly — the browser would hit CORS.
 
